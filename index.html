@@ -2677,12 +2677,12 @@ async function monitorar(nome, acao) {
         const resultado = await acao();
         const tempo = (performance.now() - t0).toFixed(2);
 
-        // Registro de Sucesso (Alinhado com o Relatório PDF)
+        // Registro de Sucesso - Nomes das colunas ajustados conforme seu SQL
         await supabaseClient.from('logs_qualidade').insert([{ 
-            funcao: nome, 
-            status: 'Positivo', 
-            latencia: parseFloat(tempo),
-            hora: new Date().toISOString() 
+            funcao_nome: nome,              // De acordo com seu SQL 
+            status: 'positivo',             // Minúsculo conforme seu CHECK 
+            latencia_ms: parseFloat(tempo), // De acordo com seu SQL 
+            dispositivo: window.innerWidth < 768 ? 'Mobile' : 'Desktop' // 
         }]);
         return resultado;
     } catch (err) {
@@ -2690,11 +2690,11 @@ async function monitorar(nome, acao) {
         
         // Registro de Erro (Diagnóstico para IA)
         await supabaseClient.from('logs_qualidade').insert([{ 
-            funcao: nome, 
-            status: 'Negativo', 
-            latencia: parseFloat(tempo), 
-            mensagem: `ERRO: ${err.message} | LOCAL: ${err.stack}`,
-            hora: new Date().toISOString()
+            funcao_nome: nome, 
+            status: 'negativo', 
+            latencia_ms: parseFloat(tempo), 
+            mensagem_erro: `ERRO: ${err.message} | LOCAL: ${err.stack}`, // 
+            dispositivo: window.innerWidth < 768 ? 'Mobile' : 'Desktop'
         }]);
         
         // Ativa o alerta visual no sistema

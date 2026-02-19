@@ -2645,7 +2645,71 @@
             appointments: [],
             paymentHistory: []
         };
+        /**
+ * MOTOR DE MONITORIZAÇÃO TÉCNICA (V2.1)
+ * @param {string} nome - Nome amigável da função
+ * @param {function} acao - Código a ser executado
+ */
+async function monitorar(nome, acao) {
+    const t0 = performance.now();
+    try {
+        const resultado = await acao();
+        const tempo = (performance.now() - t0).toFixed(2);
+        
+        // Registo de Sucesso (Telemetria de Performance)
+        await supabaseClient.from('logs_qualidade').insert([{ 
+            funcao_nome: nome, 
+            status: 'positivo', 
+            latencia_ms: tempo 
+        }]);
+        return resultado;
+    } catch (err) {
+        const tempo = (performance.now() - t0).toFixed(2);
+        
+        // Registo de Erro (Diagnóstico para IA)
+        await supabaseClient.from('logs_qualidade').insert([{ 
+            funcao_nome: nome, 
+            status: 'negativo', 
+            latencia_ms: tempo, 
+            mensagem_erro: `ERRO: ${err.message} | LOCAL: ${err.stack}`
+        }]);
+        
+        // Ativa o alerta visual no sistema
+        const sino = document.getElementById('alerta-erro');
+        if (sino) sino.style.display = 'block';
 
+        console.error(`[Central de Qualidade] Falha em ${nome}:`, err);
+        throw err;
+    }
+}
+// Central de Monitoramento Rápida
+async function monitorar(nomeFuncao, acao) {
+    const inicio = performance.now();
+    try {
+        const resultado = await acao();
+        const tempo = (performance.now() - inicio).toFixed(2);
+        
+        // Log de Sucesso
+        await supabaseClient.from('logs_qualidade').insert([{ 
+            funcao_nome: nomeFuncao, status: 'positivo', latencia_ms: tempo 
+        }]);
+        return resultado;
+    } catch (err) {
+        const tempo = (performance.now() - inicio).toFixed(2);
+        
+        // Log de Erro Detalhado para a I.A.
+        await supabaseClient.from('logs_qualidade').insert([{ 
+            funcao_nome: nomeFuncao, status: 'negativo', latencia_ms: tempo, 
+            mensagem_erro: `${err.message} | Stack: ${err.stack}` 
+        }]);
+        
+        // Alerta visual no ícone de notificações (Sino)
+        const sino = document.getElementById('alerta-erro');
+        if (sino) sino.style.display = 'block';
+        
+        throw err;
+    }
+}
         const sectionMapping = {
             1: { type: 'expense_fixed', category: 'fixed' },
             2: { type: 'expense_variable', category: 'variable' },

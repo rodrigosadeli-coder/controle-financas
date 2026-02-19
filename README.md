@@ -1,5 +1,5 @@
 # 💰 Sistema de Gestão Financeira | Financial Management System
-### Família Pedrosa de Lima
+### Família Pedrosa de Lima - v2.0 (Supabase Integration)
 
 [Português](#português) | [English](#english)
 
@@ -7,38 +7,48 @@
 
 ## <a name="português"></a> 🇧🇷 Português
 
-Este projeto é uma aplicação web completa para controle financeiro doméstico, desenvolvida como parte dos meus estudos em Tecnologia da Informação.
+Este documento detalha as atualizações críticas implementadas para garantir a persistência de dados em nuvem e a resiliência offline do sistema.
 
-### 🚀 Tecnologias Utilizadas
-* **Frontend:** HTML5, CSS3 e JavaScript.
-* **Database:** [Supabase](https://supabase.com/) (PostgreSQL + Auth).
-* **Hospedagem:** [Vercel](https://vercel.com/).
+### 🚀 Novidades da Versão 2.0
+* **Correção de Conectividade:** Ajuste na URL do Supabase (remoção de espaços em branco) para restaurar a comunicação com a API.
+* **Histórico de Pagamentos:** Implementação da tabela `payment_history` para auditoria de todas as transações.
+* **Sincronização Bidirecional:** Lógica aprimorada para garantir que dados gerados offline sejam enviados ao banco assim que a conexão retornar.
+* **Automação de Contas:** Criação automática de parcelas e renovação de contas fixas.
 
-### 📖 Relatório Técnico
-* **Justificativa:** O Supabase foi escolhido por oferecer autenticação pronta e banco de dados relacional, eliminando a necessidade de gerenciar um servidor backend manual.
-* **Workflow:** O projeto segue o padrão de mercado com CI/CD via GitHub e Vercel.
-* **Entry Point:** O arquivo principal foi definido como `index.html` para reconhecimento automático pelo servidor.
+### 📖 Guia de Manutenção Técnica
+* **Entry Point:** `index.html` (Padrão para servidores Vercel).
+* **Database:** PostgreSQL hospedado no Supabase.
+* **Sync Logic:** O sistema utiliza `localStorage` como buffer antes de persistir no banco via `upsert`.
 
 ---
 
 ## <a name="english"></a> 🇺🇸 English
 
-This project is a complete web application for household financial control, developed as part of my Information Technology studies.
+This document details the critical updates implemented to ensure cloud data persistence and the system's offline resilience.
 
-### 🚀 Technologies Used
-* **Frontend:** HTML5, CSS3, and JavaScript.
-* **Database:** [Supabase](https://supabase.com/) (PostgreSQL + Auth).
-* **Hosting:** [Vercel](https://vercel.com/).
+### 🚀 What's New in Version 2.0
+* **Connectivity Fix:** Adjusted the Supabase URL (removed trailing spaces) to restore API communication.
+* **Payment History:** Implementation of the `payment_history` table for full transaction auditing.
+* **Bi-directional Sync:** Enhanced logic to ensure offline data is pushed to the database once the connection is restored.
+* **Account Automation:** Automatic creation of installments and renewal for fixed expenses.
 
-### 📖 Technical Report
-* **Justification:** Supabase was chosen because it offers ready-to-use authentication and a relational database, removing the need to manually manage a backend server.
-* **Workflow:** The project follows industry standards with CI/CD via GitHub and Vercel.
-* **Entry Point:** The main file was set as `index.html` for automatic recognition by the web server.
+### 📖 Technical Maintenance Guide
+* **Entry Point:** `index.html` (Standard for Vercel servers).
+* **Database:** PostgreSQL hosted on Supabase.
+* **Sync Logic:** The system uses `localStorage` as a buffer before persisting to the database via `upsert`.
 
 ---
-## 🛠️ Maintenance / Manutenção
+
+## 🛠️ Comandos de Atualização / Deployment Commands
+
+Sempre que fizer alterações, use esta sequência no terminal:
 
 ```bash
+# 1. Adicionar mudanças (não esqueça o ponto!)
 git add .
-git commit -m "Your message / Sua mensagem"
+
+# 2. Salvar versão
+git commit -m "Update: Versão 2.0 - Integração Completa"
+
+# 3. Enviar para a Vercel/GitHub
 git push

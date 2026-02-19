@@ -2670,33 +2670,31 @@
             appointments: [],
             paymentHistory: []
         };
-        /**
- * MOTOR DE MONITORIZAÇÃO TÉCNICA (V2.1)
- * @param {string} nome - Nome amigável da função
- * @param {function} acao - Código a ser executado
- */
+ // --- MOTOR DE MONITORAMENTO DE QUALIDADE (V2.1) ---
 async function monitorar(nome, acao) {
     const t0 = performance.now();
     try {
         const resultado = await acao();
         const tempo = (performance.now() - t0).toFixed(2);
-        
-        // Registo de Sucesso (Telemetria de Performance)
+
+        // Registro de Sucesso (Alinhado com o Relatório PDF)
         await supabaseClient.from('logs_qualidade').insert([{ 
-            funcao_nome: nome, 
-            status: 'positivo', 
-            latencia_ms: tempo 
+            funcao: nome, 
+            status: 'Positivo', 
+            latencia: parseFloat(tempo),
+            hora: new Date().toISOString() 
         }]);
         return resultado;
     } catch (err) {
         const tempo = (performance.now() - t0).toFixed(2);
         
-        // Registo de Erro (Diagnóstico para IA)
+        // Registro de Erro (Diagnóstico para IA)
         await supabaseClient.from('logs_qualidade').insert([{ 
-            funcao_nome: nome, 
-            status: 'negativo', 
-            latencia_ms: tempo, 
-            mensagem_erro: `ERRO: ${err.message} | LOCAL: ${err.stack}`
+            funcao: nome, 
+            status: 'Negativo', 
+            latencia: parseFloat(tempo), 
+            mensagem: `ERRO: ${err.message} | LOCAL: ${err.stack}`,
+            hora: new Date().toISOString()
         }]);
         
         // Ativa o alerta visual no sistema
@@ -2707,7 +2705,6 @@ async function monitorar(nome, acao) {
         throw err;
     }
 }
-
 // Função para extrair dados do Supabase e gerar o PDF técnico
 async function gerarRelatorioPDF() {
     const { jsPDF } = window.jspdf;

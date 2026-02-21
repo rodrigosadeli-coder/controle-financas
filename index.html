@@ -5062,5 +5062,138 @@ Isso substituirá os dados atuais!`)) {
 
         // Inicializar ao carregar
         window.addEventListener('DOMContentLoaded', initSupabase);
-    </script>
-   
+ </script>
+     <!-- ===================== MODAL DE TESTES ===================== -->
+    <div class="modal" id="testModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">🧪 Área de Testes</h3>
+                <button class="close-btn" onclick="closeTestModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: var(--blue-royal); margin-bottom: 0.5rem;">📊 Gerar Dados de Teste</h4>
+                    <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">
+                        Insere transações de exemplo para testar o sistema.
+                    </p>
+                    <button class="btn btn-save" onclick="fillTestData()" style="width: 100%;">
+                        🎲 Gerar Dados Aleatórios
+                    </button>
+                </div>
+                
+                <div style="border-top: 2px solid #e5e7eb; padding-top: 1.5rem;">
+                    <h4 style="color: var(--danger); margin-bottom: 0.5rem;">⚠️ Zona de Perigo</h4>
+                    <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">
+                        Apaga TODOS os dados permanentemente (Supabase + Local).
+                    </p>
+                    <button class="btn-danger-full" onclick="confirmResetAll()" style="width: 100%;">
+                        🗑️ RESETAR TODOS OS DADOS
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeTestModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+    <!-- ===================== FIM DO MODAL ===================== -->
+
+</body>
+</html>
+
+<script>
+// ==========================================
+// FUNÇÕES DE TESTES E RESET - CORRIGIDAS
+// ==========================================
+
+function openTestModal() {
+    document.getElementById('testModal').classList.add('active');
+}
+
+function closeTestModal() {
+    document.getElementById('testModal').classList.remove('active');
+}
+
+async function fillTestData() {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth() + 1;
+    
+    const testTransactions = [
+        { type: 'income', category: 'income', partition_id: 1, description: 'Salário Teste', amount: 5000, status: 'received' },
+        { type: 'expense_fixed', category: 'fixed', partition_id: 1, description: 'Aluguel Teste', amount: 1200, status: 'pending' },
+        { type: 'expense_variable', category: 'variable', partition_id: 1, description: 'Mercado Teste', amount: 800, status: 'pending' },
+        { type: 'expense_installment', category: 'installment', partition_id: 2, description: 'TV Parcelada', amount: 300, total_installments: 10, status: 'pending' },
+        { type: 'income', category: 'income', partition_id: 2, description: 'Freela Teste', amount: 1500, status: 'pending' }
+    ];
+    
+    for (const t of testTransactions) {
+        const dueDate = new Date(year, month - 1, Math.floor(Math.random() * 28) + 1);
+        await insertTransaction({
+            ...t,
+            year: year,
+            month: month,
+            due_day: dueDate.getDate(),
+            due_date: dueDate.toISOString().split('T')[0],
+            installment_number: 1,
+            auto_renew: false,
+            is_fixed: t.category === 'fixed'
+        });
+    }
+    
+    await loadAllData();
+    showNotification('Dados de teste inseridos!');
+    closeTestModal();
+}
+
+async function confirmResetAll() {
+    const confirmation = prompt('⚠️ ATENÇÃO! Isso apagará TODOS os dados permanentemente.\n\nDigite RESETAR para confirmar:');
+    
+    if (confirmation !== 'RESETAR') {
+        if (confirmation !== null) {
+            showNotification('Reset cancelado. Texto digitado não corresponde.', 'error');
+        }
+        return;
+    }
+
+    showNotification('Iniciando reset completo...', 'warning');
+    
+    try {
+        // Limpar Supabase se online
+        if (isOnline && supabaseClient && currentUser) {
+            updateConnectionStatus('syncing');
+            
+            await supabaseClient
+                .from('transactions')
+                .delete()
+                .eq('user_id', currentUser.id);
+            
+            await supabaseClient
+                .from('payment_history')
+                .delete()
+                .eq('user_id', currentUser.id);
+        }
+        
+        // Limpar local
+        localData = { transactions: [], notebooks: [], notes: [], appointments: [], paymentHistory: [] };
+        localStorage.removeItem('fpl_localData');
+        localStorage.removeItem('fpl_lastSync');
+        
+        await loadAllData();
+        renderNotebooks();
+        closeSettingsModal();
+        closeTestModal();
+        
+        updateConnectionStatus('online');
+        showNotification('🗑️ Todos os dados foram apagados!', 'error');
+        
+    } catch (error) {
+        showNotification('Erro durante reset: ' + error.message, 'error');
+        updateConnectionStatus('offline');
+    }
+}
+
+window.openTestModal = openTestModal;
+window.closeTestModal = closeTestModal;
+window.fillTestData = fillTestData;
+window.confirmResetAll = confirmResetAll;
+</script>

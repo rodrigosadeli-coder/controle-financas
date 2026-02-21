@@ -1,3 +1,5 @@
+<!-- SUBSTITUA O ARQUIVO index.html COMPLETO POR ESTE CÓDIGO: -->
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1873,7 +1875,6 @@
         /* Botão de backup na navbar */
         .btn-backup-nav {
             background: linear-gradient(135deg, var(--success) 0%, #047857 100%);
-            color: white;
         }
 
         .btn-backup-nav:hover {
@@ -2019,7 +2020,7 @@
             <button class="nav-btn" onclick="openHistoryModal()">📜 Histórico</button>
             <button class="nav-btn" onclick="toggleNotes()">📝 Bloco de Notas</button>
             <button class="nav-btn btn-backup-nav" onclick="openBackupModal()">💾 Backup</button>
-            <button class="nav-btn btn-backup-nav" onclick="openTestModal()" style="background: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%);">🧪 Testes</button>
+            <!-- REMOVIDO: Botão de Testes -->
             <button class="nav-btn" onclick="openSettingsModal()">⚙️ Configurações</button>
             <button class="nav-btn exit" onclick="logout()">🚪 Sair</button>
             <div class="nav-notification" style="display: inline-block; position: relative; margin-left: 10px; cursor: pointer; vertical-align: middle;">
@@ -2231,7 +2232,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
-                <button type="button" class="btn btn-save" onclick="saveTransaction()">Salvar</button>
+                <button type="button" class="btn btn-save" id="btnSaveTransaction" onclick="saveTransaction()">Salvar</button>
             </div>
         </div>
     </div>
@@ -2249,7 +2250,6 @@
                     <label class="form-label-modal">Data do Pagamento</label>
                     <input type="date" class="form-input-modal" id="paymentDate" required>
                 </div>
-                <!-- ✅ CORREÇÃO: Tag div aberta corretamente -->
                 <div class="form-row">
                     <label class="form-label-modal">Valor Pago (R$)</label>
                     <input type="number" class="form-input-modal" id="paymentAmount" step="0.01" placeholder="0,00">
@@ -2569,17 +2569,7 @@
                     </div>
                 </div>
 
-                <!-- Reset Total -->
-                <div class="danger-zone">
-                    <div class="danger-title">⚠️ Zona de Perigo</div>
-                    <div class="danger-text">
-                        Atenção! Esta ação apagará PERMANENTEMENTE todas as transações e compromissos. 
-                        Não poderá ser desfeita.
-                    </div>
-                    <button class="btn-danger-full" onclick="confirmResetAll()">
-                        🗑️ RESETAR TODOS OS DADOS
-                    </button>
-                </div>
+                <!-- REMOVIDO: Zona de Perigo do modal de configurações -->
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-cancel" onclick="closeSettingsModal()">Cancelar</button>
@@ -3910,58 +3900,125 @@
             editingId = null;
         }
 
+        // ==========================================
+        // FUNÇÃO SAVE TRANSACTION - VERSÃO CORRIGIDA
+        // ==========================================
+
         async function saveTransaction() {
-            const partitionId = parseInt(document.getElementById('partitionId').value);
-            const sectionId = parseInt(document.getElementById('sectionId').value);
-            const mapping = sectionMapping[sectionId];
+            const btnSave = document.getElementById('btnSaveTransaction');
+            const originalText = btnSave.textContent;
             
-            const description = document.getElementById('description').value;
-            const amount = parseFloat(document.getElementById('amount').value);
-            const dueDate = document.getElementById('dueDate').value;
-            const status = document.getElementById('status').value;
-            const totalInstallments = parseInt(document.getElementById('installments').value) || 1;
-            const autoRenew = document.getElementById('autoRenew').checked;
+            try {
+                // Desabilita o botão para evitar cliques duplos
+                btnSave.disabled = true;
+                btnSave.textContent = '💾 Salvando...';
 
-            if (!description || !amount || !dueDate) {
-                showNotification('Preencha todos os campos!', 'error');
-                return;
+                const partitionId = parseInt(document.getElementById('partitionId').value);
+                const sectionId = parseInt(document.getElementById('sectionId').value);
+                const mapping = sectionMapping[sectionId];
+                
+                const description = document.getElementById('description').value.trim();
+                const amount = parseFloat(document.getElementById('amount').value);
+                const dueDate = document.getElementById('dueDate').value;
+                const status = document.getElementById('status').value;
+                const totalInstallments = parseInt(document.getElementById('installments').value) || 1;
+                const autoRenew = document.getElementById('autoRenew').checked;
+
+                // Validações
+                if (!description) {
+                    throw new Error('Digite uma descrição para a transação');
+                }
+                if (isNaN(amount) || amount <= 0) {
+                    throw new Error('Digite um valor válido maior que zero');
+                }
+                if (!dueDate) {
+                    throw new Error('Selecione uma data de vencimento');
+                }
+
+                const dateObj = new Date(dueDate);
+                const baseTransaction = {
+                    type: mapping.type,
+                    category: mapping.category,
+                    partition_id: partitionId,
+                    description: description,
+                    amount: amount,
+                    year: dateObj.getFullYear(),
+                    month: dateObj.getMonth() + 1,
+                    due_day: dateObj.getDate(),
+                    due_date: dueDate,
+                    status: status,
+                    total_installments: totalInstallments,
+                    installment_number: 1,
+                    auto_renew: autoRenew,
+                    is_fixed: mapping.category === 'fixed'
+                };
+
+                if (editingId) {
+                    // Modo edição - atualiza transação existente
+                    await monitorar('saveTransaction_update', async () => {
+                        const result = await updateTransaction(editingId, baseTransaction);
+                        if (!result) throw new Error('Falha ao atualizar transação');
+                        return result;
+                    });
+                    
+                    showNotification('✅ Transação atualizada com sucesso!');
+                } else {
+                    // Modo criação - insere nova transação
+                    await monitorar('saveTransaction_insert', async () => {
+                        // Se for parcelado, cria todas as parcelas
+                        if (mapping.category === 'installment' && totalInstallments > 1) {
+                            for (let i = 1; i <= totalInstallments; i++) {
+                                const parcelDate = new Date(dateObj);
+                                parcelDate.setMonth(parcelDate.getMonth() + (i - 1));
+                                
+                                const parcelTransaction = {
+                                    ...baseTransaction,
+                                    description: `${description} (${i}/${totalInstallments})`,
+                                    year: parcelDate.getFullYear(),
+                                    month: parcelDate.getMonth() + 1,
+                                    due_day: parcelDate.getDate(),
+                                    due_date: parcelDate.toISOString().split('T')[0],
+                                    installment_number: i,
+                                    status: i === 1 ? status : 'pending' // Primeira parcela com status selecionado, restantes pendentes
+                                };
+                                
+                                const result = await insertTransaction(parcelTransaction);
+                                if (!result) throw new Error(`Falha ao criar parcela ${i}/${totalInstallments}`);
+                            }
+                        } else {
+                            // Transação única
+                            const result = await insertTransaction(baseTransaction);
+                            if (!result) throw new Error('Falha ao criar transação');
+                        }
+                    });
+                    
+                    showNotification('✅ Transação adicionada com sucesso!');
+                }
+
+                closeModal();
+                await loadAllData();
+                
+            } catch (error) {
+                console.error('Erro ao salvar transação:', error);
+                showNotification('❌ ' + error.message, 'error');
+            } finally {
+                // Reabilita o botão
+                btnSave.disabled = false;
+                btnSave.textContent = originalText;
             }
-
-            const dateObj = new Date(dueDate);
-            const transactionData = {
-                type: mapping.type,
-                category: mapping.category,
-                partition_id: partitionId,
-                description: description,
-                amount: amount,
-                year: dateObj.getFullYear(),
-                month: dateObj.getMonth() + 1,
-                due_day: dateObj.getDate(),
-                due_date: dueDate,
-                status: status,
-                total_installments: totalInstallments,
-                installment_number: 1,
-                auto_renew: autoRenew,
-                is_fixed: mapping.category === 'fixed'
-            };
-
-            if (editingId) {
-                await updateTransaction(editingId, transactionData);
-                showNotification('Transação atualizada!');
-            } else {
-                await insertTransaction(transactionData);
-                showNotification('Transação adicionada!');
-            }
-
-            closeModal();
-            await loadAllData();
         }
 
         async function deleteTransactionHandler(id) {
             if (confirm('Tem certeza que deseja excluir esta transação?')) {
-                await deleteTransaction(id);
-                await loadAllData();
-                showNotification('Transação excluída!');
+                try {
+                    await monitorar('deleteTransaction', async () => {
+                        await deleteTransaction(id);
+                    });
+                    await loadAllData();
+                    showNotification('🗑️ Transação excluída!');
+                } catch (error) {
+                    showNotification('❌ Erro ao excluir: ' + error.message, 'error');
+                }
             }
         }
 
@@ -4857,17 +4914,8 @@ Isso substituirá os dados atuais!`)) {
             }
         }
 
-        function confirmResetAll() {
-            const confirmation = prompt('Digite RESETAR para confirmar:');
-            if (confirmation === 'RESETAR') {
-                localData = { transactions: [], notebooks: [], notes: [], appointments: [], paymentHistory: [] };
-                saveToLocalStorage();
-                loadAllData();
-                renderNotebooks();
-                showNotification('Todos os dados foram apagados!', 'error');
-                closeSettingsModal();
-            }
-        }
+        // REMOVIDO: Função confirmResetAll() da interface, mantida apenas para compatibilidade
+        // Se precisar resetar, use o console com: confirmResetAll()
 
         // ==========================================
         // CALCULADORA
@@ -5028,7 +5076,6 @@ Isso substituirá os dados atuais!`)) {
         window.forceSync = forceSync;
         window.closeSettingsModal = closeSettingsModal;
         window.validatePassword = validatePassword;
-        window.confirmResetAll = confirmResetAll;
         window.closeCalculator = closeCalculator;
         window.appendCalc = appendCalc;
         window.clearCalc = clearCalc;
@@ -5062,138 +5109,6 @@ Isso substituirá os dados atuais!`)) {
 
         // Inicializar ao carregar
         window.addEventListener('DOMContentLoaded', initSupabase);
- </script>
-     <!-- ===================== MODAL DE TESTES ===================== -->
-    <div class="modal" id="testModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">🧪 Área de Testes</h3>
-                <button class="close-btn" onclick="closeTestModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <div style="margin-bottom: 1.5rem;">
-                    <h4 style="color: var(--blue-royal); margin-bottom: 0.5rem;">📊 Gerar Dados de Teste</h4>
-                    <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">
-                        Insere transações de exemplo para testar o sistema.
-                    </p>
-                    <button class="btn btn-save" onclick="fillTestData()" style="width: 100%;">
-                        🎲 Gerar Dados Aleatórios
-                    </button>
-                </div>
-                
-                <div style="border-top: 2px solid #e5e7eb; padding-top: 1.5rem;">
-                    <h4 style="color: var(--danger); margin-bottom: 0.5rem;">⚠️ Zona de Perigo</h4>
-                    <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">
-                        Apaga TODOS os dados permanentemente (Supabase + Local).
-                    </p>
-                    <button class="btn-danger-full" onclick="confirmResetAll()" style="width: 100%;">
-                        🗑️ RESETAR TODOS OS DADOS
-                    </button>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-cancel" onclick="closeTestModal()">Fechar</button>
-            </div>
-        </div>
-    </div>
-    <!-- ===================== FIM DO MODAL ===================== -->
-
+    </script>
 </body>
 </html>
-
-<script>
-// ==========================================
-// FUNÇÕES DE TESTES E RESET - CORRIGIDAS
-// ==========================================
-
-function openTestModal() {
-    document.getElementById('testModal').classList.add('active');
-}
-
-function closeTestModal() {
-    document.getElementById('testModal').classList.remove('active');
-}
-
-async function fillTestData() {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth() + 1;
-    
-    const testTransactions = [
-        { type: 'income', category: 'income', partition_id: 1, description: 'Salário Teste', amount: 5000, status: 'received' },
-        { type: 'expense_fixed', category: 'fixed', partition_id: 1, description: 'Aluguel Teste', amount: 1200, status: 'pending' },
-        { type: 'expense_variable', category: 'variable', partition_id: 1, description: 'Mercado Teste', amount: 800, status: 'pending' },
-        { type: 'expense_installment', category: 'installment', partition_id: 2, description: 'TV Parcelada', amount: 300, total_installments: 10, status: 'pending' },
-        { type: 'income', category: 'income', partition_id: 2, description: 'Freela Teste', amount: 1500, status: 'pending' }
-    ];
-    
-    for (const t of testTransactions) {
-        const dueDate = new Date(year, month - 1, Math.floor(Math.random() * 28) + 1);
-        await insertTransaction({
-            ...t,
-            year: year,
-            month: month,
-            due_day: dueDate.getDate(),
-            due_date: dueDate.toISOString().split('T')[0],
-            installment_number: 1,
-            auto_renew: false,
-            is_fixed: t.category === 'fixed'
-        });
-    }
-    
-    await loadAllData();
-    showNotification('Dados de teste inseridos!');
-    closeTestModal();
-}
-
-async function confirmResetAll() {
-    const confirmation = prompt('⚠️ ATENÇÃO! Isso apagará TODOS os dados permanentemente.\n\nDigite RESETAR para confirmar:');
-    
-    if (confirmation !== 'RESETAR') {
-        if (confirmation !== null) {
-            showNotification('Reset cancelado. Texto digitado não corresponde.', 'error');
-        }
-        return;
-    }
-
-    showNotification('Iniciando reset completo...', 'warning');
-    
-    try {
-        // Limpar Supabase se online
-        if (isOnline && supabaseClient && currentUser) {
-            updateConnectionStatus('syncing');
-            
-            await supabaseClient
-                .from('transactions')
-                .delete()
-                .eq('user_id', currentUser.id);
-            
-            await supabaseClient
-                .from('payment_history')
-                .delete()
-                .eq('user_id', currentUser.id);
-        }
-        
-        // Limpar local
-        localData = { transactions: [], notebooks: [], notes: [], appointments: [], paymentHistory: [] };
-        localStorage.removeItem('fpl_localData');
-        localStorage.removeItem('fpl_lastSync');
-        
-        await loadAllData();
-        renderNotebooks();
-        closeSettingsModal();
-        closeTestModal();
-        
-        updateConnectionStatus('online');
-        showNotification('🗑️ Todos os dados foram apagados!', 'error');
-        
-    } catch (error) {
-        showNotification('Erro durante reset: ' + error.message, 'error');
-        updateConnectionStatus('offline');
-    }
-}
-
-window.openTestModal = openTestModal;
-window.closeTestModal = closeTestModal;
-window.fillTestData = fillTestData;
-window.confirmResetAll = confirmResetAll;
-</script>

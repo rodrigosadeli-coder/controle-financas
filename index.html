@@ -1,5 +1,3 @@
-<!-- SUBSTITUA O ARQUIVO index.html COMPLETO POR ESTE CÓDIGO: -->
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2020,7 +2018,6 @@
             <button class="nav-btn" onclick="openHistoryModal()">📜 Histórico</button>
             <button class="nav-btn" onclick="toggleNotes()">📝 Bloco de Notas</button>
             <button class="nav-btn btn-backup-nav" onclick="openBackupModal()">💾 Backup</button>
-            <!-- REMOVIDO: Botão de Testes -->
             <button class="nav-btn" onclick="openSettingsModal()">⚙️ Configurações</button>
             <button class="nav-btn exit" onclick="logout()">🚪 Sair</button>
             <div class="nav-notification" style="display: inline-block; position: relative; margin-left: 10px; cursor: pointer; vertical-align: middle;">
@@ -2568,8 +2565,6 @@
                         <input type="text" class="form-input-modal" id="settingsName" placeholder="Seu nome completo">
                     </div>
                 </div>
-
-                <!-- REMOVIDO: Zona de Perigo do modal de configurações -->
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-cancel" onclick="closeSettingsModal()">Cancelar</button>
@@ -3092,17 +3087,21 @@
         }
 
         // ==========================================
-        // OPERAÇÕES CRUD COM SUPABASE - VERSÃO CORRIGIDA E OTIMIZADA
+        // OPERAÇÕES CRUD COM SUPABASE - VERSÃO CORRIGIDA E OTIMIZADA (OFFLINE-FIRST)
         // ==========================================
 
         async function fetchTransactions(year, month) {
             if (!currentUser) return [];
             
+            // Sempre retorna dados locais primeiro (offline-first)
+            const localTransactions = localData.transactions.filter(t => {
+                const tDate = new Date(t.due_date);
+                return tDate.getFullYear() === year && tDate.getMonth() === month - 1;
+            });
+
             if (!isOnline) {
-                return localData.transactions.filter(t => {
-                    const tDate = new Date(t.due_date);
-                    return tDate.getFullYear() === year && tDate.getMonth() === month - 1;
-                });
+                console.log('📴 Modo offline: retornando', localTransactions.length, 'transações locais');
+                return localTransactions;
             }
 
             try {
@@ -3118,16 +3117,35 @@
 
                 if (error) throw error;
                 
-                localData.transactions = data || [];
+                // Mescla dados do servidor com locais (servidor tem prioridade)
+                const serverIds = new Set((data || []).map(t => t.id));
+                const mergedTransactions = [
+                    ...(data || []),
+                    ...localTransactions.filter(t => !serverIds.has(t.id) && String(t.id).startsWith('local_'))
+                ];
+                
+                // Atualiza localStorage com dados do servidor
+                localData.transactions = localData.transactions.map(t => {
+                    const serverVersion = (data || []).find(st => st.id === t.id);
+                    return serverVersion || t;
+                });
+                
+                // Adiciona novas do servidor que não existem localmente
+                (data || []).forEach(st => {
+                    if (!localData.transactions.find(t => t.id === st.id)) {
+                        localData.transactions.push(st);
+                    }
+                });
+                
                 saveToLocalStorage();
                 
                 updateConnectionStatus('online');
-                return data || [];
+                return mergedTransactions;
                 
             } catch (error) {
                 console.error('Erro ao buscar transações:', error);
                 updateConnectionStatus('offline');
-                return localData.transactions;
+                return localTransactions;
             }
         }
 
@@ -3153,19 +3171,27 @@
                 parent_transaction_id: transaction.parent_transaction_id || null
             };
 
-            if (!isOnline) {
-                const localTransaction = {
-                    ...supabaseData,
-                    id: 'local_' + Date.now(),
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                    _syncPending: true
-                };
-                localData.transactions.push(localTransaction);
-                saveToLocalStorage();
+            // SEMPRE salva localmente primeiro (offline-first)
+            const localId = 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            const localTransaction = {
+                ...supabaseData,
+                id: localId,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                _syncPending: true
+            };
+            
+            localData.transactions.push(localTransaction);
+            saveToLocalStorage();
+            console.log('💾 Transação salva localmente:', localTransaction.id);
+
+            // Se estiver offline, retorna imediatamente
+            if (!isOnline || !supabaseClient) {
+                console.log('📴 Modo offline: transação pendente de sincronização');
                 return localTransaction;
             }
 
+            // Tenta sincronizar com Supabase em background
             try {
                 const { data, error } = await supabaseClient
                     .from('transactions')
@@ -3174,21 +3200,24 @@
                     .single();
 
                 if (error) throw error;
-                return data;
+                
+                // Atualiza o ID local para o ID real do Supabase
+                const index = localData.transactions.findIndex(t => t.id === localId);
+                if (index !== -1 && data) {
+                    localData.transactions[index] = { 
+                        ...data, 
+                        _syncPending: false,
+                        _syncedAt: new Date().toISOString()
+                    };
+                    saveToLocalStorage();
+                    console.log('☁️ Transação sincronizada com Supabase:', data.id);
+                }
+                
+                return data || localTransaction;
                 
             } catch (error) {
-                console.error('Erro ao inserir:', error);
-                showNotification('Erro ao salvar. Modo offline ativado.', 'error');
-                
-                const localTransaction = {
-                    ...supabaseData,
-                    id: 'local_' + Date.now(),
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                    _syncPending: true
-                };
-                localData.transactions.push(localTransaction);
-                saveToLocalStorage();
+                console.error('❌ Erro ao sincronizar com Supabase:', error);
+                // Mantém o localTransaction com _syncPending = true
                 return localTransaction;
             }
         }
@@ -3196,8 +3225,7 @@
         async function updateTransaction(id, updates) {
             if (!currentUser) return null;
 
-            const { _syncPending, ...supabaseUpdates } = updates;
-            
+            // Atualiza localmente IMEDIATAMENTE (offline-first)
             const localIndex = localData.transactions.findIndex(t => t.id === id);
             let localTransaction = null;
             
@@ -3205,22 +3233,25 @@
                 localData.transactions[localIndex] = { 
                     ...localData.transactions[localIndex], 
                     ...updates,
-                    updated_at: new Date().toISOString()
+                    updated_at: new Date().toISOString(),
+                    _syncPending: true
                 };
                 localTransaction = localData.transactions[localIndex];
                 saveToLocalStorage();
+                console.log('💾 Transação atualizada localmente:', id);
+            } else {
+                console.warn('Transação não encontrada localmente:', id);
+                return null;
             }
 
+            // Se estiver offline ou for ID local, retorna imediatamente
             if (!isOnline || String(id).startsWith('local_')) {
-                if (localTransaction) {
-                    localTransaction._syncPending = true;
-                    saveToLocalStorage();
-                }
                 return localTransaction;
             }
 
+            // Tenta sincronizar com Supabase em background
             try {
-                updateConnectionStatus('syncing');
+                const { _syncPending, _syncedAt, ...supabaseUpdates } = updates;
                 
                 const { data, error } = await supabaseClient
                     .from('transactions')
@@ -3234,23 +3265,17 @@
                 if (localIndex !== -1 && data) {
                     localData.transactions[localIndex] = { 
                         ...data, 
-                        _syncPending: false 
+                        _syncPending: false,
+                        _syncedAt: new Date().toISOString()
                     };
                     saveToLocalStorage();
+                    console.log('☁️ Transação sincronizada com Supabase:', id);
                 }
 
-                updateConnectionStatus('online');
                 return data;
                 
             } catch (error) {
-                console.error('Erro ao atualizar:', error);
-                
-                if (localIndex !== -1) {
-                    localData.transactions[localIndex]._syncPending = true;
-                    saveToLocalStorage();
-                }
-                
-                updateConnectionStatus('offline');
+                console.error('❌ Erro ao sincronizar atualização:', error);
                 return localTransaction;
             }
         }
@@ -3258,9 +3283,13 @@
         async function deleteTransaction(id) {
             if (!currentUser) return;
 
+            // Remove localmente IMEDIATAMENTE
+            localData.transactions = localData.transactions.filter(t => t.id !== id);
+            saveToLocalStorage();
+            console.log('🗑️ Transação removida localmente:', id);
+
+            // Se estiver offline ou for ID local, não tenta remover do servidor
             if (!isOnline || String(id).startsWith('local_')) {
-                localData.transactions = localData.transactions.filter(t => t.id !== id);
-                saveToLocalStorage();
                 return;
             }
 
@@ -3271,36 +3300,43 @@
                     .eq('id', id);
 
                 if (error) throw error;
+                console.log('☁️ Transação removida do Supabase:', id);
                 
             } catch (error) {
-                console.error('Erro ao deletar:', error);
-                showNotification('Erro ao excluir', 'error');
+                console.error('❌ Erro ao remover do Supabase:', error);
+                // Marca para remoção posterior
+                localData._pendingDeletions = localData._pendingDeletions || [];
+                localData._pendingDeletions.push(id);
+                saveToLocalStorage();
             }
         }
 
         // ==========================================
-        // REGISTRO DE PAGAMENTOS - VERSÃO COMPLETA E CORRIGIDA
+        // REGISTRO DE PAGAMENTOS - VERSÃO COMPLETA E CORRIGIDA (OFFLINE-FIRST)
         // ==========================================
 
         async function registerPayment(id, paymentData) {
+            // Atualiza localmente IMEDIATAMENTE
             const localIndex = localData.transactions.findIndex(t => t.id === id);
+            
             if (localIndex !== -1) {
                 localData.transactions[localIndex] = { 
                     ...localData.transactions[localIndex], 
-                    ...paymentData 
+                    ...paymentData,
+                    updated_at: new Date().toISOString(),
+                    _syncPending: true
                 };
                 saveToLocalStorage();
+                console.log('💾 Pagamento registrado localmente:', id);
             }
 
+            // Se estiver offline ou for ID local, retorna imediatamente
             if (!isOnline || String(id).startsWith('local_')) {
-                if (localIndex !== -1) {
-                    localData.transactions[localIndex]._syncPending = true;
-                    saveToLocalStorage();
-                }
                 updateConnectionStatus('offline');
                 return localData.transactions[localIndex];
             }
 
+            // Tenta sincronizar com Supabase
             try {
                 updateConnectionStatus('syncing');
                 
@@ -3332,7 +3368,8 @@
                 if (localIndex !== -1 && data) {
                     localData.transactions[localIndex] = { 
                         ...data, 
-                        _syncPending: false 
+                        _syncPending: false,
+                        _syncedAt: new Date().toISOString()
                     };
                     saveToLocalStorage();
                 }
@@ -3341,7 +3378,7 @@
                 return data;
                 
             } catch (error) {
-                console.error('Erro ao registrar pagamento no Supabase:', error);
+                console.error('❌ Erro ao registrar pagamento no Supabase:', error);
                 
                 if (localIndex !== -1) {
                     localData.transactions[localIndex]._syncPending = true;
@@ -3349,8 +3386,6 @@
                 }
                 
                 updateConnectionStatus('offline');
-                showNotification('Modo offline: pagamento salvo localmente', 'warning');
-                
                 return localData.transactions[localIndex];
             }
         }
@@ -3365,16 +3400,16 @@
                 created_at: new Date().toISOString()
             };
 
-            if (!isOnline) {
-                localData.paymentHistory = localData.paymentHistory || [];
-                localData.paymentHistory.push({
-                    ...historyEntry,
-                    id: 'local_hist_' + Date.now(),
-                    _syncPending: true
-                });
-                saveToLocalStorage();
-                return;
-            }
+            // Sempre salva localmente
+            localData.paymentHistory = localData.paymentHistory || [];
+            localData.paymentHistory.push({
+                ...historyEntry,
+                id: 'local_hist_' + Date.now(),
+                _syncPending: true
+            });
+            saveToLocalStorage();
+
+            if (!isOnline) return;
 
             try {
                 const { error } = await supabaseClient
@@ -3383,14 +3418,7 @@
                     
                 if (error) throw error;
             } catch (error) {
-                console.error('Erro ao salvar histórico:', error);
-                localData.paymentHistory = localData.paymentHistory || [];
-                localData.paymentHistory.push({
-                    ...historyEntry,
-                    id: 'local_hist_' + Date.now(),
-                    _syncPending: true
-                });
-                saveToLocalStorage();
+                console.error('Erro ao salvar histórico no Supabase:', error);
             }
         }
 
@@ -3425,7 +3453,7 @@
 
             try {
                 const result = await insertTransaction(newTransaction);
-                console.log(`📦 Parcela ${nextNumber}/${total} criada:`, result);
+                console.log(`📦 Parcela ${nextNumber}/${total} criada:`, result?.id || 'local');
                 return result;
             } catch (error) {
                 console.error('Erro ao criar próxima parcela:', error);
@@ -3470,7 +3498,7 @@
 
             try {
                 const result = await insertTransaction(newTransaction);
-                console.log('🔄 Conta fixa renovada:', result);
+                console.log('🔄 Conta fixa renovada:', result?.id || 'local');
                 showNotification(`Conta fixa renovada para ${nextDueDate.toLocaleDateString('pt-BR')}`);
                 return result;
             } catch (error) {
@@ -3491,40 +3519,70 @@
             updateConnectionStatus('syncing');
             
             try {
+                // 1. Sincroniza transações pendentes
                 const pendingTransactions = localData.transactions.filter(t => t._syncPending);
-                const pendingHistory = (localData.paymentHistory || []).filter(h => h._syncPending);
+                console.log(`🔄 Sincronizando ${pendingTransactions.length} transações pendentes...`);
                 
                 for (const transaction of pendingTransactions) {
-                    const { _syncPending, id, ...data } = transaction;
+                    const { _syncPending, _syncedAt, id, ...data } = transaction;
                     
                     if (String(id).startsWith('local_')) {
-                        const newTransaction = await insertTransaction(data);
-                        if (newTransaction && !String(newTransaction.id).startsWith('local_')) {
-                            localData.transactions = localData.transactions.filter(t => t.id !== id);
+                        // Insere nova transação
+                        const { data: newData, error } = await supabaseClient
+                            .from('transactions')
+                            .insert([data])
+                            .select()
+                            .single();
+                        
+                        if (error) throw error;
+                        
+                        // Atualiza ID local
+                        const index = localData.transactions.findIndex(t => t.id === id);
+                        if (index !== -1 && newData) {
+                            localData.transactions[index] = { 
+                                ...newData, 
+                                _syncPending: false,
+                                _syncedAt: new Date().toISOString()
+                            };
                         }
                     } else {
-                        await updateTransaction(id, data);
+                        // Atualiza transação existente
+                        await supabaseClient
+                            .from('transactions')
+                            .update(data)
+                            .eq('id', id);
+                        
+                        const index = localData.transactions.findIndex(t => t.id === id);
+                        if (index !== -1) {
+                            localData.transactions[index]._syncPending = false;
+                            localData.transactions[index]._syncedAt = new Date().toISOString();
+                        }
                     }
                 }
 
-                for (const historyEntry of pendingHistory) {
-                    const { _syncPending, id, ...data } = historyEntry;
-                    await insertPaymentHistory(data.transaction_id, {
-                        payment_date: data.payment_date,
-                        payment_amount: data.amount,
-                        payment_observation: data.observation
-                    });
+                // 2. Remove transações deletadas
+                if (localData._pendingDeletions) {
+                    for (const id of localData._pendingDeletions) {
+                        if (!String(id).startsWith('local_')) {
+                            await supabaseClient
+                                .from('transactions')
+                                .delete()
+                                .eq('id', id);
+                        }
+                    }
+                    localData._pendingDeletions = [];
                 }
 
+                saveToLocalStorage();
                 await loadAllData();
                 
                 updateConnectionStatus('online');
-                showNotification('Sincronização concluída!');
+                showNotification(`Sincronização concluída! ${pendingTransactions.length} itens sincronizados.`);
                 
             } catch (error) {
                 console.error('Erro na sincronização:', error);
                 updateConnectionStatus('offline');
-                showNotification('Erro na sincronização', 'error');
+                showNotification('Erro na sincronização: ' + error.message, 'error');
             }
         }
 
@@ -3533,16 +3591,36 @@
         // ==========================================
 
         function saveToLocalStorage() {
-            localStorage.setItem('fpl_localData', JSON.stringify(localData));
+            try {
+                localStorage.setItem('fpl_localData_v2', JSON.stringify(localData));
+                console.log('💾 Dados salvos no localStorage');
+            } catch (e) {
+                console.error('Erro ao salvar no localStorage:', e);
+                showNotification('Erro ao salvar dados localmente', 'error');
+            }
         }
 
         function loadFromLocalStorage() {
-            const saved = localStorage.getItem('fpl_localData');
-            if (saved) {
-                localData = JSON.parse(saved);
-                if (!localData.paymentHistory) {
-                    localData.paymentHistory = [];
+            try {
+                const saved = localStorage.getItem('fpl_localData_v2');
+                if (saved) {
+                    localData = JSON.parse(saved);
+                    // Migração de dados antigos se necessário
+                    if (!localData.paymentHistory) localData.paymentHistory = [];
+                    if (!localData._pendingDeletions) localData._pendingDeletions = [];
+                    console.log('📂 Dados carregados do localStorage:', localData.transactions.length, 'transações');
+                } else {
+                    // Tenta carregar versão antiga
+                    const oldSaved = localStorage.getItem('fpl_localData');
+                    if (oldSaved) {
+                        localData = JSON.parse(oldSaved);
+                        if (!localData.paymentHistory) localData.paymentHistory = [];
+                        console.log('📂 Dados migrados da versão antiga');
+                        saveToLocalStorage(); // Salva na nova versão
+                    }
                 }
+            } catch (e) {
+                console.error('Erro ao carregar do localStorage:', e);
             }
         }
 
@@ -3596,6 +3674,12 @@
             checkAlerts();
             setInterval(checkAlerts, 60000);
             setupBackupDragAndDrop();
+            
+            // Tenta sincronizar se estiver online
+            if (isOnline && localData.transactions.some(t => t._syncPending)) {
+                console.log('🔄 Transações pendentes detectadas, iniciando sincronização...');
+                setTimeout(forceSync, 2000);
+            }
         }
 
         function updateDateTime() {
@@ -3696,14 +3780,16 @@
                 
                 container.innerHTML = '<div class="empty-state">Carregando...</div>';
                 
-                const transactions = await fetchTransactions(year, month);
-                
-                const sectionTransactions = transactions.filter(t => 
-                    t.partition_id === partition && 
-                    t.category === mapping.category
-                );
+                // Usa dados locais para resposta imediata
+                const transactions = localData.transactions.filter(t => {
+                    const tDate = new Date(t.due_date);
+                    return tDate.getFullYear() === year && 
+                           tDate.getMonth() === month - 1 &&
+                           t.partition_id === partition && 
+                           t.category === mapping.category;
+                });
 
-                if (sectionTransactions.length === 0) {
+                if (transactions.length === 0) {
                     container.innerHTML = `
                         <div class="empty-state">
                             <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
@@ -3716,7 +3802,7 @@
                 let html = '';
                 let total = 0;
 
-                sectionTransactions.forEach(t => {
+                transactions.forEach(t => {
                     const isPaid = t.status === 'paid' || t.status === 'received';
                     const isIncome = t.type === 'income';
                     const amountClass = isIncome ? 'positive' : (isPaid ? 'positive' : 'negative');
@@ -3736,6 +3822,7 @@
                                         <span>📅 ${formatDate(t.due_date)}</span>
                                         ${t.total_installments > 1 ? `<span>📊 ${t.installment_number}/${t.total_installments}</span>` : ''}
                                         ${isPaid ? '<span class="badge badge-success">✓ Pago</span>' : '<span class="badge badge-warning">⏳ Pendente</span>'}
+                                        ${t._syncPending ? '<span class="badge badge-warning" title="Pendente de sincronização">☁️</span>' : ''}
                                     </div>
                                     ${t.payment_observation ? `<div style="font-size: 0.85rem; color: #059669; margin-top: 0.25rem;">📝 ${t.payment_observation}</div>` : ''}
                                 </div>
@@ -3799,7 +3886,12 @@
         async function updateDashboard() {
             const year = currentMonth.getFullYear();
             const month = currentMonth.getMonth() + 1;
-            const transactions = await fetchTransactions(year, month);
+            
+            // Usa dados locais para resposta imediata
+            const transactions = localData.transactions.filter(t => {
+                const tDate = new Date(t.due_date);
+                return tDate.getFullYear() === year && tDate.getMonth() === month - 1;
+            });
 
             let income = 0, expenses = 0, pending = 0;
 
@@ -3826,7 +3918,7 @@
         }
 
         // ==========================================
-        // MODAIS E FORMULÁRIOS
+        // MODAIS E FORMULÁRIOS - VERSÃO CORRIGIDA
         // ==========================================
 
         function openAddModal(partition) {
@@ -3855,12 +3947,12 @@
         }
 
         async function openEditModal(transactionId) {
-            const year = currentMonth.getFullYear();
-            const month = currentMonth.getMonth() + 1;
-            const transactions = await fetchTransactions(year, month);
-            const t = transactions.find(tr => tr.id === transactionId);
+            const t = localData.transactions.find(tr => tr.id === transactionId);
             
-            if (!t) return;
+            if (!t) {
+                showNotification('Transação não encontrada', 'error');
+                return;
+            }
 
             editingId = transactionId;
             document.getElementById('transactionId').value = t.id;
@@ -3901,7 +3993,7 @@
         }
 
         // ==========================================
-        // FUNÇÃO SAVE TRANSACTION - VERSÃO CORRIGIDA
+        // FUNÇÃO SAVE TRANSACTION - VERSÃO CORRIGIDA E ROBUSTA
         // ==========================================
 
         async function saveTransaction() {
@@ -3913,18 +4005,37 @@
                 btnSave.disabled = true;
                 btnSave.textContent = '💾 Salvando...';
 
-                const partitionId = parseInt(document.getElementById('partitionId').value);
-                const sectionId = parseInt(document.getElementById('sectionId').value);
+                // Obtém valores do formulário com validação defensiva
+                const partitionIdEl = document.getElementById('partitionId');
+                const sectionIdEl = document.getElementById('sectionId');
+                const descriptionEl = document.getElementById('description');
+                const amountEl = document.getElementById('amount');
+                const dueDateEl = document.getElementById('dueDate');
+                const statusEl = document.getElementById('status');
+                const installmentsEl = document.getElementById('installments');
+                const autoRenewEl = document.getElementById('autoRenew');
+                
+                // Validação de elementos
+                if (!partitionIdEl || !sectionIdEl || !descriptionEl || !amountEl || !dueDateEl || !statusEl) {
+                    throw new Error('Elementos do formulário não encontrados. Recarregue a página.');
+                }
+
+                const partitionId = parseInt(partitionIdEl.value);
+                const sectionId = parseInt(sectionIdEl.value);
                 const mapping = sectionMapping[sectionId];
                 
-                const description = document.getElementById('description').value.trim();
-                const amount = parseFloat(document.getElementById('amount').value);
-                const dueDate = document.getElementById('dueDate').value;
-                const status = document.getElementById('status').value;
-                const totalInstallments = parseInt(document.getElementById('installments').value) || 1;
-                const autoRenew = document.getElementById('autoRenew').checked;
+                if (!mapping) {
+                    throw new Error('Mapeamento de seção não encontrado');
+                }
 
-                // Validações
+                const description = descriptionEl.value.trim();
+                const amount = parseFloat(amountEl.value);
+                const dueDate = dueDateEl.value;
+                const status = statusEl.value;
+                const totalInstallments = parseInt(installmentsEl?.value) || 1;
+                const autoRenew = autoRenewEl?.checked || false;
+
+                // Validações de negócio
                 if (!description) {
                     throw new Error('Digite uma descrição para a transação');
                 }
@@ -3936,6 +4047,10 @@
                 }
 
                 const dateObj = new Date(dueDate);
+                if (isNaN(dateObj.getTime())) {
+                    throw new Error('Data de vencimento inválida');
+                }
+
                 const baseTransaction = {
                     type: mapping.type,
                     category: mapping.category,
@@ -3954,7 +4069,8 @@
                 };
 
                 if (editingId) {
-                    // Modo edição - atualiza transação existente
+                    // Modo edição
+                    console.log('✏️ Editando transação:', editingId);
                     await monitorar('saveTransaction_update', async () => {
                         const result = await updateTransaction(editingId, baseTransaction);
                         if (!result) throw new Error('Falha ao atualizar transação');
@@ -3963,10 +4079,14 @@
                     
                     showNotification('✅ Transação atualizada com sucesso!');
                 } else {
-                    // Modo criação - insere nova transação
+                    // Modo criação com suporte a parcelas
+                    console.log('➕ Criando nova transação:', baseTransaction);
+                    
                     await monitorar('saveTransaction_insert', async () => {
-                        // Se for parcelado, cria todas as parcelas
                         if (mapping.category === 'installment' && totalInstallments > 1) {
+                            console.log(`📦 Criando ${totalInstallments} parcelas...`);
+                            
+                            // Cria todas as parcelas sequencialmente
                             for (let i = 1; i <= totalInstallments; i++) {
                                 const parcelDate = new Date(dateObj);
                                 parcelDate.setMonth(parcelDate.getMonth() + (i - 1));
@@ -3979,16 +4099,26 @@
                                     due_day: parcelDate.getDate(),
                                     due_date: parcelDate.toISOString().split('T')[0],
                                     installment_number: i,
-                                    status: i === 1 ? status : 'pending' // Primeira parcela com status selecionado, restantes pendentes
+                                    status: i === 1 ? status : 'pending'
                                 };
                                 
+                                console.log(`  Parcela ${i}/${totalInstallments}:`, parcelTransaction.due_date);
                                 const result = await insertTransaction(parcelTransaction);
-                                if (!result) throw new Error(`Falha ao criar parcela ${i}/${totalInstallments}`);
+                                
+                                if (!result) {
+                                    throw new Error(`Falha ao criar parcela ${i}/${totalInstallments}`);
+                                }
                             }
+                            
+                            console.log('✅ Todas as parcelas criadas com sucesso');
                         } else {
                             // Transação única
+                            console.log('Criando transação única...');
                             const result = await insertTransaction(baseTransaction);
-                            if (!result) throw new Error('Falha ao criar transação');
+                            
+                            if (!result) {
+                                throw new Error('Falha ao criar transação');
+                            }
                         }
                     });
                     
@@ -3996,13 +4126,23 @@
                 }
 
                 closeModal();
+                
+                // Recarrega dados e atualiza UI
+                console.log('🔄 Recarregando dados...');
                 await loadAllData();
                 
+                // Reabre a partição para mostrar a nova transação
+                if (!openPartitions[partitionId]) {
+                    togglePartition(partitionId);
+                } else {
+                    await renderPartitionContent(partitionId);
+                }
+                
             } catch (error) {
-                console.error('Erro ao salvar transação:', error);
+                console.error('❌ Erro ao salvar transação:', error);
                 showNotification('❌ ' + error.message, 'error');
             } finally {
-                // Reabilita o botão
+                // Reabilita o botão independente do resultado
                 btnSave.disabled = false;
                 btnSave.textContent = originalText;
             }
@@ -4014,6 +4154,8 @@
                     await monitorar('deleteTransaction', async () => {
                         await deleteTransaction(id);
                     });
+                    
+                    // Atualiza UI imediatamente
                     await loadAllData();
                     showNotification('🗑️ Transação excluída!');
                 } catch (error) {
@@ -4023,9 +4165,16 @@
         }
 
         function openPaymentModal(transactionId) {
+            const t = localData.transactions.find(tr => tr.id === transactionId);
+            if (!t) {
+                showNotification('Transação não encontrada', 'error');
+                return;
+            }
+            
             document.getElementById('paymentTransactionId').value = transactionId;
             document.getElementById('paymentDate').valueAsDate = new Date();
-            document.getElementById('paymentAmount').value = '';
+            document.getElementById('paymentAmount').value = t.amount;
+            document.getElementById('paymentObs').value = '';
             document.getElementById('paymentModal').classList.add('active');
         }
 
@@ -4093,14 +4242,14 @@
             saveBtn.disabled = true;
 
             try {
-                // 1. Registrar pagamento na transação (ATUALIZA SUPABASE)
+                // 1. Registrar pagamento na transação (ATUALIZA SUPABASE E LOCAL)
                 const result = await registerPayment(transactionId, paymentData);
                 
                 if (!result) {
                     throw new Error('Falha ao registrar pagamento');
                 }
 
-                // 2. Salvar no histórico de pagamentos (ATUALIZA SUPABASE)
+                // 2. Salvar no histórico de pagamentos
                 await insertPaymentHistory(transactionId, paymentData);
 
                 // 3. Se for parcelada e não for a última, criar próxima parcela
@@ -4234,38 +4383,16 @@
             const dateEnd = document.getElementById('filterDateEnd').value;
             const search = document.getElementById('filterSearch').value.toLowerCase();
 
-            let transactions = [];
-            
-            if (isOnline) {
-                try {
-                    let query = supabaseClient
-                        .from('transactions')
-                        .select('*')
-                        .eq('user_id', currentUser.id)
-                        .order('due_date', { ascending: false });
-                    
-                    if (partition) query = query.eq('partition_id', parseInt(partition));
-                    if (category) query = query.eq('category', category);
-                    if (type) query = query.eq('type', type === 'expense' ? 'expense_fixed' : 'income');
-                    if (status) query = query.eq('status', status);
-                    if (dateStart) query = query.gte('due_date', dateStart);
-                    if (dateEnd) query = query.lte('due_date', dateEnd);
-                    
-                    const { data, error } = await query;
-                    if (error) throw error;
-                    transactions = data || [];
-                } catch (e) {
-                    transactions = localData.transactions;
-                }
-            } else {
-                transactions = localData.transactions;
-            }
+            // Usa dados locais para resposta imediata
+            let transactions = [...localData.transactions];
 
-            if (search) {
-                transactions = transactions.filter(t => 
-                    t.description.toLowerCase().includes(search)
-                );
-            }
+            if (partition) transactions = transactions.filter(t => t.partition_id === parseInt(partition));
+            if (category) transactions = transactions.filter(t => t.category === category);
+            if (type) transactions = transactions.filter(t => t.type.startsWith(type));
+            if (status) transactions = transactions.filter(t => t.status === status);
+            if (dateStart) transactions = transactions.filter(t => t.due_date >= dateStart);
+            if (dateEnd) transactions = transactions.filter(t => t.due_date <= dateEnd);
+            if (search) transactions = transactions.filter(t => t.description.toLowerCase().includes(search));
 
             let html = '';
             transactions.forEach(t => {
@@ -4772,7 +4899,7 @@
 
         function exportBackup() {
             const backupData = {
-                version: '2.0-supabase',
+                version: '2.1-offline-first',
                 exportDate: new Date().toISOString(),
                 user_id: currentUser.id,
                 localData: localData
@@ -4832,6 +4959,7 @@
 Isso substituirá os dados atuais!`)) {
                         localData = backup.localData || backup;
                         if (!localData.paymentHistory) localData.paymentHistory = [];
+                        if (!localData._pendingDeletions) localData._pendingDeletions = [];
                         saveToLocalStorage();
                         loadAllData();
                         renderNotebooks();
@@ -4913,9 +5041,6 @@ Isso substituirá os dados atuais!`)) {
                 showNotification(error.message, 'error');
             }
         }
-
-        // REMOVIDO: Função confirmResetAll() da interface, mantida apenas para compatibilidade
-        // Se precisar resetar, use o console com: confirmResetAll()
 
         // ==========================================
         // CALCULADORA

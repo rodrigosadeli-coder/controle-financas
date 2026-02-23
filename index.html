@@ -77,20 +77,18 @@
             font-family: 'Cinzel', serif;
         }
 
-        /* Connection Status */
+        /* Connection Status - AGORA FIXO NO HEADER */
         .connection-status {
-            position: fixed;
-            top: 1rem;
-            left: 1rem;
+            position: static;
             padding: 0.5rem 1rem;
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
-            z-index: 3000;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
             transition: all 0.3s;
+            margin-left: 1rem;
         }
 
         .connection-status.online {
@@ -307,6 +305,9 @@
         .header-right {
             font-size: 14px;
             opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .dev-badge {
@@ -2048,12 +2049,6 @@
         <div class="loading-text">Conectando ao Supabase...</div>
     </div>
 
-    <!-- Connection Status -->
-    <div class="connection-status offline" id="connectionStatus">
-        <span id="connectionIcon">⚠️</span>
-        <span id="connectionText">Offline</span>
-    </div>
-
     <!-- Tela de Login -->
     <div class="login-screen" id="loginScreen">
         <div class="coat-of-arms">
@@ -2120,8 +2115,13 @@
                 <span class="welcome-text">Bem-vindo, <span id="userNameDisplay">Usuário</span></span>
                 <span class="dev-badge" id="devBadge" style="display: none;">DEV</span>
             </div>
-            <div class="header-right" id="datetimeDisplay">
-                Carregando...
+            <div class="header-right">
+                <span id="datetimeDisplay">Carregando...</span>
+                <!-- Connection Status movido para dentro do header-right -->
+                <div class="connection-status offline" id="connectionStatus">
+                    <span id="connectionIcon">⚠️</span>
+                    <span id="connectionText">Offline</span>
+                </div>
             </div>
         </header>
 
@@ -2325,7 +2325,7 @@
 
                     <div class="form-row" id="installmentFields" style="display:none;">
                         <label class="form-label-modal">Número de Parcelas</label>
-                        <input type="number" class="form-input-modal" id="installments" min="1" max="24" value="1">
+                        <input type="number" class="form-input-modal" id="installments" min="1" max="50" value="1">
                     </div>
 
                     <div class="form-row">
@@ -2345,7 +2345,7 @@
                     <div class="form-row" id="autoRenewField" style="display:none;">
                         <div class="checkbox-group">
                             <input type="checkbox" id="autoRenew">
-                            <label for="autoRenew">🔄 Renovação automática mensal</label>
+                            <label for="autoRenew">🔄 Renovação automática mensal (6 meses)</label>
                         </div>
                     </div>
                 </form>
@@ -3586,49 +3586,56 @@
             }
         }
 
+        // ==========================================
+        // RENOVAÇÃO AUTOMÁTICA - CORRIGIDA PARA 6 MESES
+        // ==========================================
+
         async function createNextMonthFixed(currentTransaction) {
-            const currentDueDate = new Date(currentTransaction.due_date);
-            const nextDueDate = new Date(currentDueDate);
-            nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+            // Criar 6 meses à frente
+            for (let i = 1; i <= 6; i++) {
+                const currentDueDate = new Date(currentTransaction.due_date);
+                const nextDueDate = new Date(currentDueDate);
+                nextDueDate.setMonth(nextDueDate.getMonth() + i);
 
-            const exists = localData.transactions.some(t => 
-                t.description === currentTransaction.description &&
-                t.year === nextDueDate.getFullYear() &&
-                t.month === nextDueDate.getMonth() + 1 &&
-                t.partition_id === currentTransaction.partition_id
-            );
+                const exists = localData.transactions.some(t => 
+                    t.description === currentTransaction.description &&
+                    t.year === nextDueDate.getFullYear() &&
+                    t.month === nextDueDate.getMonth() + 1 &&
+                    t.partition_id === currentTransaction.partition_id
+                );
 
-            if (exists) {
-                console.log('Transação fixa já existe para o próximo mês');
-                return;
+                if (exists) {
+                    console.log(`Transação fixa já existe para ${nextDueDate.toLocaleDateString('pt-BR')}`);
+                    continue;
+                }
+
+                const newTransaction = {
+                    user_id: currentUser.id,
+                    type: currentTransaction.type,
+                    category: currentTransaction.category,
+                    partition_id: currentTransaction.partition_id,
+                    description: currentTransaction.description,
+                    amount: currentTransaction.amount,
+                    year: nextDueDate.getFullYear(),
+                    month: nextDueDate.getMonth() + 1,
+                    due_day: Math.min(currentTransaction.due_day, 28),
+                    due_date: nextDueDate.toISOString().split('T')[0],
+                    status: 'pending',
+                    total_installments: 1,
+                    installment_number: 1,
+                    auto_renew: true,
+                    is_fixed: true
+                };
+
+                try {
+                    const result = await insertTransaction(newTransaction);
+                    console.log(`🔄 Conta fixa renovada para ${nextDueDate.toLocaleDateString('pt-BR')}:`, result?.id || 'local');
+                } catch (error) {
+                    console.error('Erro ao renovar conta fixa:', error);
+                }
             }
-
-            const newTransaction = {
-                user_id: currentUser.id,
-                type: currentTransaction.type,
-                category: currentTransaction.category,
-                partition_id: currentTransaction.partition_id,
-                description: currentTransaction.description,
-                amount: currentTransaction.amount,
-                year: nextDueDate.getFullYear(),
-                month: nextDueDate.getMonth() + 1,
-                due_day: Math.min(currentTransaction.due_day, 28),
-                due_date: nextDueDate.toISOString().split('T')[0],
-                status: 'pending',
-                total_installments: 1,
-                installment_number: 1,
-                auto_renew: true,
-                is_fixed: true
-            };
-
-            try {
-                const result = await insertTransaction(newTransaction);
-                console.log('🔄 Conta fixa renovada:', result?.id || 'local');
-                showNotification(`Conta fixa renovada para ${nextDueDate.toLocaleDateString('pt-BR')}`);
-                return result;
-            } catch (error) {
-                console.error('Erro ao renovar conta fixa:', error);
-            }
+            
+            showNotification('Conta fixa renovada para os próximos 6 meses!');
         }
 
         // ==========================================
@@ -3931,6 +3938,9 @@
                         total += parseFloat(t.amount);
                     }
 
+                    // CORREÇÃO: Badge de sincronização só aparece se realmente pendente
+                    const syncBadge = t._syncPending && !isOnline ? '<span class="badge badge-warning" title="Pendente de sincronização">☁️</span>' : '';
+
                     html += `
                         <div class="expense-item ${itemClass}">
                             ${mapping.category === 'installment' ? renderInstallmentSummary(t) : ''}
@@ -3941,7 +3951,7 @@
                                         <span>📅 ${formatDate(t.due_date)}</span>
                                         ${t.total_installments > 1 ? `<span>📊 ${t.installment_number}/${t.total_installments}</span>` : ''}
                                         ${isPaid ? '<span class="badge badge-success">✓ Pago</span>' : '<span class="badge badge-warning">⏳ Pendente</span>'}
-                                        ${t._syncPending ? '<span class="badge badge-warning" title="Pendente de sincronização">☁️</span>' : ''}
+                                        ${syncBadge}
                                     </div>
                                     ${t.payment_observation ? `<div style="font-size: 0.85rem; color: #059669; margin-top: 0.25rem;">📝 ${t.payment_observation}</div>` : ''}
                                 </div>
@@ -4392,6 +4402,12 @@
                             
                             if (!result) {
                                 throw new Error('Falha ao criar transação');
+                            }
+                            
+                            // Se for conta fixa com renovação automática, criar 6 meses à frente
+                            if (mapping.category === 'fixed' && autoRenew) {
+                                console.log('🔄 Criando renovações automáticas para 6 meses...');
+                                await createNextMonthFixed(result);
                             }
                         }
                     });

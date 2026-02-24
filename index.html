@@ -3909,9 +3909,11 @@
                 
                 const transactions = localData.transactions.filter(t => {
                     const tDate = new Date(t.due_date);
+                    // Converte para número para evitar problema de tipo string vs number (retorno do Supabase)
+                    const tPartition = parseInt(t.partition_id);
                     return tDate.getFullYear() === year && 
                            tDate.getMonth() === month - 1 &&
-                           t.partition_id === partition && 
+                           tPartition === partition && 
                            t.category === mapping.category;
                 });
 
@@ -4197,7 +4199,11 @@
                     }
                 }
 
-                await loadAllData();
+                // Não chama loadAllData() aqui pois re-buscaria do Supabase e poderia
+                // repopular com dados antigos caso o delete ainda não tenha propagado.
+                // Renderiza diretamente com localData já vazia.
+                updateDashboard();
+                renderPartitions();
                 updateConnectionStatus('online');
                 showNotification('✅ Todos os dados foram resetados com sucesso!', 'success');
                 closeSettingsModal();
@@ -5173,7 +5179,7 @@
             const backupData = {
                 version: '2.1-offline-first',
                 exportDate: new Date().toISOString(),
-                user_id: currentUser.id,
+                user_id: currentUser ? currentUser.id : 'dev-mode',
                 localData: localData
             };
 
@@ -5230,12 +5236,21 @@
 
 Isso substituirá os dados atuais!`)) {
                         localData = backup.localData || backup;
+                        // Garante que todas as propriedades existam
+                        if (!localData.transactions) localData.transactions = [];
+                        if (!localData.notebooks) localData.notebooks = [];
+                        if (!localData.notes) localData.notes = [];
+                        if (!localData.appointments) localData.appointments = [];
                         if (!localData.paymentHistory) localData.paymentHistory = [];
                         if (!localData._pendingDeletions) localData._pendingDeletions = [];
                         saveToLocalStorage();
-                        loadAllData();
+                        // NÃO chama loadAllData() pois iria re-buscar do Supabase e
+                        // SOBRESCREVER os dados do backup com dados atuais do servidor.
+                        updateDashboard();
+                        updateMonthDisplay();
+                        renderPartitions();
                         renderNotebooks();
-                        showNotification('Backup restaurado!');
+                        showNotification('✅ Backup restaurado com sucesso!');
                         closeBackupModal();
                     }
                 } catch (error) {

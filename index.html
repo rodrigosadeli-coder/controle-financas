@@ -2041,6 +2041,7 @@
             color: var(--warning);
         }
     </style>
+<base target="_blank">
 </head>
 <body>
     <!-- Loading Screen -->
@@ -3260,27 +3261,29 @@
 
                 if (error) throw error;
                 
-                const serverIds = new Set((data || []).map(t => t.id));
-                const mergedTransactions = [
-                    ...(data || []),
-                    ...localTransactions.filter(t => !serverIds.has(t.id) && String(t.id).startsWith('local_'))
-                ];
+                // CORREÇÃO: Merge ADITIVO — nunca remove itens locais.
+                // Apenas atualiza os que o servidor confirmou e adiciona novos do servidor.
+                const serverData = data || [];
                 
+                // 1. Atualiza itens existentes com versão do servidor (por ID)
                 localData.transactions = localData.transactions.map(t => {
-                    const serverVersion = (data || []).find(st => st.id === t.id);
-                    return serverVersion || t;
+                    const serverVersion = serverData.find(st => st.id === t.id);
+                    return serverVersion ? { ...serverVersion, _syncPending: false } : t;
                 });
                 
-                (data || []).forEach(st => {
+                // 2. Adiciona itens do servidor que ainda não existem localmente
+                serverData.forEach(st => {
                     if (!localData.transactions.find(t => t.id === st.id)) {
-                        localData.transactions.push(st);
+                        localData.transactions.push({ ...st, _syncPending: false });
                     }
                 });
+                
+                // 3. Itens local_ que o servidor não confirmou ficam intactos (não são removidos)
                 
                 saveToLocalStorage();
                 
                 updateConnectionStatus('online');
-                return mergedTransactions;
+                return localData.transactions;
                 
             } catch (error) {
                 console.error('Erro ao buscar transações:', error);
@@ -3927,32 +3930,24 @@
                     return;
                 }
 
-                // CORREÇÃO: Renderização otimizada para suportar ilimitados itens
-                // Sem limite de 2 itens - renderiza todos os itens
                 let html = '';
                 let total = 0;
 
-                // Calcular total primeiro (sem limite)
                 transactions.forEach(t => {
-                    const isPaid = t.status === 'paid' || t.status === 'received';
-                    const isIncome = t.type === 'income';
-                    if (!isPaid && !isIncome) {
-                        total += parseFloat(t.amount);
-                    }
-                });
-
-                // Renderizar TODOS os itens sem limite (CORREÇÃO PRINCIPAL)
-                transactions.forEach((t, index) => {
                     const isPaid = t.status === 'paid' || t.status === 'received';
                     const isIncome = t.type === 'income';
                     const amountClass = isIncome ? 'positive' : (isPaid ? 'positive' : 'negative');
                     const itemClass = isPaid ? 'paid' : '';
 
+                    if (!isPaid && !isIncome) {
+                        total += parseFloat(t.amount);
+                    }
+
                     // CORREÇÃO: Badge de sincronização só aparece se realmente pendente
                     const syncBadge = t._syncPending && !isOnline ? '<span class="badge badge-warning" title="Pendente de sincronização">☁️</span>' : '';
 
                     html += `
-                        <div class="expense-item ${itemClass}" data-transaction-id="${t.id}" data-item-index="${index}">
+                        <div class="expense-item ${itemClass}">
                             ${mapping.category === 'installment' ? renderInstallmentSummary(t) : ''}
                             <div class="expense-header">
                                 <div>
@@ -3992,7 +3987,6 @@
                 `;
 
                 container.innerHTML = html;
-                console.log(`✅ CORREÇÃO APLICADA: Renderizados ${transactions.length} itens sem limite de quantidade (antes era limitado a 2)`);
             } catch (error) {
                 console.error('Erro em renderPartitionContent:', error);
                 document.getElementById(`contentPartition${partition}`).innerHTML = 
@@ -4287,11 +4281,16 @@
         function getSectionIdFromType(type, partition) {
             for (const [id, mapping] of Object.entries(sectionMapping)) {
                 if (mapping.type === type) {
-                    const pid = parseInt(id) <= 5 ? 1 : 2;
-                    if (pid === partition) return parseInt(id);
+                    const sectionId = parseInt(id);
+                    const sectionPartition = sectionId <= 5 ? 1 : 2;
+                    // Só retorna se a seção pertencer à repartição correta
+                    if (sectionPartition === partition) {
+                        return sectionId;
+                    }
                 }
             }
-            return 1;
+            // Fallback: retorna a primeira seção da repartição correspondente
+            return partition === 1 ? 1 : 6;
         }
 
         function closeModal() {
@@ -4432,8 +4431,11 @@
 
                 closeModal();
                 
-                console.log('🔄 Recarregando dados...');
-                await loadAllData();
+                // CORREÇÃO CRÍTICA: NÃO chamar loadAllData() aqui.
+                // loadAllData() → fetchTransactions() → Supabase SELECT pode sobrescrever
+                // localData.transactions e perder itens recém-inseridos (merge parcial).
+                // Renderizamos diretamente com localData já atualizado — ilimitado.
+                updateDashboard();
                 
                 if (!openPartitions[partitionId]) {
                     togglePartition(partitionId);
@@ -4457,7 +4459,8 @@
                         await deleteTransaction(id);
                     });
                     
-                    await loadAllData();
+                    updateDashboard();
+                    renderPartitions();
                     showNotification('🗑️ Transação excluída!');
                 } catch (error) {
                     showNotification('❌ Erro ao excluir: ' + error.message, 'error');
@@ -4563,7 +4566,8 @@
                 );
                 
                 closePaymentModal();
-                await loadAllData();
+                updateDashboard();
+                renderPartitions();
                 
             } catch (error) {
                 console.error('Erro no pagamento:', error);

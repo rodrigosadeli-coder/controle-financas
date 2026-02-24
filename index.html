@@ -3260,27 +3260,29 @@
 
                 if (error) throw error;
                 
-                const serverIds = new Set((data || []).map(t => t.id));
-                const mergedTransactions = [
-                    ...(data || []),
-                    ...localTransactions.filter(t => !serverIds.has(t.id) && String(t.id).startsWith('local_'))
-                ];
+                // CORREÇÃO: Merge ADITIVO — nunca remove itens locais.
+                // Apenas atualiza os que o servidor confirmou e adiciona novos do servidor.
+                const serverData = data || [];
                 
+                // 1. Atualiza itens existentes com versão do servidor (por ID)
                 localData.transactions = localData.transactions.map(t => {
-                    const serverVersion = (data || []).find(st => st.id === t.id);
-                    return serverVersion || t;
+                    const serverVersion = serverData.find(st => st.id === t.id);
+                    return serverVersion ? { ...serverVersion, _syncPending: false } : t;
                 });
                 
-                (data || []).forEach(st => {
+                // 2. Adiciona itens do servidor que ainda não existem localmente
+                serverData.forEach(st => {
                     if (!localData.transactions.find(t => t.id === st.id)) {
-                        localData.transactions.push(st);
+                        localData.transactions.push({ ...st, _syncPending: false });
                     }
                 });
+                
+                // 3. Itens local_ que o servidor não confirmou ficam intactos (não são removidos)
                 
                 saveToLocalStorage();
                 
                 updateConnectionStatus('online');
-                return mergedTransactions;
+                return localData.transactions;
                 
             } catch (error) {
                 console.error('Erro ao buscar transações:', error);
@@ -4423,8 +4425,11 @@
 
                 closeModal();
                 
-                console.log('🔄 Recarregando dados...');
-                await loadAllData();
+                // CORREÇÃO CRÍTICA: NÃO chamar loadAllData() aqui.
+                // loadAllData() → fetchTransactions() → Supabase SELECT pode sobrescrever
+                // localData.transactions e perder itens recém-inseridos (merge parcial).
+                // Renderizamos diretamente com localData já atualizado — ilimitado.
+                updateDashboard();
                 
                 if (!openPartitions[partitionId]) {
                     togglePartition(partitionId);
@@ -4448,7 +4453,8 @@
                         await deleteTransaction(id);
                     });
                     
-                    await loadAllData();
+                    updateDashboard();
+                    renderPartitions();
                     showNotification('🗑️ Transação excluída!');
                 } catch (error) {
                     showNotification('❌ Erro ao excluir: ' + error.message, 'error');
@@ -4554,7 +4560,8 @@
                 );
                 
                 closePaymentModal();
-                await loadAllData();
+                updateDashboard();
+                renderPartitions();
                 
             } catch (error) {
                 console.error('Erro no pagamento:', error);

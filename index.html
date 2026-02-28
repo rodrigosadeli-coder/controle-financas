@@ -2126,7 +2126,7 @@
             </div>
             <div class="header-right">
                 <span id="datetimeDisplay">Carregando...</span>
-                <!-- Connection Status movido para dentro do header-right -->
+                <!-- Connection Status -->
                 <div class="connection-status offline" id="connectionStatus">
                     <span id="connectionIcon">⚠️</span>
                     <span id="connectionText">Offline</span>
@@ -2142,7 +2142,7 @@
             <button class="nav-btn" onclick="openHistoryModal()">📜 Histórico</button>
             <button class="nav-btn" onclick="toggleNotes()">📝 Bloco de Notas</button>
             <button class="nav-btn btn-backup-nav" onclick="openBackupModal()">💾 Backup</button>
-            <!-- Botão SINCRONIZAR adicionado -->
+            <!-- Botão SINCRONIZAR -->
             <button class="nav-btn" onclick="handleManualSync()" id="syncButton" title="Sincronizar dados com o servidor">🔄 SINCRONIZAR</button>
             <button class="nav-btn" onclick="openSettingsModal()">⚙️ Configurações</button>
             <button class="nav-btn exit" onclick="logout()">🚪 Sair</button>
@@ -2841,6 +2841,22 @@
         };
 
         // ==========================================
+        // CAMPOS PERMITIDOS PARA OPERAÇÕES COM SUPABASE
+        // ==========================================
+        const ALLOWED_INSERT_FIELDS = [
+            'user_id', 'type', 'category', 'partition_id', 'description', 'amount',
+            'year', 'month', 'due_day', 'due_date', 'status', 'total_installments',
+            'installment_number', 'auto_renew', 'is_fixed', 'parent_transaction_id'
+        ];
+
+        const ALLOWED_UPDATE_FIELDS = [
+            'type', 'category', 'partition_id', 'description', 'amount',
+            'year', 'month', 'due_day', 'due_date', 'status',
+            'total_installments', 'installment_number', 'auto_renew', 'is_fixed',
+            'parent_transaction_id', 'payment_date', 'payment_amount', 'payment_observation'
+        ];
+
+        // ==========================================
         // MOTOR DE MONITORAMENTO DE QUALIDADE (V3.0 - CORRIGIDO E CONSOLIDADO)
         // ==========================================
 
@@ -3056,8 +3072,10 @@
                     await loadUserProfile();
                     showApp();
 
-                    // Configura subscription Realtime para sincronização em tempo real
-                    setupRealtimeSubscription();
+                    // Configura subscription Realtime para sincronização em tempo real (apenas se não for modo dev)
+                    if (!isDevMode) {
+                        setupRealtimeSubscription();
+                    }
                 } else {
                     console.log('👤 Nenhuma sessão ativa');
                     hideLoading();
@@ -3258,7 +3276,7 @@
 
             initApp();
 
-            // Configura Realtime se ainda não configurado e estiver online
+            // Configura Realtime se ainda não configurado e estiver online (e não for modo dev)
             if (isOnline && !realtimeChannel && !isDevMode) {
                 setupRealtimeSubscription();
             }
@@ -3336,24 +3354,11 @@
         async function insertTransaction(transaction) {
             if (!currentUser) return null;
 
-            const supabaseData = {
-                user_id: currentUser.id,
-                type: transaction.type,
-                category: transaction.category,
-                partition_id: transaction.partition_id,
-                description: transaction.description,
-                amount: transaction.amount,
-                year: transaction.year,
-                month: transaction.month,
-                due_day: transaction.due_day,
-                due_date: transaction.due_date,
-                status: transaction.status,
-                total_installments: transaction.total_installments || 1,
-                installment_number: transaction.installment_number || 1,
-                auto_renew: transaction.auto_renew || false,
-                is_fixed: transaction.is_fixed || false,
-                parent_transaction_id: transaction.parent_transaction_id || null
-            };
+            // Constrói objeto apenas com campos permitidos
+            const supabaseData = {};
+            ALLOWED_INSERT_FIELDS.forEach(field => {
+                if (transaction[field] !== undefined) supabaseData[field] = transaction[field];
+            });
 
             const localId = 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             const localTransaction = {
@@ -3427,8 +3432,12 @@
             }
 
             try {
-                const { _syncPending, _syncedAt, ...supabaseUpdates } = updates;
-                
+                // Filtra apenas campos permitidos para update
+                const supabaseUpdates = {};
+                ALLOWED_UPDATE_FIELDS.forEach(field => {
+                    if (updates[field] !== undefined) supabaseUpdates[field] = updates[field];
+                });
+
                 const { data, error } = await supabaseClient
                     .from('transactions')
                     .update(supabaseUpdates)
@@ -3510,15 +3519,15 @@
             try {
                 updateConnectionStatus('syncing');
                 
+                // Filtra campos permitidos para update
+                const supabaseUpdates = {};
+                ALLOWED_UPDATE_FIELDS.forEach(field => {
+                    if (paymentData[field] !== undefined) supabaseUpdates[field] = paymentData[field];
+                });
+
                 const { data, error } = await supabaseClient
                     .from('transactions')
-                    .update({
-                        status: paymentData.status,
-                        payment_date: paymentData.payment_date,
-                        payment_amount: paymentData.payment_amount,
-                        payment_observation: paymentData.payment_observation,
-                        updated_at: paymentData.updated_at
-                    })
+                    .update(supabaseUpdates)
                     .eq('id', id)
                     .select()
                     .single();
@@ -3683,12 +3692,18 @@
         }
 
         // ==========================================
-        // SINCRONIZAÇÃO - VERSÃO APRIMORADA
+        // SINCRONIZAÇÃO - VERSÃO APRIMORADA (CORRIGIDA)
         // ==========================================
 
         async function forceSync() {
             if (!isOnline) {
                 showNotification('Sem conexão com o servidor', 'error');
+                return;
+            }
+
+            if (isDevMode) {
+                console.log('Modo desenvolvedor: sincronização com servidor não disponível');
+                showNotification('Modo desenvolvedor não suporta sincronização', 'warning');
                 return;
             }
 
@@ -3699,18 +3714,22 @@
                 console.log(`🔄 Sincronizando ${pendingTransactions.length} transações pendentes...`);
                 
                 for (const transaction of pendingTransactions) {
-                    const { _syncPending, _syncedAt, id, ...data } = transaction;
-                    
-                    if (String(id).startsWith('local_')) {
+                    if (String(transaction.id).startsWith('local_')) {
+                        // --- INSERT ---
+                        const dataToInsert = {};
+                        ALLOWED_INSERT_FIELDS.forEach(field => {
+                            if (transaction[field] !== undefined) dataToInsert[field] = transaction[field];
+                        });
+
                         const { data: newData, error } = await supabaseClient
                             .from('transactions')
-                            .insert([data])
+                            .insert([dataToInsert])
                             .select()
                             .single();
-                        
+
                         if (error) throw error;
-                        
-                        const index = localData.transactions.findIndex(t => t.id === id);
+
+                        const index = localData.transactions.findIndex(t => t.id === transaction.id);
                         if (index !== -1 && newData) {
                             localData.transactions[index] = { 
                                 ...newData, 
@@ -3719,12 +3738,20 @@
                             };
                         }
                     } else {
-                        await supabaseClient
+                        // --- UPDATE ---
+                        const dataToUpdate = {};
+                        ALLOWED_UPDATE_FIELDS.forEach(field => {
+                            if (transaction[field] !== undefined) dataToUpdate[field] = transaction[field];
+                        });
+
+                        const { error } = await supabaseClient
                             .from('transactions')
-                            .update(data)
-                            .eq('id', id);
-                        
-                        const index = localData.transactions.findIndex(t => t.id === id);
+                            .update(dataToUpdate)
+                            .eq('id', transaction.id);
+
+                        if (error) throw error;
+
+                        const index = localData.transactions.findIndex(t => t.id === transaction.id);
                         if (index !== -1) {
                             localData.transactions[index]._syncPending = false;
                             localData.transactions[index]._syncedAt = new Date().toISOString();
@@ -3732,31 +3759,33 @@
                     }
                 }
 
-                if (localData._pendingDeletions) {
+                // Processa exclusões pendentes
+                if (localData._pendingDeletions && localData._pendingDeletions.length > 0) {
                     for (const id of localData._pendingDeletions) {
                         if (!String(id).startsWith('local_')) {
-                            await supabaseClient
+                            const { error } = await supabaseClient
                                 .from('transactions')
                                 .delete()
                                 .eq('id', id);
+                            if (error) throw error;
                         }
                     }
                     localData._pendingDeletions = [];
                 }
 
                 saveToLocalStorage();
-                await loadAllData();
+                await loadAllData(); // Atualiza interface com dados mais recentes
                 
                 updateConnectionStatus('online');
                 showNotification(`Sincronização concluída! ${pendingTransactions.length} itens sincronizados.`);
-
-                // Retorno para que possa ser usado por handleManualSync
                 return true;
                 
             } catch (error) {
-                console.error('Erro na sincronização:', error);
+                console.error('❌ Erro detalhado na sincronização:', error);
+                if (error.details) console.error('Detalhes:', error.details);
+                if (error.message) console.error('Mensagem:', error.message);
                 updateConnectionStatus('offline');
-                showNotification('Erro na sincronização: ' + error.message, 'error');
+                showNotification('Erro na sincronização: ' + (error.message || 'Erro desconhecido'), 'error');
                 throw error;
             }
         }
@@ -3868,6 +3897,11 @@
          * Handler para sincronização manual iniciada pelo usuário
          */
         async function handleManualSync() {
+            if (isDevMode) {
+                showNotification('Modo desenvolvedor: sincronização com servidor não disponível', 'warning');
+                return;
+            }
+
             const syncBtn = document.getElementById('syncButton');
 
             if (isSyncing) {

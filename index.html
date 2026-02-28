@@ -9,6 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
+        /* --- ESTILOS EXISTENTES (mantidos integralmente) --- */
         * {
             margin: 0;
             padding: 0;
@@ -77,7 +78,7 @@
             font-family: 'Cinzel', serif;
         }
 
-        /* Connection Status - AGORA FIXO NO HEADER */
+        /* Connection Status */
         .connection-status {
             position: static;
             padding: 0.5rem 1rem;
@@ -359,6 +360,13 @@
 
         .nav-btn.exit:hover {
             background-color: #b91c1c;
+        }
+
+        /* Estilo para botão de sync desabilitado */
+        .nav-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #6b7280;
         }
 
         /* Main Content */
@@ -2134,6 +2142,8 @@
             <button class="nav-btn" onclick="openHistoryModal()">📜 Histórico</button>
             <button class="nav-btn" onclick="toggleNotes()">📝 Bloco de Notas</button>
             <button class="nav-btn btn-backup-nav" onclick="openBackupModal()">💾 Backup</button>
+            <!-- Botão SINCRONIZAR adicionado -->
+            <button class="nav-btn" onclick="handleManualSync()" id="syncButton" title="Sincronizar dados com o servidor">🔄 SINCRONIZAR</button>
             <button class="nav-btn" onclick="openSettingsModal()">⚙️ Configurações</button>
             <button class="nav-btn exit" onclick="logout()">🚪 Sair</button>
             <div class="nav-notification" style="display: inline-block; position: relative; margin-left: 10px; cursor: pointer; vertical-align: middle;">
@@ -2971,6 +2981,17 @@
             }
         }
 
+        // ==========================================
+        // VARIÁVEIS GLOBAIS (APÓS calcExpression)
+        // ==========================================
+        let calcExpression = '';
+
+        // ==========================================
+        // VARIÁVEIS GLOBAIS PARA REALTIME
+        // ==========================================
+        let realtimeChannel = null;
+        let isSyncing = false;
+
         const sectionMapping = {
             1: { type: 'expense_fixed', category: 'fixed' },
             2: { type: 'expense_variable', category: 'variable' },
@@ -3034,6 +3055,9 @@
                     currentUser = session.user;
                     await loadUserProfile();
                     showApp();
+
+                    // Configura subscription Realtime para sincronização em tempo real
+                    setupRealtimeSubscription();
                 } else {
                     console.log('👤 Nenhuma sessão ativa');
                     hideLoading();
@@ -3153,15 +3177,27 @@
 
         async function logout() {
             try {
+                // Fecha canal Realtime antes de fazer logout
+                closeRealtimeChannel();
+
                 if (isOnline) {
                     await supabaseClient.auth.signOut();
                 }
             } catch (e) {
                 console.error(e);
             }
-            
+
             currentUser = null;
             isDevMode = false;
+            isSyncing = false;
+
+            // Limpa estado do botão de sync
+            const syncBtn = document.getElementById('syncButton');
+            if (syncBtn) {
+                syncBtn.disabled = false;
+                syncBtn.innerHTML = '🔄 SINCRONIZAR';
+            }
+
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('appContainer').style.display = 'none';
             document.getElementById('email').value = '';
@@ -3214,13 +3250,18 @@
         function showApp() {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
-            
+
             if (currentUser && !isDevMode) {
-                document.getElementById('userNameDisplay').textContent = 
+                document.getElementById('userNameDisplay').textContent =
                     currentUser.user_metadata?.full_name || currentUser.email;
             }
-            
+
             initApp();
+
+            // Configura Realtime se ainda não configurado e estiver online
+            if (isOnline && !realtimeChannel && !isDevMode) {
+                setupRealtimeSubscription();
+            }
         }
 
         function showRegister() {
@@ -3708,11 +3749,224 @@
                 
                 updateConnectionStatus('online');
                 showNotification(`Sincronização concluída! ${pendingTransactions.length} itens sincronizados.`);
+
+                // Retorno para que possa ser usado por handleManualSync
+                return true;
                 
             } catch (error) {
                 console.error('Erro na sincronização:', error);
                 updateConnectionStatus('offline');
                 showNotification('Erro na sincronização: ' + error.message, 'error');
+                throw error;
+            }
+        }
+
+        // ==========================================
+        // FUNÇÕES REALTIME - SINCRONIZAÇÃO EM TEMPO REAL
+        // ==========================================
+
+        /**
+         * Configura a inscrição no canal Realtime para broadcast de sincronização
+         */
+        function setupRealtimeSubscription() {
+            if (!isOnline || !supabaseClient || isDevMode) {
+                console.log('📡 Realtime: ignorando setup (offline, sem cliente ou modo dev)');
+                return;
+            }
+
+            if (realtimeChannel) {
+                realtimeChannel.unsubscribe();
+            }
+
+            console.log('📡 Configurando canal Realtime: sync-channel');
+
+            realtimeChannel = supabaseClient.channel('sync-channel', {
+                config: {
+                    broadcast: { self: false } // Não receber próprios eventos
+                }
+            });
+
+            realtimeChannel
+                .on('broadcast', { event: 'data-updated' }, (payload) => {
+                    console.log('📡 Evento de sincronização recebido:', payload);
+
+                    if (!payload || !payload.payload) {
+                        console.warn('📡 Payload inválido recebido');
+                        return;
+                    }
+
+                    const eventData = payload.payload;
+
+                    if (eventData.userId === currentUser?.id) {
+                        console.log('📡 Ignorando evento do próprio usuário');
+                        return;
+                    }
+
+                    // Verifica se o evento é recente (evita processar eventos antigos ao reconectar)
+                    const eventTime = new Date(eventData.timestamp);
+                    const now = new Date();
+                    const diffMinutes = (now - eventTime) / (1000 * 60);
+
+                    if (diffMinutes > 5) {
+                        console.log('📡 Evento muito antigo, ignorando');
+                        return;
+                    }
+
+                    console.log('📡 Recarregando dados devido a atualização externa');
+                    handleExternalSync(eventData);
+                })
+                .subscribe((status) => {
+                    console.log('📡 Status do canal Realtime:', status);
+                    if (status === 'SUBSCRIBED') {
+                        console.log('✅ Canal Realtime conectado com sucesso');
+                    } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+                        console.warn('⚠️ Canal Realtime desconectado:', status);
+                        setTimeout(() => {
+                            if (isOnline && currentUser && !isDevMode) {
+                                setupRealtimeSubscription();
+                            }
+                        }, 5000);
+                    }
+                });
+        }
+
+        /**
+         * Publica evento de sincronização para outros usuários
+         */
+        async function publishSyncEvent() {
+            if (!realtimeChannel || !isOnline) {
+                console.warn('📡 Não foi possível publicar evento: canal offline ou inexistente');
+                return false;
+            }
+
+            try {
+                const eventData = {
+                    type: 'data-updated',
+                    userId: currentUser?.id,
+                    userEmail: currentUser?.email,
+                    timestamp: new Date().toISOString(),
+                    month: currentMonth.getMonth() + 1,
+                    year: currentMonth.getFullYear()
+                };
+
+                const result = await realtimeChannel.send({
+                    type: 'broadcast',
+                    event: 'data-updated',
+                    payload: eventData
+                });
+
+                console.log('📡 Evento de sincronização publicado:', result);
+                return true;
+
+            } catch (error) {
+                console.error('❌ Erro ao publicar evento de sincronização:', error);
+                return false;
+            }
+        }
+
+        /**
+         * Handler para sincronização manual iniciada pelo usuário
+         */
+        async function handleManualSync() {
+            const syncBtn = document.getElementById('syncButton');
+
+            if (isSyncing) {
+                console.log('⏳ Sincronização já em andamento');
+                return;
+            }
+
+            if (!isOnline) {
+                showNotification('Você está offline. Conecte-se à internet para sincronizar.', 'error');
+                return;
+            }
+
+            try {
+                isSyncing = true;
+
+                if (syncBtn) {
+                    syncBtn.disabled = true;
+                    syncBtn.innerHTML = '🔄 Sincronizando...';
+                }
+
+                updateConnectionStatus('syncing');
+
+                console.log('🔄 Iniciando sincronização manual...');
+                await forceSync();
+
+                console.log('📡 Publicando evento de atualização...');
+                const published = await publishSyncEvent();
+
+                if (published) {
+                    showNotification('✅ Sincronização concluída! Outros usuários serão notificados.', 'success');
+                } else {
+                    showNotification('✅ Dados sincronizados, mas não foi possível notificar outros usuários.', 'warning');
+                }
+
+            } catch (error) {
+                console.error('❌ Erro na sincronização manual:', error);
+                showNotification('❌ Erro ao sincronizar: ' + error.message, 'error');
+                updateConnectionStatus('offline');
+            } finally {
+                isSyncing = false;
+
+                if (syncBtn) {
+                    syncBtn.disabled = false;
+                    syncBtn.innerHTML = '🔄 SINCRONIZAR';
+                }
+
+                if (isOnline) {
+                    updateConnectionStatus('online');
+                }
+            }
+        }
+
+        /**
+         * Handler para sincronização externa (iniciada por outro usuário)
+         */
+        async function handleExternalSync(eventData) {
+            const currentYear = currentMonth.getFullYear();
+            const currentMonthNum = currentMonth.getMonth() + 1;
+
+            const hasPendingChanges = localData.transactions.some(t => t._syncPending);
+
+            if (hasPendingChanges) {
+                console.log('📡 Há alterações pendentes locais. Adiando recarga automática.');
+                showNotification('📡 Novos dados disponíveis. Clique em SINCRONIZAR para atualizar.', 'info');
+
+                localData._hasExternalUpdates = true;
+                saveToLocalStorage();
+                return;
+            }
+
+            if (eventData.year !== currentYear || eventData.month !== currentMonthNum) {
+                console.log('📡 Atualização em outro período, recarga adiada');
+                return;
+            }
+
+            try {
+                showNotification('📡 Atualizando dados...', 'info');
+                await loadAllData();
+                showNotification('✅ Dados atualizados!', 'success');
+
+                if (localData._hasExternalUpdates) {
+                    delete localData._hasExternalUpdates;
+                    saveToLocalStorage();
+                }
+
+            } catch (error) {
+                console.error('❌ Erro ao recarregar dados externos:', error);
+                showNotification('⚠️ Falha ao atualizar dados automaticamente. Tente sincronizar manualmente.', 'error');
+            }
+        }
+
+        /**
+         * Fecha o canal Realtime
+         */
+        function closeRealtimeChannel() {
+            if (realtimeChannel) {
+                console.log('📡 Fechando canal Realtime');
+                realtimeChannel.unsubscribe();
+                realtimeChannel = null;
             }
         }
 
@@ -3764,7 +4018,6 @@
         let currentCalendarDate = new Date();
         let selectedDate = null;
         let editingId = null;
-        let calcExpression = '';
 
         const nationalHolidays = {
             '2024-01-01': 'Confraternização Universal',
@@ -5537,6 +5790,12 @@ Isso substituirá os dados atuais!`)) {
         window.openEditModalFromPending = openEditModalFromPending;
         window.deleteTransactionFromPending = deleteTransactionFromPending;
         window.resetAllData = resetAllData;
+
+        // NOVAS FUNÇÕES EXPORTADAS
+        window.handleManualSync = handleManualSync;
+        window.setupRealtimeSubscription = setupRealtimeSubscription;
+        window.publishSyncEvent = publishSyncEvent;
+        window.closeRealtimeChannel = closeRealtimeChannel;
 
         // Inicializar ao carregar
         window.addEventListener('DOMContentLoaded', initSupabase);

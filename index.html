@@ -5623,7 +5623,7 @@ Isso substituirá os dados atuais!`)) {
         // NOVAS FUNÇÕES EXPORTADAS
         window.handleManualSync = typeof handleManualSync !== 'undefined' ? handleManualSync : function() { console.log('handleManualSync not implemented'); };
         window.setupRealtimeSubscription = setupRealtimeSubscription;
-        window.publishSyncEvent = publishSyncEvent;
+        window.publishSyncEvent = typeof publishSyncEvent !== 'undefined' ? publishSyncEvent : function() {};
         window.closeRealtimeChannel = closeRealtimeChannel;
 
         // Inicializar ao carregar

@@ -3093,7 +3093,7 @@
         }
 
         function hideLoading() {
-            document.getElementById('loadingScreen').classList.add('hidden');
+                        const el = document.getElementById('loadingScreen'); el.classList.add('hidden'); setTimeout(() => { el.style.display = 'none'; }, 600);
         }
 
         // ==========================================
@@ -5626,7 +5626,7 @@ Isso substituirá os dados atuais!`)) {
         window.closeRealtimeChannel = closeRealtimeChannel;
 
         // Inicializar ao carregar
-        window.addEventListener('DOMContentLoaded', initSupabase);
+                if (document.readyState === 'loading') { window.addEventListener('DOMContentLoaded', initSupabase); } else { initSupabase(); }
     </script>
 </body>
 </html>

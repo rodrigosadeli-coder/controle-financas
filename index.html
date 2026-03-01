@@ -5621,7 +5621,7 @@ Isso substituirá os dados atuais!`)) {
         window.resetAllData = resetAllData;
 
         // NOVAS FUNÇÕES EXPORTADAS
-        window.handleManualSync = handleManualSync;
+        window.handleManualSync = typeof handleManualSync !== 'undefined' ? handleManualSync : function() { console.log('handleManualSync not implemented'); };
         window.setupRealtimeSubscription = setupRealtimeSubscription;
         window.publishSyncEvent = publishSyncEvent;
         window.closeRealtimeChannel = closeRealtimeChannel;

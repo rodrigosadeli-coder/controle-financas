@@ -3031,13 +3031,14 @@
                     }
                 });
                 
-                const { data, error } = await supabaseClient
-                    .from('profiles')
-                    .select('count', { count: 'exact', head: true });
-                
-                if (error) {
-                    console.error('❌ Erro no teste de conexão:', error);
-                    throw error;
+                try {
+                                        const testResult = await Promise.race([
+                                                                    supabaseClient.from('profiles').select('count', { count: 'exact', head: true }),
+                                                                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 8000))
+                                                                ]);
+                                        if (testResult.error) console.warn('Teste de conexao com erro:', testResult.error);
+                } catch (testErr) {
+                                        console.warn('Teste de conexao falhou (continuando):', testErr.message);
                 }
                 
                 isOnline = true;

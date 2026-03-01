@@ -5626,7 +5626,7 @@ Isso substituirá os dados atuais!`)) {
         window.closeRealtimeChannel = closeRealtimeChannel;
 
         // Inicializar ao carregar
-                if (document.readyState === 'loading') { window.addEventListener('DOMContentLoaded', initSupabase); } else { initSupabase(); }
+                        function waitForSupabaseAndInit() { if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') { initSupabase(); } else { setTimeout(waitForSupabaseAndInit, 100); } } waitForSupabaseAndInit();
     </script>
 </body>
 </html>

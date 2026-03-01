@@ -5627,7 +5627,7 @@ Isso substituirá os dados atuais!`)) {
         window.closeRealtimeChannel = closeRealtimeChannel;
 
         // Inicializar ao carregar
-                                setTimeout(function() { initSupabase().catch(function(e) { console.error(e); hideLoading(); }); setTimeout(function() { if (!supabaseClient) hideLoading(); }, 15000); }, 100);
+                                setTimeout(function() { initSupabase().catch(function(e) { console.error(e); hideLoading(); }); setTimeout(function() { hideLoading(); }, 15000); }, 100);
     </script>
 </body>
 </html>

@@ -2142,8 +2142,6 @@
             <button class="nav-btn" onclick="openHistoryModal()">📜 Histórico</button>
             <button class="nav-btn" onclick="toggleNotes()">📝 Bloco de Notas</button>
             <button class="nav-btn btn-backup-nav" onclick="openBackupModal()">💾 Backup</button>
-            <!-- Botão SINCRONIZAR -->
-            <button class="nav-btn" onclick="handleManualSync()" id="syncButton" title="Sincronizar dados com o servidor">🔄 SINCRONIZAR</button>
             <button class="nav-btn" onclick="openSettingsModal()">⚙️ Configurações</button>
             <button class="nav-btn exit" onclick="logout()">🚪 Sair</button>
             <div class="nav-notification" style="display: inline-block; position: relative; margin-left: 10px; cursor: pointer; vertical-align: middle;">
@@ -2646,12 +2644,6 @@
                     <input type="file" id="backupFileInput" class="file-input" accept=".json" onchange="handleBackupFileSelect(event)">
                 </div>
 
-                <div style="border-top: 2px solid #e5e7eb; padding-top: 2rem; margin-top: 2rem;">
-                    <h4 style="margin-bottom: 1rem; color: var(--blue-royal);">Sincronização</h4>
-                    <button class="btn btn-primary" onclick="forceSync()" style="width: 100%;">
-                        🔄 Sincronizar Agora
-                    </button>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-cancel" onclick="closeBackupModal()">Fechar</button>
@@ -2694,18 +2686,6 @@
                     </form>
                 </div>
 
-                <!-- Diagnóstico e Qualidade -->
-                <div class="settings-section" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
-                    <h4 class="settings-section-title">
-                        <span>🔬</span> Diagnóstico e Qualidade
-                    </h4>
-                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">
-                        Gere um relatório técnico das últimas operações. Use este arquivo para pedir ajuda à I.A. em caso de erros.
-                    </p>
-                    <button onclick="gerarRelatorioPDF()" class="btn-action" style="background: #e74c3c; width: 100%; justify-content: center;">
-                        <span>📄</span> Exportar Logs para I.A.
-                    </button>
-                </div>
 
                 <!-- Informações da Conta -->
                 <div class="settings-section">
@@ -3006,7 +2986,6 @@
         // VARIÁVEIS GLOBAIS PARA REALTIME
         // ==========================================
         let realtimeChannel = null;
-        let isSyncing = false;
 
         const sectionMapping = {
             1: { type: 'expense_fixed', category: 'fixed' },
@@ -3148,27 +3127,63 @@
             }
         });
 
+        /**
+         * Função otimizada de cadastro de novos usuários
+         * Inclui validações completas e tratamento de erros robusto
+         */
         async function registerUser() {
-            const name = document.getElementById('regName').value;
-            const email = document.getElementById('regEmail').value;
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
             const password = document.getElementById('regPassword').value;
             const confirmPassword = document.getElementById('regConfirmPassword').value;
 
-            if (password !== confirmPassword) {
-                showNotification('As senhas não coincidem!', 'error');
+            // Validações de entrada
+            if (!name) {
+                showNotification('❌ Por favor, informe seu nome completo!', 'error');
+                return;
+            }
+
+            if (name.length < 3) {
+                showNotification('❌ O nome deve ter no mínimo 3 caracteres!', 'error');
+                return;
+            }
+
+            // Validação de email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email || !emailRegex.test(email)) {
+                showNotification('❌ Por favor, informe um email válido!', 'error');
+                return;
+            }
+
+            if (!password) {
+                showNotification('❌ Por favor, informe uma senha!', 'error');
                 return;
             }
 
             if (password.length < 6) {
-                showNotification('A senha deve ter no mínimo 6 caracteres!', 'error');
+                showNotification('❌ A senha deve ter no mínimo 6 caracteres!', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showNotification('❌ As senhas não coincidem!', 'error');
+                return;
+            }
+
+            if (!isOnline || !supabaseClient) {
+                showNotification('❌ Sem conexão com o servidor. Tente novamente.', 'error');
                 return;
             }
 
             try {
-                if (!isOnline) {
-                    throw new Error('Sem conexão com o servidor');
+                // Feedback visual durante o cadastro
+                const registerBtn = event?.target;
+                if (registerBtn) {
+                    registerBtn.disabled = true;
+                    registerBtn.textContent = 'Cadastrando...';
                 }
 
+                // Cria usuário no Supabase Auth
                 const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
                     password: password,
@@ -3181,15 +3196,62 @@
 
                 if (error) throw error;
 
-                await supabaseClient.from('profiles').insert([
-                    { id: data.user.id, full_name: name, email: email }
-                ]);
+                if (!data.user) {
+                    throw new Error('Erro ao criar usuário. Tente novamente.');
+                }
 
-                showNotification('Cadastro realizado! Verifique seu email.');
+                // Cria perfil na tabela profiles
+                try {
+                    const { error: profileError } = await supabaseClient
+                        .from('profiles')
+                        .insert([
+                            { 
+                                id: data.user.id, 
+                                full_name: name, 
+                                email: email,
+                                created_at: new Date().toISOString()
+                            }
+                        ]);
+
+                    if (profileError) {
+                        console.warn('⚠️ Erro ao criar perfil (pode já existir):', profileError);
+                        // Não falha se o perfil já existir
+                    }
+                } catch (profileError) {
+                    console.warn('⚠️ Erro ao criar perfil:', profileError);
+                    // Continua mesmo se houver erro no perfil
+                }
+
+                showNotification('✅ Cadastro realizado com sucesso! Verifique seu email para confirmar.', 'success');
                 closeRegisterModal();
                 
+                // Limpa os campos do formulário
+                document.getElementById('regName').value = '';
+                document.getElementById('regEmail').value = '';
+                document.getElementById('regPassword').value = '';
+                document.getElementById('regConfirmPassword').value = '';
+                
             } catch (error) {
-                showNotification(error.message, 'error');
+                console.error('❌ Erro no cadastro:', error);
+                
+                let errorMessage = 'Erro ao realizar cadastro';
+                
+                if (error.message.includes('already registered')) {
+                    errorMessage = 'Este email já está cadastrado!';
+                } else if (error.message.includes('Invalid')) {
+                    errorMessage = 'Email ou senha inválidos!';
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                showNotification('❌ ' + errorMessage, 'error');
+            } finally {
+                // Restaura o botão
+                const registerBtn = event?.target;
+                if (registerBtn) {
+                    registerBtn.disabled = false;
+                    registerBtn.textContent = 'Cadastrar';
+                }
             }
         }
 
@@ -3207,14 +3269,6 @@
 
             currentUser = null;
             isDevMode = false;
-            isSyncing = false;
-
-            // Limpa estado do botão de sync
-            const syncBtn = document.getElementById('syncButton');
-            if (syncBtn) {
-                syncBtn.disabled = false;
-                syncBtn.innerHTML = '🔄 SINCRONIZAR';
-            }
 
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('appContainer').style.display = 'none';
@@ -3294,89 +3348,76 @@
         // OPERAÇÕES CRUD COM SUPABASE - VERSÃO CORRIGIDA E OTIMIZADA (OFFLINE-FIRST)
         // ==========================================
 
+        /**
+         * Carrega transações DIRETAMENTE do Supabase (sem localStorage)
+         * Todos os usuários veem TODAS as transações
+         */
         async function fetchTransactions(year, month) {
             if (!currentUser) return [];
             
-            const localTransactions = localData.transactions.filter(t => {
-                const tDate = new Date(t.due_date);
-                return tDate.getFullYear() === year && tDate.getMonth() === month - 1;
-            });
-
-            if (!isOnline) {
-                console.log('📴 Modo offline: retornando', localTransactions.length, 'transações locais');
-                return localTransactions;
+            if (!isOnline || !supabaseClient) {
+                console.warn('📴 Modo offline: sem conexão com Supabase');
+                return localData.transactions.filter(t => {
+                    const tDate = new Date(t.due_date);
+                    return tDate.getFullYear() === year && tDate.getMonth() === month - 1;
+                });
             }
 
             try {
                 updateConnectionStatus('syncing');
                 
+                // IMPORTANTE: Remove o filtro .eq('user_id', currentUser.id) 
+                // para que TODOS vejam TODAS as transações da família
                 const { data, error } = await supabaseClient
                     .from('transactions')
                     .select('*')
-                    .eq('user_id', currentUser.id)
                     .eq('year', year)
                     .eq('month', month)
                     .order('due_date', { ascending: true });
 
                 if (error) throw error;
                 
-                // CORREÇÃO: Merge ADITIVO — nunca remove itens locais.
-                // Apenas atualiza os que o servidor confirmou e adiciona novos do servidor.
+                // Substitui completamente os dados em memória com os do servidor
                 const serverData = data || [];
                 
-                // 1. Atualiza itens existentes com versão do servidor (por ID)
-                localData.transactions = localData.transactions.map(t => {
-                    const serverVersion = serverData.find(st => st.id === t.id);
-                    return serverVersion ? { ...serverVersion, _syncPending: false } : t;
+                // Remove transações do mês atual e adiciona as do servidor
+                localData.transactions = localData.transactions.filter(t => {
+                    const tDate = new Date(t.due_date);
+                    return !(tDate.getFullYear() === year && tDate.getMonth() === month - 1);
                 });
                 
-                // 2. Adiciona itens do servidor que ainda não existem localmente
-                serverData.forEach(st => {
-                    if (!localData.transactions.find(t => t.id === st.id)) {
-                        localData.transactions.push({ ...st, _syncPending: false });
-                    }
-                });
-                
-                // 3. Itens local_ que o servidor não confirmou ficam intactos (não são removidos)
-                
-                saveToLocalStorage();
+                // Adiciona todas as transações do servidor
+                localData.transactions.push(...serverData);
                 
                 updateConnectionStatus('online');
-                return localData.transactions;
+                console.log(`✅ ${serverData.length} transações carregadas do Supabase`);
+                
+                return serverData;
                 
             } catch (error) {
-                console.error('Erro ao buscar transações:', error);
+                console.error('❌ Erro ao buscar transações:', error);
                 updateConnectionStatus('offline');
-                return localTransactions;
+                return [];
             }
         }
 
+        /**
+         * Insere transação diretamente no Supabase
+         * Outros usuários receberão via Realtime
+         */
         async function insertTransaction(transaction) {
             if (!currentUser) return null;
+
+            if (!isOnline || !supabaseClient) {
+                showNotification('⚠️ Sem conexão. Não é possível adicionar transação.', 'error');
+                return null;
+            }
 
             // Constrói objeto apenas com campos permitidos
             const supabaseData = {};
             ALLOWED_INSERT_FIELDS.forEach(field => {
                 if (transaction[field] !== undefined) supabaseData[field] = transaction[field];
             });
-
-            const localId = 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            const localTransaction = {
-                ...supabaseData,
-                id: localId,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-                _syncPending: true
-            };
-            
-            localData.transactions.push(localTransaction);
-            saveToLocalStorage();
-            console.log('💾 Transação salva localmente:', localTransaction.id);
-
-            if (!isOnline || !supabaseClient) {
-                console.log('📴 Modo offline: transação pendente de sincronização');
-                return localTransaction;
-            }
 
             try {
                 const { data, error } = await supabaseClient
@@ -3387,48 +3428,31 @@
 
                 if (error) throw error;
                 
-                const index = localData.transactions.findIndex(t => t.id === localId);
-                if (index !== -1 && data) {
-                    localData.transactions[index] = { 
-                        ...data, 
-                        _syncPending: false,
-                        _syncedAt: new Date().toISOString()
-                    };
-                    saveToLocalStorage();
-                    console.log('☁️ Transação sincronizada com Supabase:', data.id);
-                }
+                // Adiciona à memória local
+                localData.transactions.push(data);
                 
-                return data || localTransaction;
+                console.log('✅ Transação inserida no Supabase:', data.id);
+                
+                // Notifica outros usuários via Realtime (o Realtime Database Changes já faz isso automaticamente)
+                
+                return data;
                 
             } catch (error) {
-                console.error('❌ Erro ao sincronizar com Supabase:', error);
-                return localTransaction;
+                console.error('❌ Erro ao inserir transação:', error);
+                showNotification('❌ Erro ao adicionar transação: ' + error.message, 'error');
+                return null;
             }
         }
 
+        /**
+         * Atualiza transação diretamente no Supabase
+         */
         async function updateTransaction(id, updates) {
             if (!currentUser) return null;
 
-            const localIndex = localData.transactions.findIndex(t => t.id === id);
-            let localTransaction = null;
-            
-            if (localIndex !== -1) {
-                localData.transactions[localIndex] = { 
-                    ...localData.transactions[localIndex], 
-                    ...updates,
-                    updated_at: new Date().toISOString(),
-                    _syncPending: true
-                };
-                localTransaction = localData.transactions[localIndex];
-                saveToLocalStorage();
-                console.log('💾 Transação atualizada localmente:', id);
-            } else {
-                console.warn('Transação não encontrada localmente:', id);
+            if (!isOnline || !supabaseClient) {
+                showNotification('⚠️ Sem conexão. Não é possível atualizar.', 'error');
                 return null;
-            }
-
-            if (!isOnline || String(id).startsWith('local_')) {
-                return localTransaction;
             }
 
             try {
@@ -3447,32 +3471,30 @@
 
                 if (error) throw error;
                 
+                // Atualiza memória local
+                const localIndex = localData.transactions.findIndex(t => t.id === id);
                 if (localIndex !== -1 && data) {
-                    localData.transactions[localIndex] = { 
-                        ...data, 
-                        _syncPending: false,
-                        _syncedAt: new Date().toISOString()
-                    };
-                    saveToLocalStorage();
-                    console.log('☁️ Transação sincronizada com Supabase:', id);
+                    localData.transactions[localIndex] = data;
                 }
-
+                
+                console.log('✅ Transação atualizada no Supabase:', id);
                 return data;
                 
             } catch (error) {
-                console.error('❌ Erro ao sincronizar atualização:', error);
-                return localTransaction;
+                console.error('❌ Erro ao atualizar transação:', error);
+                showNotification('❌ Erro ao atualizar: ' + error.message, 'error');
+                return null;
             }
         }
 
+        /**
+         * Deleta transação diretamente do Supabase
+         */
         async function deleteTransaction(id) {
             if (!currentUser) return;
 
-            localData.transactions = localData.transactions.filter(t => t.id !== id);
-            saveToLocalStorage();
-            console.log('🗑️ Transação removida localmente:', id);
-
-            if (!isOnline || String(id).startsWith('local_')) {
+            if (!isOnline || !supabaseClient) {
+                showNotification('⚠️ Sem conexão. Não é possível deletar.', 'error');
                 return;
             }
 
@@ -3483,13 +3505,15 @@
                     .eq('id', id);
 
                 if (error) throw error;
-                console.log('☁️ Transação removida do Supabase:', id);
+                
+                // Remove da memória local
+                localData.transactions = localData.transactions.filter(t => t.id !== id);
+                
+                console.log('✅ Transação removida do Supabase:', id);
                 
             } catch (error) {
-                console.error('❌ Erro ao remover do Supabase:', error);
-                localData._pendingDeletions = localData._pendingDeletions || [];
-                localData._pendingDeletions.push(id);
-                saveToLocalStorage();
+                console.error('❌ Erro ao remover transação:', error);
+                showNotification('❌ Erro ao deletar: ' + error.message, 'error');
             }
         }
 
@@ -3507,7 +3531,7 @@
                     updated_at: new Date().toISOString(),
                     _syncPending: true
                 };
-                saveToLocalStorage();
+                
                 console.log('💾 Pagamento registrado localmente:', id);
             }
 
@@ -3536,7 +3560,7 @@
                     if (error.code === 'PGRST301' || error.code === 'ECONNREFUSED' || !navigator.onLine) {
                         if (localIndex !== -1) {
                             localData.transactions[localIndex]._syncPending = true;
-                            saveToLocalStorage();
+                            
                         }
                         updateConnectionStatus('offline');
                         return localData.transactions[localIndex];
@@ -3550,7 +3574,7 @@
                         _syncPending: false,
                         _syncedAt: new Date().toISOString()
                     };
-                    saveToLocalStorage();
+                    
                 }
 
                 updateConnectionStatus('online');
@@ -3561,7 +3585,7 @@
                 
                 if (localIndex !== -1) {
                     localData.transactions[localIndex]._syncPending = true;
-                    saveToLocalStorage();
+                    
                 }
                 
                 updateConnectionStatus('offline');
@@ -3585,7 +3609,7 @@
                 id: 'local_hist_' + Date.now(),
                 _syncPending: true
             });
-            saveToLocalStorage();
+            
 
             if (!isOnline) return;
 
@@ -3695,107 +3719,18 @@
         // SINCRONIZAÇÃO - VERSÃO APRIMORADA (CORRIGIDA)
         // ==========================================
 
-        async function forceSync() {
-            if (!isOnline) {
-                showNotification('Sem conexão com o servidor', 'error');
-                return;
-            }
-
-            if (isDevMode) {
-                console.log('Modo desenvolvedor: sincronização com servidor não disponível');
-                showNotification('Modo desenvolvedor não suporta sincronização', 'warning');
-                return;
-            }
-
-            updateConnectionStatus('syncing');
-            
-            try {
-                const pendingTransactions = localData.transactions.filter(t => t._syncPending);
-                console.log(`🔄 Sincronizando ${pendingTransactions.length} transações pendentes...`);
-                
-                for (const transaction of pendingTransactions) {
-                    if (String(transaction.id).startsWith('local_')) {
-                        // --- INSERT ---
-                        const dataToInsert = {};
-                        ALLOWED_INSERT_FIELDS.forEach(field => {
-                            if (transaction[field] !== undefined) dataToInsert[field] = transaction[field];
-                        });
-
-                        const { data: newData, error } = await supabaseClient
-                            .from('transactions')
-                            .insert([dataToInsert])
-                            .select()
-                            .single();
-
-                        if (error) throw error;
-
-                        const index = localData.transactions.findIndex(t => t.id === transaction.id);
-                        if (index !== -1 && newData) {
-                            localData.transactions[index] = { 
-                                ...newData, 
-                                _syncPending: false,
-                                _syncedAt: new Date().toISOString()
-                            };
-                        }
-                    } else {
-                        // --- UPDATE ---
-                        const dataToUpdate = {};
-                        ALLOWED_UPDATE_FIELDS.forEach(field => {
-                            if (transaction[field] !== undefined) dataToUpdate[field] = transaction[field];
-                        });
-
-                        const { error } = await supabaseClient
-                            .from('transactions')
-                            .update(dataToUpdate)
-                            .eq('id', transaction.id);
-
-                        if (error) throw error;
-
-                        const index = localData.transactions.findIndex(t => t.id === transaction.id);
-                        if (index !== -1) {
-                            localData.transactions[index]._syncPending = false;
-                            localData.transactions[index]._syncedAt = new Date().toISOString();
-                        }
-                    }
-                }
-
-                // Processa exclusões pendentes
-                if (localData._pendingDeletions && localData._pendingDeletions.length > 0) {
-                    for (const id of localData._pendingDeletions) {
-                        if (!String(id).startsWith('local_')) {
-                            const { error } = await supabaseClient
-                                .from('transactions')
-                                .delete()
-                                .eq('id', id);
-                            if (error) throw error;
-                        }
-                    }
-                    localData._pendingDeletions = [];
-                }
-
-                saveToLocalStorage();
-                await loadAllData(); // Atualiza interface com dados mais recentes
-                
-                updateConnectionStatus('online');
-                showNotification(`Sincronização concluída! ${pendingTransactions.length} itens sincronizados.`);
-                return true;
-                
-            } catch (error) {
-                console.error('❌ Erro detalhado na sincronização:', error);
-                if (error.details) console.error('Detalhes:', error.details);
-                if (error.message) console.error('Mensagem:', error.message);
-                updateConnectionStatus('offline');
-                showNotification('Erro na sincronização: ' + (error.message || 'Erro desconhecido'), 'error');
-                throw error;
-            }
-        }
+        // ==========================================
+        // NOTA: função forceSync removida - não é mais necessária
+        // Todas as operações são sincronizadas automaticamente via Supabase
+        // ==========================================
 
         // ==========================================
         // FUNÇÕES REALTIME - SINCRONIZAÇÃO EM TEMPO REAL
         // ==========================================
 
         /**
-         * Configura a inscrição no canal Realtime para broadcast de sincronização
+         * Configura Realtime para escutar mudanças na tabela transactions
+         * Todos os usuários recebem notificações de INSERT, UPDATE e DELETE em tempo real
          */
         function setupRealtimeSubscription() {
             if (!isOnline || !supabaseClient || isDevMode) {
@@ -3807,49 +3742,70 @@
                 realtimeChannel.unsubscribe();
             }
 
-            console.log('📡 Configurando canal Realtime: sync-channel');
+            console.log('📡 Configurando Realtime para tabela transactions');
 
-            realtimeChannel = supabaseClient.channel('sync-channel', {
-                config: {
-                    broadcast: { self: false } // Não receber próprios eventos
-                }
-            });
-
-            realtimeChannel
-                .on('broadcast', { event: 'data-updated' }, (payload) => {
-                    console.log('📡 Evento de sincronização recebido:', payload);
-
-                    if (!payload || !payload.payload) {
-                        console.warn('📡 Payload inválido recebido');
-                        return;
+            // Cria canal para escutar mudanças na tabela transactions
+            realtimeChannel = supabaseClient
+                .channel('transactions-changes')
+                .on(
+                    'postgres_changes',
+                    { 
+                        event: '*', // Escuta INSERT, UPDATE, DELETE
+                        schema: 'public',
+                        table: 'transactions'
+                    },
+                    (payload) => {
+                        console.log('📡 Mudança detectada na tabela transactions:', payload);
+                        
+                        const { eventType, new: newRecord, old: oldRecord } = payload;
+                        
+                        // Recarrega dados do mês atual
+                        const currentYear = currentMonth.getFullYear();
+                        const currentMonthNum = currentMonth.getMonth() + 1;
+                        
+                        if (eventType === 'INSERT' && newRecord) {
+                            console.log('➕ Nova transação inserida:', newRecord.id);
+                            // Verifica se é do mês atual antes de adicionar
+                            const recordDate = new Date(newRecord.due_date);
+                            if (recordDate.getFullYear() === currentYear && 
+                                recordDate.getMonth() === currentMonthNum - 1) {
+                                
+                                // Verifica se já não existe (para evitar duplicatas)
+                                if (!localData.transactions.find(t => t.id === newRecord.id)) {
+                                    localData.transactions.push(newRecord);
+                                    renderData(); // Atualiza interface
+                                    showNotification('📡 Nova transação adicionada!', 'info');
+                                }
+                            }
+                        } 
+                        else if (eventType === 'UPDATE' && newRecord) {
+                            console.log('✏️ Transação atualizada:', newRecord.id);
+                            // Atualiza na memória local
+                            const index = localData.transactions.findIndex(t => t.id === newRecord.id);
+                            if (index !== -1) {
+                                localData.transactions[index] = newRecord;
+                                renderData(); // Atualiza interface
+                                showNotification('📡 Transação atualizada!', 'info');
+                            }
+                        } 
+                        else if (eventType === 'DELETE' && oldRecord) {
+                            console.log('🗑️ Transação deletada:', oldRecord.id);
+                            // Remove da memória local
+                            localData.transactions = localData.transactions.filter(t => t.id !== oldRecord.id);
+                            renderData(); // Atualiza interface
+                            showNotification('📡 Transação removida!', 'info');
+                        }
                     }
-
-                    const eventData = payload.payload;
-
-                    if (eventData.userId === currentUser?.id) {
-                        console.log('📡 Ignorando evento do próprio usuário');
-                        return;
-                    }
-
-                    // Verifica se o evento é recente (evita processar eventos antigos ao reconectar)
-                    const eventTime = new Date(eventData.timestamp);
-                    const now = new Date();
-                    const diffMinutes = (now - eventTime) / (1000 * 60);
-
-                    if (diffMinutes > 5) {
-                        console.log('📡 Evento muito antigo, ignorando');
-                        return;
-                    }
-
-                    console.log('📡 Recarregando dados devido a atualização externa');
-                    handleExternalSync(eventData);
-                })
+                )
                 .subscribe((status) => {
-                    console.log('📡 Status do canal Realtime:', status);
+                    console.log('📡 Status do Realtime:', status);
                     if (status === 'SUBSCRIBED') {
-                        console.log('✅ Canal Realtime conectado com sucesso');
+                        console.log('✅ Realtime conectado - sincronização automática ativa!');
+                        showNotification('✅ Sincronização em tempo real ativada!', 'success');
                     } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-                        console.warn('⚠️ Canal Realtime desconectado:', status);
+                        console.warn('⚠️ Realtime desconectado:', status);
+                        showNotification('⚠️ Sincronização automática desconectada', 'warning');
+                        // Tenta reconectar após 5 segundos
                         setTimeout(() => {
                             if (isOnline && currentUser && !isDevMode) {
                                 setupRealtimeSubscription();
@@ -3862,136 +3818,10 @@
         /**
          * Publica evento de sincronização para outros usuários
          */
-        async function publishSyncEvent() {
-            if (!realtimeChannel || !isOnline) {
-                console.warn('📡 Não foi possível publicar evento: canal offline ou inexistente');
-                return false;
-            }
-
-            try {
-                const eventData = {
-                    type: 'data-updated',
-                    userId: currentUser?.id,
-                    userEmail: currentUser?.email,
-                    timestamp: new Date().toISOString(),
-                    month: currentMonth.getMonth() + 1,
-                    year: currentMonth.getFullYear()
-                };
-
-                const result = await realtimeChannel.send({
-                    type: 'broadcast',
-                    event: 'data-updated',
-                    payload: eventData
-                });
-
-                console.log('📡 Evento de sincronização publicado:', result);
-                return true;
-
-            } catch (error) {
-                console.error('❌ Erro ao publicar evento de sincronização:', error);
-                return false;
-            }
-        }
-
-        /**
-         * Handler para sincronização manual iniciada pelo usuário
-         */
-        async function handleManualSync() {
-            if (isDevMode) {
-                showNotification('Modo desenvolvedor: sincronização com servidor não disponível', 'warning');
-                return;
-            }
-
-            const syncBtn = document.getElementById('syncButton');
-
-            if (isSyncing) {
-                console.log('⏳ Sincronização já em andamento');
-                return;
-            }
-
-            if (!isOnline) {
-                showNotification('Você está offline. Conecte-se à internet para sincronizar.', 'error');
-                return;
-            }
-
-            try {
-                isSyncing = true;
-
-                if (syncBtn) {
-                    syncBtn.disabled = true;
-                    syncBtn.innerHTML = '🔄 Sincronizando...';
-                }
-
-                updateConnectionStatus('syncing');
-
-                console.log('🔄 Iniciando sincronização manual...');
-                await forceSync();
-
-                console.log('📡 Publicando evento de atualização...');
-                const published = await publishSyncEvent();
-
-                if (published) {
-                    showNotification('✅ Sincronização concluída! Outros usuários serão notificados.', 'success');
-                } else {
-                    showNotification('✅ Dados sincronizados, mas não foi possível notificar outros usuários.', 'warning');
-                }
-
-            } catch (error) {
-                console.error('❌ Erro na sincronização manual:', error);
-                showNotification('❌ Erro ao sincronizar: ' + error.message, 'error');
-                updateConnectionStatus('offline');
-            } finally {
-                isSyncing = false;
-
-                if (syncBtn) {
-                    syncBtn.disabled = false;
-                    syncBtn.innerHTML = '🔄 SINCRONIZAR';
-                }
-
-                if (isOnline) {
-                    updateConnectionStatus('online');
-                }
-            }
-        }
-
-        /**
-         * Handler para sincronização externa (iniciada por outro usuário)
-         */
-        async function handleExternalSync(eventData) {
-            const currentYear = currentMonth.getFullYear();
-            const currentMonthNum = currentMonth.getMonth() + 1;
-
-            const hasPendingChanges = localData.transactions.some(t => t._syncPending);
-
-            if (hasPendingChanges) {
-                console.log('📡 Há alterações pendentes locais. Adiando recarga automática.');
-                showNotification('📡 Novos dados disponíveis. Clique em SINCRONIZAR para atualizar.', 'info');
-
-                localData._hasExternalUpdates = true;
-                saveToLocalStorage();
-                return;
-            }
-
-            if (eventData.year !== currentYear || eventData.month !== currentMonthNum) {
-                console.log('📡 Atualização em outro período, recarga adiada');
-                return;
-            }
-
-            try {
-                showNotification('📡 Atualizando dados...', 'info');
-                await loadAllData();
-                showNotification('✅ Dados atualizados!', 'success');
-
-                if (localData._hasExternalUpdates) {
-                    delete localData._hasExternalUpdates;
-                    saveToLocalStorage();
-                }
-
-            } catch (error) {
-                console.error('❌ Erro ao recarregar dados externos:', error);
-                showNotification('⚠️ Falha ao atualizar dados automaticamente. Tente sincronizar manualmente.', 'error');
-            }
-        }
+        // ==========================================
+        // NOTA: Funções de sincronização manual removidas
+        // Agora a sincronização é 100% automática via Realtime Database Changes
+        // ==========================================
 
         /**
          * Fecha o canal Realtime
@@ -4005,40 +3835,9 @@
         }
 
         // ==========================================
-        // LOCALSTORAGE - VERSÃO ESTENDIDA
+        // NOTA: localStorage foi removido - todos os dados vêm do Supabase
+        // Sincronização em tempo real via Supabase Realtime
         // ==========================================
-
-        function saveToLocalStorage() {
-            try {
-                localStorage.setItem('fpl_localData_v2', JSON.stringify(localData));
-                console.log('💾 Dados salvos no localStorage');
-            } catch (e) {
-                console.error('Erro ao salvar no localStorage:', e);
-                showNotification('Erro ao salvar dados localmente', 'error');
-            }
-        }
-
-        function loadFromLocalStorage() {
-            try {
-                const saved = localStorage.getItem('fpl_localData_v2');
-                if (saved) {
-                    localData = JSON.parse(saved);
-                    if (!localData.paymentHistory) localData.paymentHistory = [];
-                    if (!localData._pendingDeletions) localData._pendingDeletions = [];
-                    console.log('📂 Dados carregados do localStorage:', localData.transactions.length, 'transações');
-                } else {
-                    const oldSaved = localStorage.getItem('fpl_localData');
-                    if (oldSaved) {
-                        localData = JSON.parse(oldSaved);
-                        if (!localData.paymentHistory) localData.paymentHistory = [];
-                        console.log('📂 Dados migrados da versão antiga');
-                        saveToLocalStorage();
-                    }
-                }
-            } catch (e) {
-                console.error('Erro ao carregar do localStorage:', e);
-            }
-        }
 
         // ==========================================
         // INICIALIZAÇÃO DO APP
@@ -4077,7 +3876,7 @@
         };
 
         async function initApp() {
-            loadFromLocalStorage();
+            // localStorage removido - dados carregados apenas do Supabase
             updateDateTime();
             setInterval(updateDateTime, 1000);
             updateMonthDisplay();
@@ -4090,10 +3889,6 @@
             setInterval(checkAlerts, 60000);
             setupBackupDragAndDrop();
             
-            if (isOnline && localData.transactions.some(t => t._syncPending)) {
-                console.log('🔄 Transações pendentes detectadas, iniciando sincronização...');
-                setTimeout(forceSync, 2000);
-            }
         }
 
         function updateDateTime() {
@@ -4467,7 +4262,7 @@
                     paymentHistory: []
                 };
                 
-                saveToLocalStorage();
+                
 
                 // Se estiver online, tenta limpar no Supabase também
                 if (isOnline && supabaseClient && !isDevMode) {
@@ -5140,7 +4935,7 @@
             };
 
             localData.appointments.push(appointment);
-            saveToLocalStorage();
+            
             renderDayAppointments();
             renderCalendar();
             
@@ -5155,7 +4950,7 @@
         function deleteAppointment(id) {
             if (confirm('Excluir este compromisso?')) {
                 localData.appointments = localData.appointments.filter(a => a.id !== id);
-                saveToLocalStorage();
+                
                 renderDayAppointments();
                 renderCalendar();
                 checkAlerts();
@@ -5280,7 +5075,7 @@
                     created_at: new Date().toISOString()
                 };
                 localData.notebooks.push(notebook);
-                saveToLocalStorage();
+                
                 selectNotebook(notebook.id);
                 showNotification('Caderno criado!');
             }
@@ -5338,7 +5133,7 @@
             };
             
             localData.notes.push(note);
-            saveToLocalStorage();
+            
             openNote(note.id);
             showNotification('Nota criada!');
         }
@@ -5372,7 +5167,7 @@
                 note.title = document.getElementById('noteTitle').value;
                 note.content = document.getElementById('noteContent').value;
                 note.updated_at = new Date().toISOString();
-                saveToLocalStorage();
+                
                 showNotification('Nota salva!');
             }
         }
@@ -5382,7 +5177,7 @@
             
             if (confirm('Excluir esta nota?')) {
                 localData.notes = localData.notes.filter(n => n.id !== currentNoteId);
-                saveToLocalStorage();
+                
                 closeNoteEditor();
                 renderNotes();
                 showNotification('Nota excluída!');
@@ -5426,7 +5221,7 @@
                         type: 'image',
                         data: e.target.result
                     });
-                    saveToLocalStorage();
+                    
                     renderNoteMedia(note.media);
                 }
             };
@@ -5458,7 +5253,7 @@
             const note = localData.notes.find(n => n.id === currentNoteId);
             if (note && note.media) {
                 note.media.splice(index, 1);
-                saveToLocalStorage();
+                
                 renderNoteMedia(note.media);
             }
         }
@@ -5543,7 +5338,7 @@ Isso substituirá os dados atuais!`)) {
                         if (!localData.appointments) localData.appointments = [];
                         if (!localData.paymentHistory) localData.paymentHistory = [];
                         if (!localData._pendingDeletions) localData._pendingDeletions = [];
-                        saveToLocalStorage();
+                        
                         // NÃO chama loadAllData() pois iria re-buscar do Supabase e
                         // SOBRESCREVER os dados do backup com dados atuais do servidor.
                         updateDashboard();
@@ -5785,7 +5580,6 @@ Isso substituirá os dados atuais!`)) {
         window.closeDayAppointmentsModal = closeDayAppointmentsModal;
         window.closeBackupModal = closeBackupModal;
         window.handleBackupFileSelect = handleBackupFileSelect;
-        window.forceSync = forceSync;
         window.closeSettingsModal = closeSettingsModal;
         window.validatePassword = validatePassword;
         window.closeCalculator = closeCalculator;

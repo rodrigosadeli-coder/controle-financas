@@ -5627,7 +5627,7 @@ Isso substituirá os dados atuais!`)) {
         window.closeRealtimeChannel = closeRealtimeChannel;
 
         // Inicializar ao carregar
-                        (async function startApp() { for (let i = 1; i <= 5; i++) { try { if (typeof supabase === 'undefined' || typeof supabase.createClient !== 'function') { await new Promise(r => setTimeout(r, 500)); continue; } await initSupabase(); if (supabaseClient) return; } catch(e) { console.error('Tentativa ' + i + ' falhou:', e); } await new Promise(r => setTimeout(r, 1000)); } hideLoading(); })();
+                        (async function startApp() { for (let i = 1; i <= 5; i++) { try { if (typeof supabase === 'undefined' || typeof supabase.createClient !== 'function') { await new Promise(r => setTimeout(r, 500)); continue; } await Promise.race([initSupabase(), new Promise((_, rej) => setTimeout(() => rej(new Error('initSupabase timeout')), 15000))]); if (supabaseClient) return; } catch(e) { console.error('Tentativa ' + i + ' falhou:', e); } await new Promise(r => setTimeout(r, 1000)); } hideLoading(); })();
     </script>
 </body>
 </html>

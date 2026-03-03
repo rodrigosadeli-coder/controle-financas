@@ -1116,6 +1116,34 @@
             color: #6b7280;
         }
 
+        /* CORREÇÃO: Notificação menos intrusiva no mobile */
+        @media (max-width: 768px) {
+            .notification {
+                top: auto;
+                bottom: 1rem;
+                left: 1rem;
+                right: 1rem;
+                max-width: none;
+                padding: 0.6rem 1rem;
+                font-size: 0.85rem;
+                border-radius: 8px;
+                transform: translateY(200px);
+            }
+            
+            .notification.show {
+                transform: translateY(0);
+            }
+            
+            .notification-title {
+                font-size: 0.9rem;
+                margin-bottom: 0.1rem;
+            }
+            
+            .notification-text {
+                font-size: 0.8rem;
+            }
+        }
+
         /* Settings Panel */
         .settings-panel {
             background-color: white;
@@ -2048,6 +2076,72 @@
             font-weight: 700;
             color: var(--warning);
         }
+
+        /* CORREÇÃO: Totalizadores de Receitas e Despesas nas Repartições */
+        .partition-totals-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .partition-total-card {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 2px solid #86efac;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .partition-total-card.expenses {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-color: #fecaca;
+        }
+
+        .partition-total-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .partition-total-card .partition-total-label {
+            color: #065f46;
+        }
+
+        .partition-total-card.expenses .partition-total-label {
+            color: #991b1b;
+        }
+
+        .partition-total-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .partition-total-card .partition-total-value {
+            color: var(--success);
+        }
+
+        .partition-total-card.expenses .partition-total-value {
+            color: var(--danger);
+        }
+
+        @media (max-width: 480px) {
+            .partition-totals-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .partition-total-value {
+                font-size: 1.25rem;
+            }
+        }
     </style>
 <base target="_blank">
 </head>
@@ -2142,8 +2236,6 @@
             <button class="nav-btn" onclick="openHistoryModal()">📜 Histórico</button>
             <button class="nav-btn" onclick="toggleNotes()">📝 Bloco de Notas</button>
             <button class="nav-btn btn-backup-nav" onclick="openBackupModal()">💾 Backup</button>
-            <!-- Botão SINCRONIZAR -->
-            <button class="nav-btn" onclick="handleManualSync()" id="syncButton" title="Sincronizar dados com o servidor">🔄 SINCRONIZAR</button>
             <button class="nav-btn" onclick="openSettingsModal()">⚙️ Configurações</button>
             <button class="nav-btn exit" onclick="logout()">🚪 Sair</button>
             <div class="nav-notification" style="display: inline-block; position: relative; margin-left: 10px; cursor: pointer; vertical-align: middle;">
@@ -2159,8 +2251,8 @@
                 <!-- Title -->
                 <div class="title-section">
                     <div class="title-wrapper">
-                    <span class="title-fleur">⚜️</span>
-                    <h1 class="main-title">Finanças Família Pedrosa de Lima</h1>
+                        <span class="title-fleur">⚜️</span>
+                        <h1 class="main-title">Finanças Família Pedrosa de Lima</h1>
                     </div>
                 </div>
 
@@ -2174,123 +2266,147 @@
                 <!-- Cards Grid -->
                 <div class="cards-grid">
                     <div class="card">
-                    <div class="card-label">💰 Saldo Total</div>
-                    <div class="card-value card-saldo" id="totalBalance">R$ 0,00</div>
+                        <div class="card-label">💰 Saldo Total</div>
+                        <div class="card-value card-saldo" id="totalBalance">R$ 0,00</div>
                     </div>
                     <div class="card">
-                    <div class="card-label">📥 Receitas</div>
-                    <div class="card-value card-receitas" id="totalIncome">R$ 0,00</div>
+                        <div class="card-label">📥 Receitas</div>
+                        <div class="card-value card-receitas" id="totalIncome">R$ 0,00</div>
                     </div>
                     <div class="card">
-                    <div class="card-label">📤 Despesas</div>
-                    <div class="card-value card-despesas" id="totalExpenses">R$ 0,00</div>
+                        <div class="card-label">📤 Despesas</div>
+                        <div class="card-value card-despesas" id="totalExpenses">R$ 0,00</div>
                     </div>
                     <div class="card" id="pendingCard" onclick="openPendingModal()">
-                    <div class="card-label">⏰ Pendentes</div>
-                    <div class="card-value card-pendencias" id="totalPending">R$ 0,00</div>
+                        <div class="card-label">⏰ Pendentes</div>
+                        <div class="card-value card-pendencias" id="totalPending">R$ 0,00</div>
                     </div>
                 </div>
 
                 <!-- Repartições -->
                 <div class="reparticao-section">
                     <div class="reparticao-card" id="reparticaoCard1" onclick="togglePartition(1)">
-                    <div>
-                    <div class="reparticao-title">1ª Repartição</div>
-                    <div class="reparticao-subtitle">Vencimento no 5º dia útil</div>
-                    </div>
-                    <span class="dropdown-arrow" id="arrow1">▼</span>
+                        <div>
+                            <div class="reparticao-title">1ª Repartição</div>
+                            <div class="reparticao-subtitle">Vencimento no 5º dia útil</div>
+                        </div>
+                        <span class="dropdown-arrow" id="arrow1">▼</span>
                     </div>
                     <div class="reparticao-card" id="reparticaoCard2" onclick="togglePartition(2)">
-                    <div>
-                    <div class="reparticao-title">2ª Repartição</div>
-                    <div class="reparticao-subtitle">Vencimento no dia 20</div>
-                    </div>
-                    <span class="dropdown-arrow" id="arrow2">▼</span>
+                        <div>
+                            <div class="reparticao-title">2ª Repartição</div>
+                            <div class="reparticao-subtitle">Vencimento no dia 20</div>
+                        </div>
+                        <span class="dropdown-arrow" id="arrow2">▼</span>
                     </div>
                 </div>
 
                 <!-- Conteúdo das Repartições -->
                 <div class="partition-content" id="partitionContent1">
                     <div class="partition-header-indicator">
-                    <h3>📂 1ª Repartição - Inserção de Dados</h3>
-                    <span class="partition-badge">Vencimento: 5º dia útil</span>
+                        <h3>📂 1ª Repartição - Inserção de Dados</h3>
+                        <span class="partition-badge">Vencimento: 5º dia útil</span>
                     </div>
                     <div class="section-tabs" id="tabsPartition1">
-                    <button class="section-tab active" data-section="1" data-partition="1">Fixas</button>
-                    <button class="section-tab" data-section="2" data-partition="1">Variáveis</button>
-                    <button class="section-tab" data-section="3" data-partition="1">Parceladas</button>
-                    <button class="section-tab" data-section="4" data-partition="1">À Vista</button>
-                    <button class="section-tab" data-section="5" data-partition="1">Entradas</button>
+                        <button class="section-tab active" data-section="1" data-partition="1">Fixas</button>
+                        <button class="section-tab" data-section="2" data-partition="1">Variáveis</button>
+                        <button class="section-tab" data-section="3" data-partition="1">Parceladas</button>
+                        <button class="section-tab" data-section="4" data-partition="1">À Vista</button>
+                        <button class="section-tab" data-section="5" data-partition="1">Entradas</button>
                     </div>
                     <button class="btn-action" onclick="openAddModal(1)">+ Nova Transação</button>
                     <div id="contentPartition1"></div>
+                    
+                    <!-- CORREÇÃO: Totalizadores da 1ª Repartição -->
+                    <div class="partition-totals-container" id="totalsPartition1">
+                        <div class="partition-total-card">
+                            <div class="partition-total-label">📥 Total Receitas</div>
+                            <div class="partition-total-value" id="totalIncome1">R$ 0,00</div>
+                        </div>
+                        <div class="partition-total-card expenses">
+                            <div class="partition-total-label">📤 Total Despesas</div>
+                            <div class="partition-total-value" id="totalExpenses1">R$ 0,00</div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="partition-content" id="partitionContent2">
                     <div class="partition-header-indicator">
-                    <h3>📂 2ª Repartição - Inserção de Dados</h3>
-                    <span class="partition-badge">Vencimento: Dia 20</span>
+                        <h3>📂 2ª Repartição - Inserção de Dados</h3>
+                        <span class="partition-badge">Vencimento: Dia 20</span>
                     </div>
                     <div class="section-tabs" id="tabsPartition2">
-                    <button class="section-tab active" data-section="6" data-partition="2">Fixas</button>
-                    <button class="section-tab" data-section="7" data-partition="2">Variáveis</button>
-                    <button class="section-tab" data-section="8" data-partition="2">Parceladas</button>
-                    <button class="section-tab" data-section="9" data-partition="2">À Vista</button>
-                    <button class="section-tab" data-section="10" data-partition="2">Entradas</button>
+                        <button class="section-tab active" data-section="6" data-partition="2">Fixas</button>
+                        <button class="section-tab" data-section="7" data-partition="2">Variáveis</button>
+                        <button class="section-tab" data-section="8" data-partition="2">Parceladas</button>
+                        <button class="section-tab" data-section="9" data-partition="2">À Vista</button>
+                        <button class="section-tab" data-section="10" data-partition="2">Entradas</button>
                     </div>
                     <button class="btn-action" onclick="openAddModal(2)">+ Nova Transação</button>
                     <div id="contentPartition2"></div>
+                    
+                    <!-- CORREÇÃO: Totalizadores da 2ª Repartição -->
+                    <div class="partition-totals-container" id="totalsPartition2">
+                        <div class="partition-total-card">
+                            <div class="partition-total-label">📥 Total Receitas</div>
+                            <div class="partition-total-value" id="totalIncome2">R$ 0,00</div>
+                        </div>
+                        <div class="partition-total-card expenses">
+                            <div class="partition-total-label">📤 Total Despesas</div>
+                            <div class="partition-total-value" id="totalExpenses2">R$ 0,00</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Bloco de Notas Resumo -->
                 <div class="notas-section" onclick="toggleNotes()">
                     <div class="notas-title">
-                    <span>📝</span>
-                    <span>Bloco de Notas</span>
+                        <span>📝</span>
+                        <span>Bloco de Notas</span>
                     </div>
                     <div class="notas-actions">
-                    <button class="notas-btn" onclick="event.stopPropagation(); createNotebook()">+ Caderno</button>
-                    <button class="notas-btn" onclick="event.stopPropagation(); createNote()">+ Nota</button>
+                        <button class="notas-btn" onclick="event.stopPropagation(); createNotebook()">+ Caderno</button>
+                        <button class="notas-btn" onclick="event.stopPropagation(); createNote()">+ Nota</button>
                     </div>
                 </div>
 
                 <!-- Bloco de Notas Expandido -->
                 <div class="notes-container" id="notesContainer">
                     <div class="notes-header">
-                    <div class="notes-title">📝 Bloco de Notas</div>
-                    <button class="notas-btn" onclick="toggleNotes()">✕ Fechar</button>
+                        <div class="notes-title">📝 Bloco de Notas</div>
+                        <button class="notas-btn" onclick="toggleNotes()">✕ Fechar</button>
                     </div>
                     <div class="notes-layout">
-                    <div class="notebooks-sidebar">
-                    <div class="sidebar-title">📚 Cadernos</div>
-                    <div id="notebooksList"></div>
-                    <button class="btn-add-notebook" onclick="createNotebook()">+ Novo Caderno</button>
-                    </div>
-                    <div class="notes-content">
-                    <div id="notesListView">
-                    <div class="notes-toolbar">
-                    <button class="btn-add-note" onclick="createNote()">+ Nova Nota</button>
-                    <div class="sync-indicator" id="notesSyncStatus"></div>
-                    </div>
-                    <div id="notesList"></div>
-                    </div>
-                    <div id="noteEditorView" class="note-editor">
-                    <input type="text" class="note-input-title" id="noteTitle" placeholder="Título da Nota">
-                    <div class="notes-toolbar">
-                    <button class="toolbar-btn" onclick="formatText('bold')"><b>B</b></button>
-                    <button class="toolbar-btn" onclick="formatText('italic')"><i>I</i></button>
-                    <button class="toolbar-btn" onclick="formatText('underline')"><u>U</u></button>
-                    <button class="toolbar-btn" onclick="insertList()">• Lista</button>
-                    <button class="toolbar-btn" onclick="document.getElementById('noteImageInput').click()">🖼️ Imagem</button>
-                    <input type="file" id="noteImageInput" accept="image/*" style="display: none;" onchange="handleNoteImage(event)">
-                    <button class="toolbar-btn" onclick="closeNoteEditor()">✕ Fechar</button>
-                    <button class="toolbar-btn btn-success" onclick="saveNote()">💾 Salvar</button>
-                    <button class="toolbar-btn btn-danger" onclick="deleteCurrentNote()">🗑️ Excluir</button>
-                    </div>
-                    <textarea class="note-textarea" id="noteContent" placeholder="Digite sua nota aqui..."></textarea>
-                    <div class="media-preview" id="noteMediaPreview"></div>
-                    </div>
-                    </div>
+                        <div class="notebooks-sidebar">
+                            <div class="sidebar-title">📚 Cadernos</div>
+                            <div id="notebooksList"></div>
+                            <button class="btn-add-notebook" onclick="createNotebook()">+ Novo Caderno</button>
+                        </div>
+                        <div class="notes-content">
+                            <div id="notesListView">
+                                <div class="notes-toolbar">
+                                    <button class="btn-add-note" onclick="createNote()">+ Nova Nota</button>
+                                    <div class="sync-indicator" id="notesSyncStatus"></div>
+                                </div>
+                                <div id="notesList"></div>
+                            </div>
+                            <div id="noteEditorView" class="note-editor">
+                                <input type="text" class="note-input-title" id="noteTitle" placeholder="Título da Nota">
+                                <div class="notes-toolbar">
+                                    <button class="toolbar-btn" onclick="formatText('bold')"><b>B</b></button>
+                                    <button class="toolbar-btn" onclick="formatText('italic')"><i>I</i></button>
+                                    <button class="toolbar-btn" onclick="formatText('underline')"><u>U</u></button>
+                                    <button class="toolbar-btn" onclick="insertList()">• Lista</button>
+                                    <button class="toolbar-btn" onclick="document.getElementById('noteImageInput').click()">🖼️ Imagem</button>
+                                    <input type="file" id="noteImageInput" accept="image/*" style="display: none;" onchange="handleNoteImage(event)">
+                                    <button class="toolbar-btn" onclick="closeNoteEditor()">✕ Fechar</button>
+                                    <button class="toolbar-btn btn-success" onclick="saveNote()">💾 Salvar</button>
+                                    <button class="toolbar-btn btn-danger" onclick="deleteCurrentNote()">🗑️ Excluir</button>
+                                </div>
+                                <textarea class="note-textarea" id="noteContent" placeholder="Digite sua nota aqui..."></textarea>
+                                <div class="media-preview" id="noteMediaPreview"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2317,47 +2433,47 @@
                     <input type="hidden" id="sectionId">
 
                     <div class="form-row">
-                    <label class="form-label-modal">Tipo</label>
-                    <select class="form-input-modal" id="transactionType">
-                    <option value="expense">Despesa</option>
-                    <option value="income">Receita</option>
-                    </select>
+                        <label class="form-label-modal">Tipo</label>
+                        <select class="form-input-modal" id="transactionType">
+                            <option value="expense">Despesa</option>
+                            <option value="income">Receita</option>
+                        </select>
                     </div>
 
                     <div class="form-row">
-                    <label class="form-label-modal">Descrição</label>
-                    <input type="text" class="form-input-modal" id="description" placeholder="Ex: Aluguel, Salário..." required>
+                        <label class="form-label-modal">Descrição</label>
+                        <input type="text" class="form-input-modal" id="description" placeholder="Ex: Aluguel, Salário..." required>
                     </div>
 
                     <div class="form-row">
-                    <label class="form-label-modal">Valor (R$)</label>
-                    <input type="number" class="form-input-modal" id="amount" step="0.01" placeholder="0,00" required>
+                        <label class="form-label-modal">Valor (R$)</label>
+                        <input type="number" class="form-input-modal" id="amount" step="0.01" placeholder="0,00" required>
                     </div>
 
                     <div class="form-row" id="installmentFields" style="display:none;">
-                    <label class="form-label-modal">Número de Parcelas</label>
-                    <input type="number" class="form-input-modal" id="installments" min="1" max="50" value="1">
+                        <label class="form-label-modal">Número de Parcelas</label>
+                        <input type="number" class="form-input-modal" id="installments" min="1" max="50" value="1">
                     </div>
 
                     <div class="form-row">
-                    <label class="form-label-modal">Data de Vencimento</label>
-                    <input type="date" class="form-input-modal" id="dueDate" required>
+                        <label class="form-label-modal">Data de Vencimento</label>
+                        <input type="date" class="form-input-modal" id="dueDate" required>
                     </div>
 
                     <div class="form-row">
-                    <label class="form-label-modal">Status</label>
-                    <select class="form-input-modal" id="status">
-                    <option value="pending">Pendente</option>
-                    <option value="paid">Pago</option>
-                    <option value="received">Recebido</option>
-                    </select>
+                        <label class="form-label-modal">Status</label>
+                        <select class="form-input-modal" id="status">
+                            <option value="pending">Pendente</option>
+                            <option value="paid">Pago</option>
+                            <option value="received">Recebido</option>
+                        </select>
                     </div>
 
                     <div class="form-row" id="autoRenewField" style="display:none;">
-                    <div class="checkbox-group">
-                    <input type="checkbox" id="autoRenew">
-                    <label for="autoRenew">🔄 Renovação automática mensal (6 meses)</label>
-                    </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="autoRenew">
+                            <label for="autoRenew">🔄 Renovação automática mensal (6 meses)</label>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -2423,68 +2539,68 @@
             <div class="modal-body">
                 <div class="history-filters">
                     <div class="filter-group">
-                    <label class="filter-label">Repartição</label>
-                    <select class="filter-select" id="filterPartition" onchange="applyHistoryFilters()">
-                    <option value="">Todas</option>
-                    <option value="1">1ª Repartição</option>
-                    <option value="2">2ª Repartição</option>
-                    </select>
+                        <label class="filter-label">Repartição</label>
+                        <select class="filter-select" id="filterPartition" onchange="applyHistoryFilters()">
+                            <option value="">Todas</option>
+                            <option value="1">1ª Repartição</option>
+                            <option value="2">2ª Repartição</option>
+                        </select>
                     </div>
                     <div class="filter-group">
-                    <label class="filter-label">Categoria</label>
-                    <select class="filter-select" id="filterCategory" onchange="applyHistoryFilters()">
-                    <option value="">Todas</option>
-                    <option value="fixed">Fixas</option>
-                    <option value="variable">Variáveis</option>
-                    <option value="installment">Parceladas</option>
-                    <option value="cash">À Vista</option>
-                    <option value="income">Entradas</option>
-                    </select>
+                        <label class="filter-label">Categoria</label>
+                        <select class="filter-select" id="filterCategory" onchange="applyHistoryFilters()">
+                            <option value="">Todas</option>
+                            <option value="fixed">Fixas</option>
+                            <option value="variable">Variáveis</option>
+                            <option value="installment">Parceladas</option>
+                            <option value="cash">À Vista</option>
+                            <option value="income">Entradas</option>
+                        </select>
                     </div>
                     <div class="filter-group">
-                    <label class="filter-label">Tipo</label>
-                    <select class="filter-select" id="filterType" onchange="applyHistoryFilters()">
-                    <option value="">Todos</option>
-                    <option value="expense">Despesas</option>
-                    <option value="income">Receitas</option>
-                    </select>
+                        <label class="filter-label">Tipo</label>
+                        <select class="filter-select" id="filterType" onchange="applyHistoryFilters()">
+                            <option value="">Todos</option>
+                            <option value="expense">Despesas</option>
+                            <option value="income">Receitas</option>
+                        </select>
                     </div>
                     <div class="filter-group">
-                    <label class="filter-label">Status</label>
-                    <select class="filter-select" id="filterStatus" onchange="applyHistoryFilters()">
-                    <option value="">Todos</option>
-                    <option value="paid">Pagos</option>
-                    <option value="pending">Pendentes</option>
-                    <option value="received">Recebidos</option>
-                    </select>
+                        <label class="filter-label">Status</label>
+                        <select class="filter-select" id="filterStatus" onchange="applyHistoryFilters()">
+                            <option value="">Todos</option>
+                            <option value="paid">Pagos</option>
+                            <option value="pending">Pendentes</option>
+                            <option value="received">Recebidos</option>
+                        </select>
                     </div>
                     <div class="filter-group">
-                    <label class="filter-label">Data Inicial</label>
-                    <input type="date" class="filter-input" id="filterDateStart" onchange="applyHistoryFilters()">
+                        <label class="filter-label">Data Inicial</label>
+                        <input type="date" class="filter-input" id="filterDateStart" onchange="applyHistoryFilters()">
                     </div>
                     <div class="filter-group">
-                    <label class="filter-label">Data Final</label>
-                    <input type="date" class="filter-input" id="filterDateEnd" onchange="applyHistoryFilters()">
+                        <label class="filter-label">Data Final</label>
+                        <input type="date" class="filter-input" id="filterDateEnd" onchange="applyHistoryFilters()">
                     </div>
                     <div class="filter-group">
-                    <label class="filter-label">Busca</label>
-                    <input type="text" class="filter-input" id="filterSearch" placeholder="Descrição..." oninput="applyHistoryFilters()">
+                        <label class="filter-label">Busca</label>
+                        <input type="text" class="filter-input" id="filterSearch" placeholder="Descrição..." oninput="applyHistoryFilters()">
                     </div>
                 </div>
                 <div style="overflow-x: auto;">
                     <table class="history-table">
-                    <thead>
-                    <tr>
-                    <th>Data</th>
-                    <th>Descrição</th>
-                    <th>Categoria</th>
-                    <th>Repartição</th>
-                    <th>Tipo</th>
-                    <th>Valor</th>
-                    <th>Status</th>
-                    </tr>
-                    </thead>
-                    <tbody id="historyTableBody"></tbody>
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Descrição</th>
+                                <th>Categoria</th>
+                                <th>Repartição</th>
+                                <th>Tipo</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -2504,28 +2620,28 @@
             <div class="modal-body">
                 <div class="calendar-container">
                     <div class="calendar-header">
-                    <button class="calendar-nav" onclick="changeCalendarMonth(-1)">◀</button>
-                    <h3 id="calendarMonthYear" style="font-family: 'Cinzel', serif;"></h3>
-                    <button class="calendar-nav" onclick="changeCalendarMonth(1)">▶</button>
+                        <button class="calendar-nav" onclick="changeCalendarMonth(-1)">◀</button>
+                        <h3 id="calendarMonthYear" style="font-family: 'Cinzel', serif;"></h3>
+                        <button class="calendar-nav" onclick="changeCalendarMonth(1)">▶</button>
                     </div>
                     <div class="calendar-grid" id="calendarGrid"></div>
                     <div class="calendar-legend">
-                    <div class="legend-item">
-                    <div class="legend-color" style="background: #dbeafe;"></div>
-                    <span>Hoje</span>
-                    </div>
-                    <div class="legend-item">
-                    <div class="legend-color" style="background: #fef2f2; border-left: 3px solid var(--danger);"></div>
-                    <span>Feriado Nacional</span>
-                    </div>
-                    <div class="legend-item">
-                    <div class="legend-color" style="background: #fef3c7; border-left: 3px solid var(--warning);"></div>
-                    <span>Feriado Anápolis/GO</span>
-                    </div>
-                    <div class="legend-item">
-                    <div class="legend-color" style="background: white; border-top: 3px solid var(--blue-royal);"></div>
-                    <span>Compromisso</span>
-                    </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #dbeafe;"></div>
+                            <span>Hoje</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #fef2f2; border-left: 3px solid var(--danger);"></div>
+                            <span>Feriado Nacional</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #fef3c7; border-left: 3px solid var(--warning);"></div>
+                            <span>Feriado Anápolis/GO</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: white; border-top: 3px solid var(--blue-royal);"></div>
+                            <span>Compromisso</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2546,19 +2662,19 @@
                 <div class="appointment-form">
                     <h4 style="margin-bottom: 0.75rem; color: var(--blue-royal);">➕ Novo Compromisso</h4>
                     <div class="form-row">
-                    <label class="form-label-modal">Descrição</label>
-                    <textarea class="form-textarea" id="appointmentDesc" placeholder="Descreva o compromisso..."></textarea>
+                        <label class="form-label-modal">Descrição</label>
+                        <textarea class="form-textarea" id="appointmentDesc" placeholder="Descreva o compromisso..."></textarea>
                     </div>
                     <div class="form-row">
-                    <label class="form-label-modal">Horário (opcional)</label>
-                    <input type="time" class="form-input-modal" id="appointmentTime">
+                        <label class="form-label-modal">Horário (opcional)</label>
+                        <input type="time" class="form-input-modal" id="appointmentTime">
                     </div>
                     <div class="checkbox-group">
-                    <input type="checkbox" id="appointmentAlert">
-                    <label for="appointmentAlert">🔔 Ativar alerta para este compromisso</label>
+                        <input type="checkbox" id="appointmentAlert">
+                        <label for="appointmentAlert">🔔 Ativar alerta para este compromisso</label>
                     </div>
                     <button class="btn btn-save" onclick="saveAppointment()" style="margin-top: 0.75rem; width: 100%;">
-                    💾 Salvar Compromisso
+                        💾 Salvar Compromisso
                     </button>
                 </div>
                 
@@ -2622,36 +2738,30 @@
                 <div style="margin-bottom: 2rem;">
                     <h4 style="margin-bottom: 1rem; color: var(--blue-royal);">Exportar Backup</h4>
                     <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.9rem;">
-                    Baixe todos os seus dados em um arquivo JSON.
+                        Baixe todos os seus dados em um arquivo JSON.
                     </p>
                     <button class="btn btn-save" onclick="exportBackup()" style="width: 100%;">
-                    📥 Download Backup
+                        📥 Download Backup
                     </button>
                 </div>
 
                 <div style="border-top: 2px solid #e5e7eb; padding-top: 2rem;">
                     <h4 style="margin-bottom: 1rem; color: var(--blue-royal);">Restaurar Backup</h4>
                     <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.9rem;">
-                    Arraste um arquivo de backup abaixo ou clique para selecionar.
-                    <br><strong style="color: var(--danger);">Atenção:</strong> Isso substituirá todos os dados atuais!
+                        Arraste um arquivo de backup abaixo ou clique para selecionar.
+                        <br><strong style="color: var(--danger);">Atenção:</strong> Isso substituirá todos os dados atuais!
                     </p>
 
                     <div class="backup-area" id="backupDropArea" onclick="document.getElementById('backupFileInput').click()">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
-                    <p>Clique aqui ou arraste o arquivo de backup</p>
-                    <p style="font-size: 0.85rem; color: #9ca3af; margin-top: 0.5rem;">
-                    Apenas arquivos .json
-                    </p>
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
+                        <p>Clique aqui ou arraste o arquivo de backup</p>
+                        <p style="font-size: 0.85rem; color: #9ca3af; margin-top: 0.5rem;">
+                            Apenas arquivos .json
+                        </p>
                     </div>
                     <input type="file" id="backupFileInput" class="file-input" accept=".json" onchange="handleBackupFileSelect(event)">
                 </div>
 
-                <div style="border-top: 2px solid #e5e7eb; padding-top: 2rem; margin-top: 2rem;">
-                    <h4 style="margin-bottom: 1rem; color: var(--blue-royal);">Sincronização</h4>
-                    <button class="btn btn-primary" onclick="forceSync()" style="width: 100%;">
-                    🔄 Sincronizar Agora
-                    </button>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-cancel" onclick="closeBackupModal()">Fechar</button>
@@ -2671,67 +2781,55 @@
                 <div class="settings-section">
                     <h4 class="settings-section-title">🔐 Alterar Senha</h4>
                     <form id="changePasswordForm">
-                    <div class="form-row">
-                    <label class="form-label-modal">Senha Atual</label>
-                    <input type="password" class="form-input-modal" id="currentPassword" placeholder="Digite sua senha atual" required>
-                    </div>
-                    <div class="form-row">
-                    <label class="form-label-modal">Nova Senha</label>
-                    <input type="password" class="form-input-modal" id="newPassword" placeholder="Digite a nova senha" required oninput="validatePassword()">
-                    </div>
-                    <div class="form-row">
-                    <label class="form-label-modal">Confirmar Nova Senha</label>
-                    <input type="password" class="form-input-modal" id="confirmPassword" placeholder="Confirme a nova senha" required oninput="validatePassword()">
-                    </div>
-                    <div class="password-requirements" id="passwordRequirements">
-                    <strong>Requisitos da senha:</strong>
-                    <ul>
-                    <li id="req-length">Mínimo 6 caracteres</li>
-                    <li id="req-number">Pelo menos 1 número</li>
-                    <li id="req-match">As senhas devem coincidir</li>
-                    </ul>
-                    </div>
+                        <div class="form-row">
+                            <label class="form-label-modal">Senha Atual</label>
+                            <input type="password" class="form-input-modal" id="currentPassword" placeholder="Digite sua senha atual" required>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label-modal">Nova Senha</label>
+                            <input type="password" class="form-input-modal" id="newPassword" placeholder="Digite a nova senha" required oninput="validatePassword()">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label-modal">Confirmar Nova Senha</label>
+                            <input type="password" class="form-input-modal" id="confirmPassword" placeholder="Confirme a nova senha" required oninput="validatePassword()">
+                        </div>
+                        <div class="password-requirements" id="passwordRequirements">
+                            <strong>Requisitos da senha:</strong>
+                            <ul>
+                                <li id="req-length">Mínimo 6 caracteres</li>
+                                <li id="req-number">Pelo menos 1 número</li>
+                                <li id="req-match">As senhas devem coincidir</li>
+                            </ul>
+                        </div>
                     </form>
                 </div>
 
-                <!-- Diagnóstico e Qualidade -->
-                <div class="settings-section" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
-                    <h4 class="settings-section-title">
-                    <span>🔬</span> Diagnóstico e Qualidade
-                    </h4>
-                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">
-                    Gere um relatório técnico das últimas operações. Use este arquivo para pedir ajuda à I.A. em caso de erros.
-                    </p>
-                    <button onclick="gerarRelatorioPDF()" class="btn-action" style="background: #e74c3c; width: 100%; justify-content: center;">
-                    <span>📄</span> Exportar Logs para I.A.
-                    </button>
-                </div>
 
                 <!-- Informações da Conta -->
                 <div class="settings-section">
                     <h4 class="settings-section-title">👤 Informações da Conta</h4>
                     <div class="form-row">
-                    <label class="form-label-modal">Email</label>
-                    <input type="text" class="form-input-modal" id="settingsEmail" readonly style="background: #f3f4f6;">
+                        <label class="form-label-modal">Email</label>
+                        <input type="text" class="form-input-modal" id="settingsEmail" readonly style="background: #f3f4f6;">
                     </div>
                     <div class="form-row">
-                    <label class="form-label-modal">Nome Completo</label>
-                    <input type="text" class="form-input-modal" id="settingsName" placeholder="Seu nome completo">
+                        <label class="form-label-modal">Nome Completo</label>
+                        <input type="text" class="form-input-modal" id="settingsName" placeholder="Seu nome completo">
                     </div>
                 </div>
 
                 <!-- Zona de Perigo - Resetar Dados -->
                 <div class="danger-zone">
                     <div class="danger-title">
-                    <span>⚠️</span> ZONA DE PERIGO
+                        <span>⚠️</span> ZONA DE PERIGO
                     </div>
                     <div class="danger-text">
-                    <strong>Resetar todos os dados</strong><br>
-                    Esta ação irá apagar permanentemente TODOS os seus dados financeiros, notas e compromissos. 
-                    Esta ação não pode ser desfeita!
+                        <strong>Resetar todos os dados</strong><br>
+                        Esta ação irá apagar permanentemente TODOS os seus dados financeiros, notas e compromissos. 
+                        Esta ação não pode ser desfeita!
                     </div>
                     <button class="btn-danger-full" onclick="resetAllData()">
-                    🗑️ RESETAR TODOS OS DADOS
+                        🗑️ RESETAR TODOS OS DADOS
                     </button>
                 </div>
             </div>
@@ -2790,20 +2888,20 @@
             <div class="modal-body">
                 <form id="registerForm">
                     <div class="form-row">
-                    <label class="form-label-modal">Nome Completo</label>
-                    <input type="text" class="form-input-modal" id="regName" placeholder="Seu nome completo" required>
+                        <label class="form-label-modal">Nome Completo</label>
+                        <input type="text" class="form-input-modal" id="regName" placeholder="Seu nome completo" required>
                     </div>
                     <div class="form-row">
-                    <label class="form-label-modal">Email</label>
-                    <input type="email" class="form-input-modal" id="regEmail" placeholder="seu@email.com" required>
+                        <label class="form-label-modal">Email</label>
+                        <input type="email" class="form-input-modal" id="regEmail" placeholder="seu@email.com" required>
                     </div>
                     <div class="form-row">
-                    <label class="form-label-modal">Senha</label>
-                    <input type="password" class="form-input-modal" id="regPassword" placeholder="Mínimo 6 caracteres" required>
+                        <label class="form-label-modal">Senha</label>
+                        <input type="password" class="form-input-modal" id="regPassword" placeholder="Mínimo 6 caracteres" required>
                     </div>
                     <div class="form-row">
-                    <label class="form-label-modal">Confirmar Senha</label>
-                    <input type="password" class="form-input-modal" id="regConfirmPassword" placeholder="Confirme sua senha" required>
+                        <label class="form-label-modal">Confirmar Senha</label>
+                        <input type="password" class="form-input-modal" id="regConfirmPassword" placeholder="Confirme sua senha" required>
                     </div>
                 </form>
             </div>
@@ -2820,9 +2918,9 @@
     </div>
 
     <script>
-        // ====
+        // ==========================================
         // CONFIGURAÇÃO DO SUPABASE - CREDENCIAIS ATUALIZADAS
-        // ====
+        // ==========================================
         
         const SUPABASE_URL = 'https://esknlhztamypntxxvxpe.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVza25saHp0YW15cG50eHh2eHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5NDEyOTAsImV4cCI6MjA4NjUxNzI5MH0.sT0F2QX8kpF06gma-fkvc2EQnFpuSZntdofWgLjMScM';
@@ -2840,9 +2938,9 @@
             paymentHistory: []
         };
 
-        // ====
+        // ==========================================
         // CAMPOS PERMITIDOS PARA OPERAÇÕES COM SUPABASE
-        // ====
+        // ==========================================
         const ALLOWED_INSERT_FIELDS = [
             'user_id', 'type', 'category', 'partition_id', 'description', 'amount',
             'year', 'month', 'due_day', 'due_date', 'status', 'total_installments',
@@ -2856,9 +2954,9 @@
             'parent_transaction_id', 'payment_date', 'payment_amount', 'payment_observation'
         ];
 
-        // ====
+        // ==========================================
         // MOTOR DE MONITORAMENTO DE QUALIDADE (V3.0 - CORRIGIDO E CONSOLIDADO)
-        // ====
+        // ==========================================
 
         /**
          * Função central de monitoramento - registra métricas no Supabase
@@ -2913,17 +3011,17 @@
                     .from('logs_qualidade')
                     .insert([logEntry])
                     .then(({ error }) => {
-                    if (error) console.warn('[Monitoramento] Falha ao salvar log:', error);
+                        if (error) console.warn('[Monitoramento] Falha ao salvar log:', error);
                     })
                     .catch(e => {
-                    console.warn('[Monitoramento] Erro de conexão ao salvar log:', e);
+                        console.warn('[Monitoramento] Erro de conexão ao salvar log:', e);
                     });
             }
         }
 
-        // ====
+        // ==========================================
         // FUNÇÃO DE GERAÇÃO DE RELATÓRIO PDF (CORRIGIDA)
-        // ====
+        // ==========================================
 
         async function gerarRelatorioPDF() {
             if (!supabaseClient || typeof supabaseClient.from !== 'function') {
@@ -2937,10 +3035,10 @@
             try {
                 const logs = await monitorar('gerarRelatorioPDF_fetch', async () => {
                     const { data, error } = await supabaseClient
-                    .from('logs_qualidade')
-                    .select('*')
-                    .order('data_hora', { ascending: false })
-                    .limit(20);
+                        .from('logs_qualidade')
+                        .select('*')
+                        .order('data_hora', { ascending: false })
+                        .limit(20);
                     
                     if (error) throw error;
                     return data || [];
@@ -2968,11 +3066,11 @@
                     headStyles: { fillColor: [231, 76, 60] },
                     styles: { fontSize: 8, cellPadding: 2 },
                     columnStyles: {
-                    0: { cellWidth: 20 },
-                    1: { cellWidth: 40 },
-                    2: { cellWidth: 20 },
-                    3: { cellWidth: 25 },
-                    4: { cellWidth: 'auto' }
+                        0: { cellWidth: 20 },
+                        1: { cellWidth: 40 },
+                        2: { cellWidth: 20 },
+                        3: { cellWidth: 25 },
+                        4: { cellWidth: 'auto' }
                     }
                 });
 
@@ -2997,16 +3095,15 @@
             }
         }
 
-        // ====
+        // ==========================================
         // VARIÁVEIS GLOBAIS (APÓS calcExpression)
-        // ====
+        // ==========================================
         let calcExpression = '';
 
-        // ====
+        // ==========================================
         // VARIÁVEIS GLOBAIS PARA REALTIME
-        // ====
+        // ==========================================
         let realtimeChannel = null;
-        let isSyncing = false;
 
         const sectionMapping = {
             1: { type: 'expense_fixed', category: 'fixed' },
@@ -3028,9 +3125,9 @@
             9: 'Gastos à Vista', 10: 'Entradas'
         };
 
-        // ====
+        // ==========================================
         // INICIALIZAÇÃO
-        // ====
+        // ==========================================
 
         async function initSupabase() {
             try {
@@ -3038,17 +3135,17 @@
                 
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
                     auth: {
-                    persistSession: true,
-                    autoRefreshToken: true,
-                    detectSessionInUrl: true
+                        persistSession: true,
+                        autoRefreshToken: true,
+                        detectSessionInUrl: true
                     },
                     db: {
-                    schema: 'public'
+                        schema: 'public'
                     },
                     global: {
-                    headers: {
-                    'X-Client-Info': 'supabase-js/2.x'
-                    }
+                        headers: {
+                            'X-Client-Info': 'supabase-js/2.x'
+                        }
                     }
                 });
                 
@@ -3074,7 +3171,7 @@
 
                     // Configura subscription Realtime para sincronização em tempo real (apenas se não for modo dev)
                     if (!isDevMode) {
-                    setupRealtimeSubscription();
+                        setupRealtimeSubscription();
                     }
                 } else {
                     console.log('👤 Nenhuma sessão ativa');
@@ -3117,9 +3214,9 @@
             document.getElementById('loadingScreen').classList.add('hidden');
         }
 
-        // ====
+        // ==========================================
         // AUTENTICAÇÃO
-        // ====
+        // ==========================================
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -3148,48 +3245,131 @@
             }
         });
 
+        /**
+         * Função otimizada de cadastro de novos usuários
+         * Inclui validações completas e tratamento de erros robusto
+         */
         async function registerUser() {
-            const name = document.getElementById('regName').value;
-            const email = document.getElementById('regEmail').value;
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
             const password = document.getElementById('regPassword').value;
             const confirmPassword = document.getElementById('regConfirmPassword').value;
 
-            if (password !== confirmPassword) {
-                showNotification('As senhas não coincidem!', 'error');
+            // Validações de entrada
+            if (!name) {
+                showNotification('❌ Por favor, informe seu nome completo!', 'error');
+                return;
+            }
+
+            if (name.length < 3) {
+                showNotification('❌ O nome deve ter no mínimo 3 caracteres!', 'error');
+                return;
+            }
+
+            // Validação de email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email || !emailRegex.test(email)) {
+                showNotification('❌ Por favor, informe um email válido!', 'error');
+                return;
+            }
+
+            if (!password) {
+                showNotification('❌ Por favor, informe uma senha!', 'error');
                 return;
             }
 
             if (password.length < 6) {
-                showNotification('A senha deve ter no mínimo 6 caracteres!', 'error');
+                showNotification('❌ A senha deve ter no mínimo 6 caracteres!', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showNotification('❌ As senhas não coincidem!', 'error');
+                return;
+            }
+
+            if (!isOnline || !supabaseClient) {
+                showNotification('❌ Sem conexão com o servidor. Tente novamente.', 'error');
                 return;
             }
 
             try {
-                if (!isOnline) {
-                    throw new Error('Sem conexão com o servidor');
+                // Feedback visual durante o cadastro
+                const registerBtn = event?.target;
+                if (registerBtn) {
+                    registerBtn.disabled = true;
+                    registerBtn.textContent = 'Cadastrando...';
                 }
 
+                // Cria usuário no Supabase Auth
                 const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
                     password: password,
                     options: {
-                    data: {
-                    full_name: name
-                    }
+                        data: {
+                            full_name: name
+                        }
                     }
                 });
 
                 if (error) throw error;
 
-                await supabaseClient.from('profiles').insert([
-                    { id: data.user.id, full_name: name, email: email }
-                ]);
+                if (!data.user) {
+                    throw new Error('Erro ao criar usuário. Tente novamente.');
+                }
 
-                showNotification('Cadastro realizado! Verifique seu email.');
+                // Cria perfil na tabela profiles
+                try {
+                    const { error: profileError } = await supabaseClient
+                        .from('profiles')
+                        .insert([
+                            { 
+                                id: data.user.id, 
+                                full_name: name, 
+                                email: email,
+                                created_at: new Date().toISOString()
+                            }
+                        ]);
+
+                    if (profileError) {
+                        console.warn('⚠️ Erro ao criar perfil (pode já existir):', profileError);
+                        // Não falha se o perfil já existir
+                    }
+                } catch (profileError) {
+                    console.warn('⚠️ Erro ao criar perfil:', profileError);
+                    // Continua mesmo se houver erro no perfil
+                }
+
+                showNotification('✅ Cadastro realizado com sucesso! Verifique seu email para confirmar.', 'success');
                 closeRegisterModal();
                 
+                // Limpa os campos do formulário
+                document.getElementById('regName').value = '';
+                document.getElementById('regEmail').value = '';
+                document.getElementById('regPassword').value = '';
+                document.getElementById('regConfirmPassword').value = '';
+                
             } catch (error) {
-                showNotification(error.message, 'error');
+                console.error('❌ Erro no cadastro:', error);
+                
+                let errorMessage = 'Erro ao realizar cadastro';
+                
+                if (error.message.includes('already registered')) {
+                    errorMessage = 'Este email já está cadastrado!';
+                } else if (error.message.includes('Invalid')) {
+                    errorMessage = 'Email ou senha inválidos!';
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                showNotification('❌ ' + errorMessage, 'error');
+            } finally {
+                // Restaura o botão
+                const registerBtn = event?.target;
+                if (registerBtn) {
+                    registerBtn.disabled = false;
+                    registerBtn.textContent = 'Cadastrar';
+                }
             }
         }
 
@@ -3207,14 +3387,6 @@
 
             currentUser = null;
             isDevMode = false;
-            isSyncing = false;
-
-            // Limpa estado do botão de sync
-            const syncBtn = document.getElementById('syncButton');
-            if (syncBtn) {
-                syncBtn.disabled = false;
-                syncBtn.innerHTML = '🔄 SINCRONIZAR';
-            }
 
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('appContainer').style.display = 'none';
@@ -3290,93 +3462,80 @@
             document.getElementById('registerModal').classList.remove('active');
         }
 
-        // ====
+        // ==========================================
         // OPERAÇÕES CRUD COM SUPABASE - VERSÃO CORRIGIDA E OTIMIZADA (OFFLINE-FIRST)
-        // ====
+        // ==========================================
 
+        /**
+         * Carrega transações DIRETAMENTE do Supabase (sem localStorage)
+         * Todos os usuários veem TODAS as transações
+         */
         async function fetchTransactions(year, month) {
             if (!currentUser) return [];
             
-            const localTransactions = localData.transactions.filter(t => {
-                const tDate = new Date(t.due_date);
-                return tDate.getFullYear() === year && tDate.getMonth() === month - 1;
-            });
-
-            if (!isOnline) {
-                console.log('📴 Modo offline: retornando', localTransactions.length, 'transações locais');
-                return localTransactions;
+            if (!isOnline || !supabaseClient) {
+                console.warn('📴 Modo offline: sem conexão com Supabase');
+                return localData.transactions.filter(t => {
+                    const tDate = new Date(t.due_date);
+                    return tDate.getFullYear() === year && tDate.getMonth() === month - 1;
+                });
             }
 
             try {
                 updateConnectionStatus('syncing');
                 
+                // IMPORTANTE: Remove o filtro .eq('user_id', currentUser.id) 
+                // para que TODOS vejam TODAS as transações da família
                 const { data, error } = await supabaseClient
                     .from('transactions')
                     .select('*')
-                    .eq('user_id', currentUser.id)
                     .eq('year', year)
                     .eq('month', month)
                     .order('due_date', { ascending: true });
 
                 if (error) throw error;
                 
-                // CORREÇÃO: Merge ADITIVO — nunca remove itens locais.
-                // Apenas atualiza os que o servidor confirmou e adiciona novos do servidor.
+                // Substitui completamente os dados em memória com os do servidor
                 const serverData = data || [];
                 
-                // 1. Atualiza itens existentes com versão do servidor (por ID)
-                localData.transactions = localData.transactions.map(t => {
-                    const serverVersion = serverData.find(st => st.id === t.id);
-                    return serverVersion ? { ...serverVersion, _syncPending: false } : t;
+                // Remove transações do mês atual e adiciona as do servidor
+                localData.transactions = localData.transactions.filter(t => {
+                    const tDate = new Date(t.due_date);
+                    return !(tDate.getFullYear() === year && tDate.getMonth() === month - 1);
                 });
                 
-                // 2. Adiciona itens do servidor que ainda não existem localmente
-                serverData.forEach(st => {
-                    if (!localData.transactions.find(t => t.id === st.id)) {
-                    localData.transactions.push({ ...st, _syncPending: false });
-                    }
-                });
-                
-                // 3. Itens local_ que o servidor não confirmou ficam intactos (não são removidos)
-                
-                saveToLocalStorage();
+                // Adiciona todas as transações do servidor
+                localData.transactions.push(...serverData);
                 
                 updateConnectionStatus('online');
-                return localData.transactions;
+                console.log(`✅ ${serverData.length} transações carregadas do Supabase`);
+                
+                return serverData;
                 
             } catch (error) {
-                console.error('Erro ao buscar transações:', error);
+                console.error('❌ Erro ao buscar transações:', error);
                 updateConnectionStatus('offline');
-                return localTransactions;
+                return [];
             }
         }
 
+        /**
+         * Insere transação diretamente no Supabase
+         * Outros usuários receberão via Realtime
+         */
         async function insertTransaction(transaction) {
             if (!currentUser) return null;
+
+            if (!isOnline || !supabaseClient) {
+                showNotification('⚠️ Sem conexão. Não é possível adicionar transação.', 'error');
+                return null;
+            }
 
             // Constrói objeto apenas com campos permitidos
             const supabaseData = {};
             ALLOWED_INSERT_FIELDS.forEach(field => {
                 if (transaction[field] !== undefined) supabaseData[field] = transaction[field];
             });
-
-            const localId = 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            const localTransaction = {
-                ...supabaseData,
-                id: localId,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-                _syncPending: true
-            };
-            
-            localData.transactions.push(localTransaction);
-            saveToLocalStorage();
-            console.log('💾 Transação salva localmente:', localTransaction.id);
-
-            if (!isOnline || !supabaseClient) {
-                console.log('📴 Modo offline: transação pendente de sincronização');
-                return localTransaction;
-            }
 
             try {
                 const { data, error } = await supabaseClient
@@ -3387,48 +3546,31 @@
 
                 if (error) throw error;
                 
-                const index = localData.transactions.findIndex(t => t.id === localId);
-                if (index !== -1 && data) {
-                    localData.transactions[index] = { 
-                    ...data, 
-                    _syncPending: false,
-                    _syncedAt: new Date().toISOString()
-                    };
-                    saveToLocalStorage();
-                    console.log('☁️ Transação sincronizada com Supabase:', data.id);
-                }
+                // Adiciona à memória local
+                localData.transactions.push(data);
                 
-                return data || localTransaction;
+                console.log('✅ Transação inserida no Supabase:', data.id);
+                
+                // Notifica outros usuários via Realtime (o Realtime Database Changes já faz isso automaticamente)
+                
+                return data;
                 
             } catch (error) {
-                console.error('❌ Erro ao sincronizar com Supabase:', error);
-                return localTransaction;
+                console.error('❌ Erro ao inserir transação:', error);
+                showNotification('❌ Erro ao adicionar transação: ' + error.message, 'error');
+                return null;
             }
         }
 
+        /**
+         * Atualiza transação diretamente no Supabase
+         */
         async function updateTransaction(id, updates) {
             if (!currentUser) return null;
 
-            const localIndex = localData.transactions.findIndex(t => t.id === id);
-            let localTransaction = null;
-            
-            if (localIndex !== -1) {
-                localData.transactions[localIndex] = { 
-                    ...localData.transactions[localIndex], 
-                    ...updates,
-                    updated_at: new Date().toISOString(),
-                    _syncPending: true
-                };
-                localTransaction = localData.transactions[localIndex];
-                saveToLocalStorage();
-                console.log('💾 Transação atualizada localmente:', id);
-            } else {
-                console.warn('Transação não encontrada localmente:', id);
+            if (!isOnline || !supabaseClient) {
+                showNotification('⚠️ Sem conexão. Não é possível atualizar.', 'error');
                 return null;
-            }
-
-            if (!isOnline || String(id).startsWith('local_')) {
-                return localTransaction;
             }
 
             try {
@@ -3447,32 +3589,30 @@
 
                 if (error) throw error;
                 
+                // Atualiza memória local
+                const localIndex = localData.transactions.findIndex(t => t.id === id);
                 if (localIndex !== -1 && data) {
-                    localData.transactions[localIndex] = { 
-                    ...data, 
-                    _syncPending: false,
-                    _syncedAt: new Date().toISOString()
-                    };
-                    saveToLocalStorage();
-                    console.log('☁️ Transação sincronizada com Supabase:', id);
+                    localData.transactions[localIndex] = data;
                 }
-
+                
+                console.log('✅ Transação atualizada no Supabase:', id);
                 return data;
                 
             } catch (error) {
-                console.error('❌ Erro ao sincronizar atualização:', error);
-                return localTransaction;
+                console.error('❌ Erro ao atualizar transação:', error);
+                showNotification('❌ Erro ao atualizar: ' + error.message, 'error');
+                return null;
             }
         }
 
+        /**
+         * Deleta transação diretamente do Supabase
+         */
         async function deleteTransaction(id) {
             if (!currentUser) return;
 
-            localData.transactions = localData.transactions.filter(t => t.id !== id);
-            saveToLocalStorage();
-            console.log('🗑️ Transação removida localmente:', id);
-
-            if (!isOnline || String(id).startsWith('local_')) {
+            if (!isOnline || !supabaseClient) {
+                showNotification('⚠️ Sem conexão. Não é possível deletar.', 'error');
                 return;
             }
 
@@ -3483,19 +3623,21 @@
                     .eq('id', id);
 
                 if (error) throw error;
-                console.log('☁️ Transação removida do Supabase:', id);
+                
+                // Remove da memória local
+                localData.transactions = localData.transactions.filter(t => t.id !== id);
+                
+                console.log('✅ Transação removida do Supabase:', id);
                 
             } catch (error) {
-                console.error('❌ Erro ao remover do Supabase:', error);
-                localData._pendingDeletions = localData._pendingDeletions || [];
-                localData._pendingDeletions.push(id);
-                saveToLocalStorage();
+                console.error('❌ Erro ao remover transação:', error);
+                showNotification('❌ Erro ao deletar: ' + error.message, 'error');
             }
         }
 
-        // ====
+        // ==========================================
         // REGISTRO DE PAGAMENTOS - VERSÃO COMPLETA E CORRIGIDA (OFFLINE-FIRST)
-        // ====
+        // ==========================================
 
         async function registerPayment(id, paymentData) {
             const localIndex = localData.transactions.findIndex(t => t.id === id);
@@ -3507,7 +3649,7 @@
                     updated_at: new Date().toISOString(),
                     _syncPending: true
                 };
-                saveToLocalStorage();
+                
                 console.log('💾 Pagamento registrado localmente:', id);
             }
 
@@ -3534,23 +3676,23 @@
 
                 if (error) {
                     if (error.code === 'PGRST301' || error.code === 'ECONNREFUSED' || !navigator.onLine) {
-                    if (localIndex !== -1) {
-                    localData.transactions[localIndex]._syncPending = true;
-                    saveToLocalStorage();
-                    }
-                    updateConnectionStatus('offline');
-                    return localData.transactions[localIndex];
+                        if (localIndex !== -1) {
+                            localData.transactions[localIndex]._syncPending = true;
+                            
+                        }
+                        updateConnectionStatus('offline');
+                        return localData.transactions[localIndex];
                     }
                     throw error;
                 }
 
                 if (localIndex !== -1 && data) {
                     localData.transactions[localIndex] = { 
-                    ...data, 
-                    _syncPending: false,
-                    _syncedAt: new Date().toISOString()
+                        ...data, 
+                        _syncPending: false,
+                        _syncedAt: new Date().toISOString()
                     };
-                    saveToLocalStorage();
+                    
                 }
 
                 updateConnectionStatus('online');
@@ -3561,7 +3703,7 @@
                 
                 if (localIndex !== -1) {
                     localData.transactions[localIndex]._syncPending = true;
-                    saveToLocalStorage();
+                    
                 }
                 
                 updateConnectionStatus('offline');
@@ -3585,7 +3727,7 @@
                 id: 'local_hist_' + Date.now(),
                 _syncPending: true
             });
-            saveToLocalStorage();
+            
 
             if (!isOnline) return;
 
@@ -3639,9 +3781,9 @@
             }
         }
 
-        // ====
+        // ==========================================
         // RENOVAÇÃO AUTOMÁTICA - CORRIGIDA PARA 6 MESES
-        // ====
+        // ==========================================
 
         async function createNextMonthFixed(currentTransaction) {
             // Criar 6 meses à frente
@@ -3691,111 +3833,22 @@
             showNotification('Conta fixa renovada para os próximos 6 meses!');
         }
 
-        // ====
+        // ==========================================
         // SINCRONIZAÇÃO - VERSÃO APRIMORADA (CORRIGIDA)
-        // ====
+        // ==========================================
 
-        async function forceSync() {
-            if (!isOnline) {
-                showNotification('Sem conexão com o servidor', 'error');
-                return;
-            }
+        // ==========================================
+        // NOTA: função forceSync removida - não é mais necessária
+        // Todas as operações são sincronizadas automaticamente via Supabase
+        // ==========================================
 
-            if (isDevMode) {
-                console.log('Modo desenvolvedor: sincronização com servidor não disponível');
-                showNotification('Modo desenvolvedor não suporta sincronização', 'warning');
-                return;
-            }
-
-            updateConnectionStatus('syncing');
-            
-            try {
-                const pendingTransactions = localData.transactions.filter(t => t._syncPending);
-                console.log(`🔄 Sincronizando ${pendingTransactions.length} transações pendentes...`);
-                
-                for (const transaction of pendingTransactions) {
-                    if (String(transaction.id).startsWith('local_')) {
-                    // --- INSERT ---
-                    const dataToInsert = {};
-                    ALLOWED_INSERT_FIELDS.forEach(field => {
-                    if (transaction[field] !== undefined) dataToInsert[field] = transaction[field];
-                    });
-
-                    const { data: newData, error } = await supabaseClient
-                    .from('transactions')
-                    .insert([dataToInsert])
-                    .select()
-                    .single();
-
-                    if (error) throw error;
-
-                    const index = localData.transactions.findIndex(t => t.id === transaction.id);
-                    if (index !== -1 && newData) {
-                    localData.transactions[index] = { 
-                    ...newData, 
-                    _syncPending: false,
-                    _syncedAt: new Date().toISOString()
-                    };
-                    }
-                    } else {
-                    // --- UPDATE ---
-                    const dataToUpdate = {};
-                    ALLOWED_UPDATE_FIELDS.forEach(field => {
-                    if (transaction[field] !== undefined) dataToUpdate[field] = transaction[field];
-                    });
-
-                    const { error } = await supabaseClient
-                    .from('transactions')
-                    .update(dataToUpdate)
-                    .eq('id', transaction.id);
-
-                    if (error) throw error;
-
-                    const index = localData.transactions.findIndex(t => t.id === transaction.id);
-                    if (index !== -1) {
-                    localData.transactions[index]._syncPending = false;
-                    localData.transactions[index]._syncedAt = new Date().toISOString();
-                    }
-                    }
-                }
-
-                // Processa exclusões pendentes
-                if (localData._pendingDeletions && localData._pendingDeletions.length > 0) {
-                    for (const id of localData._pendingDeletions) {
-                    if (!String(id).startsWith('local_')) {
-                    const { error } = await supabaseClient
-                    .from('transactions')
-                    .delete()
-                    .eq('id', id);
-                    if (error) throw error;
-                    }
-                    }
-                    localData._pendingDeletions = [];
-                }
-
-                saveToLocalStorage();
-                await loadAllData(); // Atualiza interface com dados mais recentes
-                
-                updateConnectionStatus('online');
-                showNotification(`Sincronização concluída! ${pendingTransactions.length} itens sincronizados.`);
-                return true;
-                
-            } catch (error) {
-                console.error('❌ Erro detalhado na sincronização:', error);
-                if (error.details) console.error('Detalhes:', error.details);
-                if (error.message) console.error('Mensagem:', error.message);
-                updateConnectionStatus('offline');
-                showNotification('Erro na sincronização: ' + (error.message || 'Erro desconhecido'), 'error');
-                throw error;
-            }
-        }
-
-        // ====
+        // ==========================================
         // FUNÇÕES REALTIME - SINCRONIZAÇÃO EM TEMPO REAL
-        // ====
+        // ==========================================
 
         /**
-         * Configura a inscrição no canal Realtime para broadcast de sincronização
+         * Configura Realtime para escutar mudanças na tabela transactions
+         * Todos os usuários recebem notificações de INSERT, UPDATE e DELETE em tempo real
          */
         function setupRealtimeSubscription() {
             if (!isOnline || !supabaseClient || isDevMode) {
@@ -3807,54 +3860,75 @@
                 realtimeChannel.unsubscribe();
             }
 
-            console.log('📡 Configurando canal Realtime: sync-channel');
+            console.log('📡 Configurando Realtime para tabela transactions');
 
-            realtimeChannel = supabaseClient.channel('sync-channel', {
-                config: {
-                    broadcast: { self: false } // Não receber próprios eventos
-                }
-            });
-
-            realtimeChannel
-                .on('broadcast', { event: 'data-updated' }, (payload) => {
-                    console.log('📡 Evento de sincronização recebido:', payload);
-
-                    if (!payload || !payload.payload) {
-                    console.warn('📡 Payload inválido recebido');
-                    return;
+            // Cria canal para escutar mudanças na tabela transactions
+            realtimeChannel = supabaseClient
+                .channel('transactions-changes')
+                .on(
+                    'postgres_changes',
+                    { 
+                        event: '*', // Escuta INSERT, UPDATE, DELETE
+                        schema: 'public',
+                        table: 'transactions'
+                    },
+                    (payload) => {
+                        console.log('📡 Mudança detectada na tabela transactions:', payload);
+                        
+                        const { eventType, new: newRecord, old: oldRecord } = payload;
+                        
+                        // Recarrega dados do mês atual
+                        const currentYear = currentMonth.getFullYear();
+                        const currentMonthNum = currentMonth.getMonth() + 1;
+                        
+                        if (eventType === 'INSERT' && newRecord) {
+                            console.log('➕ Nova transação inserida:', newRecord.id);
+                            // Verifica se é do mês atual antes de adicionar
+                            const recordDate = new Date(newRecord.due_date);
+                            if (recordDate.getFullYear() === currentYear && 
+                                recordDate.getMonth() === currentMonthNum - 1) {
+                                
+                                // Verifica se já não existe (para evitar duplicatas)
+                                if (!localData.transactions.find(t => t.id === newRecord.id)) {
+                                    localData.transactions.push(newRecord);
+                                    renderData(); // Atualiza interface
+                                    showNotification('📡 Nova transação adicionada!', 'info');
+                                }
+                            }
+                        } 
+                        else if (eventType === 'UPDATE' && newRecord) {
+                            console.log('✏️ Transação atualizada:', newRecord.id);
+                            // Atualiza na memória local
+                            const index = localData.transactions.findIndex(t => t.id === newRecord.id);
+                            if (index !== -1) {
+                                localData.transactions[index] = newRecord;
+                                renderData(); // Atualiza interface
+                                showNotification('📡 Transação atualizada!', 'info');
+                            }
+                        } 
+                        else if (eventType === 'DELETE' && oldRecord) {
+                            console.log('🗑️ Transação deletada:', oldRecord.id);
+                            // Remove da memória local
+                            localData.transactions = localData.transactions.filter(t => t.id !== oldRecord.id);
+                            renderData(); // Atualiza interface
+                            showNotification('📡 Transação removida!', 'info');
+                        }
                     }
-
-                    const eventData = payload.payload;
-
-                    if (eventData.userId === currentUser?.id) {
-                    console.log('📡 Ignorando evento do próprio usuário');
-                    return;
-                    }
-
-                    // Verifica se o evento é recente (evita processar eventos antigos ao reconectar)
-                    const eventTime = new Date(eventData.timestamp);
-                    const now = new Date();
-                    const diffMinutes = (now - eventTime) / (1000 * 60);
-
-                    if (diffMinutes > 5) {
-                    console.log('📡 Evento muito antigo, ignorando');
-                    return;
-                    }
-
-                    console.log('📡 Recarregando dados devido a atualização externa');
-                    handleExternalSync(eventData);
-                })
+                )
                 .subscribe((status) => {
-                    console.log('📡 Status do canal Realtime:', status);
+                    console.log('📡 Status do Realtime:', status);
                     if (status === 'SUBSCRIBED') {
-                    console.log('✅ Canal Realtime conectado com sucesso');
+                        console.log('✅ Realtime conectado - sincronização automática ativa!');
+                        showNotification('✅ Sincronização em tempo real ativada!', 'success');
                     } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-                    console.warn('⚠️ Canal Realtime desconectado:', status);
-                    setTimeout(() => {
-                    if (isOnline && currentUser && !isDevMode) {
-                    setupRealtimeSubscription();
-                    }
-                    }, 5000);
+                        console.warn('⚠️ Realtime desconectado:', status);
+                        showNotification('⚠️ Sincronização automática desconectada', 'warning');
+                        // Tenta reconectar após 5 segundos
+                        setTimeout(() => {
+                            if (isOnline && currentUser && !isDevMode) {
+                                setupRealtimeSubscription();
+                            }
+                        }, 5000);
                     }
                 });
         }
@@ -3862,238 +3936,1887 @@
         /**
          * Publica evento de sincronização para outros usuários
          */
-        async function publishSyncEvent() {
-            if (!realtimeChannel || !isOnline) {
-                console.warn('📡 Não foi possível publicar evento: canal offline ou inexistente');
-                return false;
-            }
-
-            try {
-                const eventData = {
-                    type: 'data-updated',
-                    userId: currentUser?.id,
-                    userEmail: currentUser?.email,
-                    timestamp: new Date().toISOString(),
-                    month: currentMonth.getMonth() + 1,
-                    year: currentMonth.getFullYear()
-                };
-
-                const result = await realtimeChannel.send({
-                    type: 'broadcast',
-                    event: 'data-updated',
-                    payload: eventData
-                });
-
-                console.log('📡 Evento de sincronização publicado:', result);
-                return true;
-
-            } catch (error) {
-                console.error('❌ Erro ao publicar evento de sincronização:', error);
-                return false;
-            }
-        }
-
-        /**
-         * Handler para sincronização manual iniciada pelo usuário
-         */
-        async function handleManualSync() {
-            if (isDevMode) {
-                showNotification('Modo desenvolvedor: sincronização com servidor não disponível', 'warning');
-                return;
-            }
-
-            const syncBtn = document.getElementById('syncButton');
-
-            if (isSyncing) {
-                console.log('⏳ Sincronização já em andamento');
-                return;
-            }
-
-            if (!isOnline) {
-                showNotification('Você está offline. Conecte-se à internet para sincronizar.', 'error');
-                return;
-            }
-
-            try {
-                isSyncing = true;
-
-                if (syncBtn) {
-                    syncBtn.disabled = true;
-                    syncBtn.innerHTML = '🔄 Sincronizando...';
-                }
-
-                updateConnectionStatus('syncing');
-
-                console.log('🔄 Iniciando sincronização manual...');
-                await forceSync();
-
-                console.log('📡 Publicando evento de atualização...');
-                const published = await publishSyncEvent();
-
-                if (published) {
-                    showNotification('✅ Sincronização concluída! Outros usuários serão notificados.', 'success
-                }
-
-                if (syncBtn) {
-                    syncBtn.disabled = false;
-                    syncBtn.innerHTML = '🔄 SINCRONIZAR';
-                }
-
-                isSyncing = false;
-            } catch (error) {
-                console.error('❌ Erro na sincronização manual:', error);
-                showNotification('Erro na sincronização. Tente novamente.', 'error');
-
-                if (syncBtn) {
-                    syncBtn.disabled = false;
-                    syncBtn.innerHTML = '🔄 SINCRONIZAR';
-                }
-
-                isSyncing = false;
-            }
-        }
-
-        /**
-         * Handler para eventos externos de sincronização (Realtime)
-         */
-        async function handleExternalSync(eventData) {
-            if (!currentUser || !isOnline) return;
-
-            // Atualiza o status para sincronizando
-            updateConnectionStatus('syncing');
-
-            try {
-                // Recarrega dados do mês e ano do evento
-                await loadAllData(eventData.year, eventData.month);
-
-                // Atualiza status para online
-                updateConnectionStatus('online');
-
-                // Mostra notificação para o usuário
-                showNotification('Dados atualizados em tempo real por outro usuário.', 'success');
-            } catch (error) {
-                console.error('Erro ao processar sincronização externa:', error);
-                updateConnectionStatus('offline');
-            }
-        }
+        // ==========================================
+        // NOTA: Funções de sincronização manual removidas
+        // Agora a sincronização é 100% automática via Realtime Database Changes
+        // ==========================================
 
         /**
          * Fecha o canal Realtime
          */
         function closeRealtimeChannel() {
             if (realtimeChannel) {
+                console.log('📡 Fechando canal Realtime');
                 realtimeChannel.unsubscribe();
                 realtimeChannel = null;
-                console.log('📡 Canal Realtime fechado');
             }
         }
 
-        // ====
-        // FUNÇÕES AUXILIARES
-        // ====
+        // ==========================================
+        // NOTA: localStorage foi removido - todos os dados vêm do Supabase
+        // Sincronização em tempo real via Supabase Realtime
+        // ==========================================
+
+        // ==========================================
+        // INICIALIZAÇÃO DO APP
+        // ==========================================
+
+        let currentMonth = new Date();
+        let openPartitions = { 1: false, 2: false };
+        let currentNotebookId = null;
+        let currentNoteId = null;
+        let notesExpanded = false;
+        let currentCalendarDate = new Date();
+        let selectedDate = null;
+        let editingId = null;
+
+        const nationalHolidays = {
+            '2024-01-01': 'Confraternização Universal',
+            '2024-02-12': 'Carnaval', '2024-02-13': 'Carnaval',
+            '2024-03-29': 'Sexta-feira Santa', '2024-04-21': 'Tiradentes',
+            '2024-05-01': 'Dia do Trabalho', '2024-05-30': 'Corpus Christi',
+            '2024-09-07': 'Independência', '2024-10-12': 'Nossa Senhora Aparecida',
+            '2024-11-02': 'Finados', '2024-11-15': 'Proclamação da República',
+            '2024-11-20': 'Consciência Negra', '2024-12-25': 'Natal',
+            '2025-01-01': 'Confraternização Universal', '2025-03-03': 'Carnaval',
+            '2025-04-18': 'Sexta-feira Santa', '2025-04-21': 'Tiradentes',
+            '2025-05-01': 'Dia do Trabalho', '2025-06-19': 'Corpus Christi',
+            '2025-09-07': 'Independência', '2025-10-12': 'Nossa Senhora Aparecida',
+            '2025-11-02': 'Finados', '2025-11-15': 'Proclamação da República',
+            '2025-12-25': 'Natal'
+        };
+
+        const anapolisHolidays = {
+            '2024-03-19': 'São José', '2024-07-26': 'Aniversário de Anápolis',
+            '2024-08-15': 'Assunção', '2024-12-08': 'Imaculada Conceição',
+            '2025-03-19': 'São José', '2025-07-26': 'Aniversário de Anápolis',
+            '2025-08-15': 'Assunção', '2025-12-08': 'Imaculada Conceição'
+        };
+
+        async function initApp() {
+            // localStorage removido - dados carregados apenas do Supabase
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            updateMonthDisplay();
+            await loadAllData();
+            setupTabs();
+            document.getElementById('dueDate').valueAsDate = new Date();
+            document.getElementById('paymentDate').valueAsDate = new Date();
+            renderNotebooks();
+            checkAlerts();
+            setInterval(checkAlerts, 60000);
+            setupBackupDragAndDrop();
+            
+        }
+
+        function updateDateTime() {
+            const now = new Date();
+            const options = {
+                timeZone: 'America/Sao_Paulo',
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', second: '2-digit'
+            };
+            document.getElementById('datetimeDisplay').textContent = 
+                '🇧🇷 ' + now.toLocaleString('pt-BR', options);
+        }
+
+        function changeMonth(delta) {
+            currentMonth.setMonth(currentMonth.getMonth() + delta);
+            updateMonthDisplay();
+            loadAllData();
+        }
+
+        function updateMonthDisplay() {
+            const monthNames = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO',
+                              'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
+            document.getElementById('currentMonth').textContent = 
+                monthNames[currentMonth.getMonth()] + ' ' + currentMonth.getFullYear();
+        }
+
+        async function loadAllData() {
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth() + 1;
+            
+            await fetchTransactions(year, month);
+            updateDashboard();
+            renderPartitions();
+            // CORREÇÃO: Atualiza os totalizadores após carregar os dados
+            updatePartitionTotals(1);
+            updatePartitionTotals(2);
+        }
+
+        // ==========================================
+        // DASHBOARD E UI
+        // ==========================================
+
+        function showView(viewName) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            
+            if (viewName === 'dashboard') {
+                document.getElementById('dashboardView').classList.add('active');
+                document.querySelector('.nav-btn').classList.add('active');
+            }
+        }
+
+        function togglePartition(partition) {
+            openPartitions[partition] = !openPartitions[partition];
+            const content = document.getElementById(`partitionContent${partition}`);
+            const arrow = document.getElementById(`arrow${partition}`);
+            const card = document.getElementById(`reparticaoCard${partition}`);
+            
+            if (openPartitions[partition]) {
+                content.classList.add('open');
+                arrow.classList.add('open');
+                arrow.textContent = '▲';
+                card.classList.add('active');
+                renderPartitionContent(partition);
+                // CORREÇÃO: Atualiza os totalizadores quando a repartição é aberta
+                updatePartitionTotals(partition);
+            } else {
+                content.classList.remove('open');
+                arrow.classList.remove('open');
+                arrow.textContent = '▼';
+                card.classList.remove('active');
+            }
+        }
+
+        function setupTabs() {
+            document.querySelectorAll('.section-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const partition = this.dataset.partition;
+                    const container = document.getElementById(`tabsPartition${partition}`);
+                    container.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    renderPartitionContent(parseInt(partition));
+                });
+            });
+        }
+
+        function getActiveSection(partition) {
+            const container = document.getElementById(`tabsPartition${partition}`);
+            const activeTab = container.querySelector('.section-tab.active');
+            return parseInt(activeTab.dataset.section);
+        }
+
+        async function renderPartitions() {
+            if (openPartitions[1]) renderPartitionContent(1);
+            if (openPartitions[2]) renderPartitionContent(2);
+            // CORREÇÃO: Atualiza os totalizadores quando as repartições são renderizadas
+            updatePartitionTotals(1);
+            updatePartitionTotals(2);
+        }
+
+        // CORREÇÃO: Função para calcular e atualizar os totais de receitas e despesas por repartição
+        function updatePartitionTotals(partition) {
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth() + 1;
+            
+            // Filtra transações da repartição e mês atual
+            const partitionTransactions = localData.transactions.filter(t => {
+                const tDate = new Date(t.due_date);
+                const tPartition = parseInt(t.partition_id);
+                return tDate.getFullYear() === year && 
+                       tDate.getMonth() === month - 1 &&
+                       tPartition === partition;
+            });
+            
+            let totalIncome = 0;
+            let totalExpenses = 0;
+            
+            partitionTransactions.forEach(t => {
+                const amount = parseFloat(t.amount) || 0;
+                if (t.type === 'income') {
+                    totalIncome += amount;
+                } else {
+                    totalExpenses += amount;
+                }
+            });
+            
+            // Atualiza os elementos do DOM
+            const incomeEl = document.getElementById(`totalIncome${partition}`);
+            const expensesEl = document.getElementById(`totalExpenses${partition}`);
+            
+            if (incomeEl) incomeEl.textContent = formatCurrency(totalIncome);
+            if (expensesEl) expensesEl.textContent = formatCurrency(totalExpenses);
+        }
+
+        async function renderPartitionContent(partition) {
+            try {
+                const section = getActiveSection(partition);
+                const container = document.getElementById(`contentPartition${partition}`);
+                const mapping = sectionMapping[section];
+                
+                const year = currentMonth.getFullYear();
+                const month = currentMonth.getMonth() + 1;
+                
+                container.innerHTML = '<div class="empty-state">Carregando...</div>';
+                
+                const transactions = localData.transactions.filter(t => {
+                    const tDate = new Date(t.due_date);
+                    // Converte para número para evitar problema de tipo string vs number (retorno do Supabase)
+                    const tPartition = parseInt(t.partition_id);
+                    return tDate.getFullYear() === year && 
+                           tDate.getMonth() === month - 1 &&
+                           tPartition === partition && 
+                           t.category === mapping.category;
+                });
+
+                if (transactions.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+                            <p>Nenhuma transação registrada</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                let total = 0;
+
+                transactions.forEach(t => {
+                    const isPaid = t.status === 'paid' || t.status === 'received';
+                    const isIncome = t.type === 'income';
+                    const amountClass = isIncome ? 'positive' : (isPaid ? 'positive' : 'negative');
+                    const itemClass = isPaid ? 'paid' : '';
+
+                    if (!isPaid && !isIncome) {
+                        total += parseFloat(t.amount);
+                    }
+
+                    // CORREÇÃO: Badge de sincronização só aparece se realmente pendente
+                    const syncBadge = t._syncPending && !isOnline ? '<span class="badge badge-warning" title="Pendente de sincronização">☁️</span>' : '';
+
+                    html += `
+                        <div class="expense-item ${itemClass}">
+                            ${mapping.category === 'installment' ? renderInstallmentSummary(t) : ''}
+                            <div class="expense-header">
+                                <div>
+                                    <div class="expense-name">${t.description}</div>
+                                    <div class="expense-details">
+                                        <span>📅 ${formatDate(t.due_date)}</span>
+                                        ${t.total_installments > 1 ? `<span>📊 ${t.installment_number}/${t.total_installments}</span>` : ''}
+                                        ${isPaid ? '<span class="badge badge-success">✓ Pago</span>' : '<span class="badge badge-warning">⏳ Pendente</span>'}
+                                        ${syncBadge}
+                                    </div>
+                                    ${t.payment_observation ? `<div style="font-size: 0.85rem; color: #059669; margin-top: 0.25rem;">📝 ${t.payment_observation}</div>` : ''}
+                                </div>
+                                <div class="expense-amount ${amountClass}">
+                                    ${isIncome ? '+' : '-'} ${formatCurrency(t.amount)}
+                                </div>
+                            </div>
+                            <div class="expense-actions">
+                                ${!isPaid && !isIncome ? `
+                                    <button class="btn-small btn-success-small" onclick="openPaymentModal('${t.id}')">✓ Marcar Pago</button>
+                                ` : ''}
+                                <button class="btn-small btn-warning-small" onclick="openPaymentHistoryModal('${t.id}')">📜 Histórico</button>
+                                <button class="btn-small btn-secondary-small" onclick="openEditModal('${t.id}')">✏️ Editar</button>
+                                <button class="btn-small btn-danger-small" onclick="deleteTransactionHandler('${t.id}')">🗑️ Excluir</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                const totalLabel = mapping.category === 'installment' ? 'Total Restante' : 
+                                  (mapping.category === 'income' ? 'Total a Receber' : 'Total a Pagar');
+
+                html += `
+                    <div class="total-section">
+                        <span class="total-label">${totalLabel}</span>
+                        <span class="total-amount">${formatCurrency(total)}</span>
+                    </div>
+                `;
+
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Erro em renderPartitionContent:', error);
+                document.getElementById(`contentPartition${partition}`).innerHTML = 
+                    '<div class="empty-state">Erro ao carregar dados</div>';
+            }
+        }
+
+        function renderInstallmentSummary(transaction) {
+            const totalDebt = parseFloat(transaction.amount) * (transaction.total_installments || 1);
+            const paidAmount = transaction.status === 'paid' ? parseFloat(transaction.amount) : 0;
+            const remaining = totalDebt - paidAmount;
+
+            return `
+                <div class="installment-summary">
+                    <div class="installment-row">
+                        <span class="installment-label">💰 Total:</span>
+                        <span class="installment-value total">${formatCurrency(totalDebt)}</span>
+                    </div>
+                    <div class="installment-row">
+                        <span class="installment-label">✅ Pago:</span>
+                        <span class="installment-value paid">${formatCurrency(paidAmount)}</span>
+                    </div>
+                    <div class="installment-row">
+                        <span class="installment-label">⏳ Restante:</span>
+                        <span class="installment-value remaining">${formatCurrency(remaining)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function updateDashboard() {
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth() + 1;
+            
+            const transactions = localData.transactions.filter(t => {
+                const tDate = new Date(t.due_date);
+                return tDate.getFullYear() === year && tDate.getMonth() === month - 1;
+            });
+
+            let income = 0, expenses = 0, pending = 0;
+
+            transactions.forEach(t => {
+                const amount = parseFloat(t.amount);
+                
+                if (t.type === 'income') {
+                    if (t.status === 'received') income += amount;
+                    else pending += amount;
+                } else {
+                    expenses += amount;
+                    if (t.status === 'pending') pending += amount;
+                }
+            });
+
+            document.getElementById('totalIncome').textContent = formatCurrency(income);
+            document.getElementById('totalExpenses').textContent = formatCurrency(expenses);
+            document.getElementById('totalPending').textContent = formatCurrency(pending);
+            
+            const balance = income - expenses;
+            const balanceEl = document.getElementById('totalBalance');
+            balanceEl.textContent = formatCurrency(balance);
+            balanceEl.style.color = balance >= 0 ? 'var(--success)' : 'var(--danger)';
+        }
+
+        // ==========================================
+        // MODAL DE CONTAS PENDENTES
+        // ==========================================
+
+        function openPendingModal() {
+            renderPendingList();
+            document.getElementById('pendingModal').classList.add('active');
+        }
+
+        function closePendingModal() {
+            document.getElementById('pendingModal').classList.remove('active');
+        }
+
+        function renderPendingList() {
+            const container = document.getElementById('pendingList');
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth() + 1;
+            
+            const pendingTransactions = localData.transactions.filter(t => {
+                const tDate = new Date(t.due_date);
+                return tDate.getFullYear() === year && 
+                       tDate.getMonth() === month - 1 &&
+                       (t.status === 'pending' || t.status === null);
+            });
+
+            if (pendingTransactions.length === 0) {
+                container.innerHTML = '<div class="empty-state">Nenhuma conta pendente para este mês</div>';
+                document.getElementById('pendingTotalValue').textContent = formatCurrency(0);
+                return;
+            }
+
+            let html = '';
+            let totalPending = 0;
+
+            pendingTransactions.forEach(t => {
+                totalPending += parseFloat(t.amount);
+                const partitionName = t.partition_id === 1 ? '1ª Repartição' : '2ª Repartição';
+                
+                html += `
+                    <div class="pending-item">
+                        <div class="pending-header">
+                            <div>
+                                <div class="pending-name">${t.description}</div>
+                                <div class="pending-details">
+                                    <span>📅 ${formatDate(t.due_date)}</span>
+                                    <span>📂 ${partitionName}</span>
+                                    ${t.total_installments > 1 ? `<span>📊 ${t.installment_number}/${t.total_installments}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="pending-amount">${formatCurrency(t.amount)}</div>
+                        </div>
+                        <div class="pending-actions">
+                            <button class="btn-small btn-success-small" onclick="openPaymentModalFromPending('${t.id}')">✓ Pagar</button>
+                            <button class="btn-small btn-secondary-small" onclick="openEditModalFromPending('${t.id}')">✏️ Editar</button>
+                            <button class="btn-small btn-danger-small" onclick="deleteTransactionFromPending('${t.id}')">🗑️ Excluir</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            document.getElementById('pendingTotalValue').textContent = formatCurrency(totalPending);
+        }
+
+        function openPaymentModalFromPending(id) {
+            openPaymentModal(id);
+            closePendingModal();
+        }
+
+        function openEditModalFromPending(id) {
+            openEditModal(id);
+            closePendingModal();
+        }
+
+        async function deleteTransactionFromPending(id) {
+            if (confirm('Tem certeza que deseja excluir esta transação?')) {
+                try {
+                    await monitorar('deleteTransaction', async () => {
+                        await deleteTransaction(id);
+                    });
+                    
+                    await loadAllData();
+                    renderPendingList();
+                    showNotification('🗑️ Transação excluída!');
+                } catch (error) {
+                    showNotification('❌ Erro ao excluir: ' + error.message, 'error');
+                }
+            }
+        }
+
+        // ==========================================
+        // RESETAR TODOS OS DADOS
+        // ==========================================
+
+        async function resetAllData() {
+            const confirmation = confirm(
+                '⚠️ ATENÇÃO!\n\n' +
+                'Você está prestes a APAGAR TODOS os seus dados permanentemente.\n\n' +
+                'Esta ação irá remover:\n' +
+                '- Todas as transações financeiras\n' +
+                '- Todas as notas e cadernos\n' +
+                '- Todos os compromissos\n' +
+                '- Todo o histórico de pagamentos\n\n' +
+                'Esta ação NÃO PODE ser desfeita!\n\n' +
+                'Deseja continuar?'
+            );
+
+            if (!confirmation) return;
+
+            const secondConfirmation = prompt(
+                'Para confirmar a exclusão de TODOS os dados, digite "RESETAR" no campo abaixo:'
+            );
+
+            if (secondConfirmation !== 'RESETAR') {
+                showNotification('Operação cancelada. Os dados não foram alterados.', 'warning');
+                return;
+            }
+
+            try {
+                updateConnectionStatus('syncing');
+                
+                // Limpa dados locais
+                localData = {
+                    transactions: [],
+                    notebooks: [],
+                    notes: [],
+                    appointments: [],
+                    paymentHistory: []
+                };
+                
+                
+
+                // Se estiver online, tenta limpar no Supabase também
+                if (isOnline && supabaseClient && !isDevMode) {
+                    try {
+                        // Deleta transações
+                        await supabaseClient
+                            .from('transactions')
+                            .delete()
+                            .eq('user_id', currentUser.id);
+                        
+                        // Deleta histórico de pagamentos
+                        await supabaseClient
+                            .from('payment_history')
+                            .delete()
+                            .eq('user_id', currentUser.id);
+                            
+                    } catch (error) {
+                        console.error('Erro ao limpar dados no Supabase:', error);
+                    }
+                }
+
+                // Não chama loadAllData() aqui pois re-buscaria do Supabase e poderia
+                // repopular com dados antigos caso o delete ainda não tenha propagado.
+                // Renderiza diretamente com localData já vazia.
+                updateDashboard();
+                renderPartitions();
+                updateConnectionStatus('online');
+                showNotification('✅ Todos os dados foram resetados com sucesso!', 'success');
+                closeSettingsModal();
+                
+            } catch (error) {
+                console.error('Erro ao resetar dados:', error);
+                updateConnectionStatus('offline');
+                showNotification('❌ Erro ao resetar dados: ' + error.message, 'error');
+            }
+        }
+
+        // ==========================================
+        // MODAIS E FORMULÁRIOS - VERSÃO CORRIGIDA
+        // ==========================================
+
+        function openAddModal(partition) {
+            editingId = null;
+            const section = getActiveSection(partition);
+            const mapping = sectionMapping[section];
+            
+            document.getElementById('transactionId').value = '';
+            document.getElementById('partitionId').value = partition;
+            document.getElementById('sectionId').value = section;
+            document.getElementById('modalTitle').textContent = `Nova ${sectionNames[section]}`;
+
+            document.getElementById('transactionType').value = mapping.type.startsWith('income') ? 'income' : 'expense';
+            document.getElementById('description').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('installments').value = '1';
+            document.getElementById('dueDate').valueAsDate = new Date();
+            document.getElementById('status').value = 'pending';
+            document.getElementById('autoRenew').checked = false;
+
+            const isInstallment = mapping.category === 'installment';
+            document.getElementById('installmentFields').style.display = isInstallment ? 'block' : 'none';
+            document.getElementById('autoRenewField').style.display = mapping.category === 'fixed' ? 'block' : 'none';
+
+            document.getElementById('addModal').classList.add('active');
+        }
+
+        async function openEditModal(transactionId) {
+            const t = localData.transactions.find(tr => tr.id === transactionId);
+            
+            if (!t) {
+                showNotification('Transação não encontrada', 'error');
+                return;
+            }
+
+            editingId = transactionId;
+            document.getElementById('transactionId').value = t.id;
+            document.getElementById('partitionId').value = t.partition_id;
+            document.getElementById('sectionId').value = getSectionIdFromType(t.type, t.partition_id);
+            document.getElementById('modalTitle').textContent = 'Editar Transação';
+
+            document.getElementById('transactionType').value = t.type.startsWith('income') ? 'income' : 'expense';
+            document.getElementById('description').value = t.description;
+            document.getElementById('amount').value = t.amount;
+            document.getElementById('installments').value = t.total_installments || 1;
+            document.getElementById('dueDate').value = t.due_date;
+            document.getElementById('status').value = t.status;
+            document.getElementById('autoRenew').checked = t.auto_renew || false;
+
+            const mapping = sectionMapping[getSectionIdFromType(t.type, t.partition_id)];
+            document.getElementById('installmentFields').style.display = 
+                mapping.category === 'installment' ? 'block' : 'none';
+            document.getElementById('autoRenewField').style.display = 
+                mapping.category === 'fixed' ? 'block' : 'none';
+
+            document.getElementById('addModal').classList.add('active');
+        }
+
+        function getSectionIdFromType(type, partition) {
+            for (const [id, mapping] of Object.entries(sectionMapping)) {
+                if (mapping.type === type) {
+                    const sectionId = parseInt(id);
+                    const sectionPartition = sectionId <= 5 ? 1 : 2;
+                    // Só retorna se a seção pertencer à repartição correta
+                    if (sectionPartition === partition) {
+                        return sectionId;
+                    }
+                }
+            }
+            // Fallback: retorna a primeira seção da repartição correspondente
+            return partition === 1 ? 1 : 6;
+        }
+
+        function closeModal() {
+            document.getElementById('addModal').classList.remove('active');
+            editingId = null;
+        }
+
+        // ==========================================
+        // FUNÇÃO SAVE TRANSACTION - VERSÃO CORRIGIDA E ROBUSTA
+        // ==========================================
+
+        async function saveTransaction() {
+            const btnSave = document.getElementById('btnSaveTransaction');
+            const originalText = btnSave.textContent;
+            
+            try {
+                btnSave.disabled = true;
+                btnSave.textContent = '💾 Salvando...';
+
+                const partitionIdEl = document.getElementById('partitionId');
+                const sectionIdEl = document.getElementById('sectionId');
+                const descriptionEl = document.getElementById('description');
+                const amountEl = document.getElementById('amount');
+                const dueDateEl = document.getElementById('dueDate');
+                const statusEl = document.getElementById('status');
+                const installmentsEl = document.getElementById('installments');
+                const autoRenewEl = document.getElementById('autoRenew');
+                
+                if (!partitionIdEl || !sectionIdEl || !descriptionEl || !amountEl || !dueDateEl || !statusEl) {
+                    throw new Error('Elementos do formulário não encontrados. Recarregue a página.');
+                }
+
+                const partitionId = parseInt(partitionIdEl.value);
+                const sectionId = parseInt(sectionIdEl.value);
+                const mapping = sectionMapping[sectionId];
+                
+                if (!mapping) {
+                    throw new Error('Mapeamento de seção não encontrado');
+                }
+
+                const description = descriptionEl.value.trim();
+                const amount = parseFloat(amountEl.value);
+                const dueDate = dueDateEl.value;
+                const status = statusEl.value;
+                const totalInstallments = parseInt(installmentsEl?.value) || 1;
+                const autoRenew = autoRenewEl?.checked || false;
+
+                if (!description) {
+                    throw new Error('Digite uma descrição para a transação');
+                }
+                if (isNaN(amount) || amount <= 0) {
+                    throw new Error('Digite um valor válido maior que zero');
+                }
+                if (!dueDate) {
+                    throw new Error('Selecione uma data de vencimento');
+                }
+
+                const dateObj = new Date(dueDate);
+                if (isNaN(dateObj.getTime())) {
+                    throw new Error('Data de vencimento inválida');
+                }
+
+                const baseTransaction = {
+                    type: mapping.type,
+                    category: mapping.category,
+                    partition_id: partitionId,
+                    description: description,
+                    amount: amount,
+                    year: dateObj.getFullYear(),
+                    month: dateObj.getMonth() + 1,
+                    due_day: dateObj.getDate(),
+                    due_date: dueDate,
+                    status: status,
+                    total_installments: totalInstallments,
+                    installment_number: 1,
+                    auto_renew: autoRenew,
+                    is_fixed: mapping.category === 'fixed'
+                };
+
+                if (editingId) {
+                    console.log('✏️ Editando transação:', editingId);
+                    await monitorar('saveTransaction_update', async () => {
+                        const result = await updateTransaction(editingId, baseTransaction);
+                        if (!result) throw new Error('Falha ao atualizar transação');
+                        return result;
+                    });
+                    
+                    showNotification('✅ Transação atualizada com sucesso!');
+                } else {
+                    console.log('➕ Criando nova transação:', baseTransaction);
+                    
+                    await monitorar('saveTransaction_insert', async () => {
+                        if (mapping.category === 'installment' && totalInstallments > 1) {
+                            console.log(`📦 Criando ${totalInstallments} parcelas...`);
+                            
+                            for (let i = 1; i <= totalInstallments; i++) {
+                                const parcelDate = new Date(dateObj);
+                                parcelDate.setMonth(parcelDate.getMonth() + (i - 1));
+                                
+                                const parcelTransaction = {
+                                    ...baseTransaction,
+                                    description: `${description} (${i}/${totalInstallments})`,
+                                    year: parcelDate.getFullYear(),
+                                    month: parcelDate.getMonth() + 1,
+                                    due_day: parcelDate.getDate(),
+                                    due_date: parcelDate.toISOString().split('T')[0],
+                                    installment_number: i,
+                                    status: i === 1 ? status : 'pending'
+                                };
+                                
+                                console.log(`  Parcela ${i}/${totalInstallments}:`, parcelTransaction.due_date);
+                                const result = await insertTransaction(parcelTransaction);
+                                
+                                if (!result) {
+                                    throw new Error(`Falha ao criar parcela ${i}/${totalInstallments}`);
+                                }
+                            }
+                            
+                            console.log('✅ Todas as parcelas criadas com sucesso');
+                        } else {
+                            console.log('Criando transação única...');
+                            const result = await insertTransaction(baseTransaction);
+                            
+                            if (!result) {
+                                throw new Error('Falha ao criar transação');
+                            }
+                            
+                            // Se for conta fixa com renovação automática, criar 6 meses à frente
+                            if (mapping.category === 'fixed' && autoRenew) {
+                                console.log('🔄 Criando renovações automáticas para 6 meses...');
+                                await createNextMonthFixed(result);
+                            }
+                        }
+                    });
+                    
+                    showNotification('✅ Transação adicionada com sucesso!');
+                }
+
+                closeModal();
+                
+                // CORREÇÃO CRÍTICA: NÃO chamar loadAllData() aqui.
+                // loadAllData() → fetchTransactions() → Supabase SELECT pode sobrescrever
+                // localData.transactions e perder itens recém-inseridos (merge parcial).
+                // Renderizamos diretamente com localData já atualizado — ilimitado.
+                updateDashboard();
+                
+                if (!openPartitions[partitionId]) {
+                    togglePartition(partitionId);
+                } else {
+                    await renderPartitionContent(partitionId);
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro ao salvar transação:', error);
+                showNotification('❌ ' + error.message, 'error');
+            } finally {
+                btnSave.disabled = false;
+                btnSave.textContent = originalText;
+            }
+        }
+
+        async function deleteTransactionHandler(id) {
+            if (confirm('Tem certeza que deseja excluir esta transação?')) {
+                try {
+                    await monitorar('deleteTransaction', async () => {
+                        await deleteTransaction(id);
+                    });
+                    
+                    updateDashboard();
+                    renderPartitions();
+                    showNotification('🗑️ Transação excluída!');
+                } catch (error) {
+                    showNotification('❌ Erro ao excluir: ' + error.message, 'error');
+                }
+            }
+        }
+
+        function openPaymentModal(transactionId) {
+            const t = localData.transactions.find(tr => tr.id === transactionId);
+            if (!t) {
+                showNotification('Transação não encontrada', 'error');
+                return;
+            }
+            
+            document.getElementById('paymentTransactionId').value = transactionId;
+            document.getElementById('paymentDate').valueAsDate = new Date();
+            document.getElementById('paymentAmount').value = t.amount;
+            document.getElementById('paymentObs').value = '';
+            document.getElementById('paymentModal').classList.add('active');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.remove('active');
+            document.getElementById('paymentObs').value = '';
+        }
+
+        // ==========================================
+        // CONFIRMAÇÃO DE PAGAMENTO - VERSÃO FINAL CORRIGIDA
+        // ==========================================
+
+        async function confirmPayment() {
+            const transactionId = document.getElementById('paymentTransactionId').value;
+            const paymentDate = document.getElementById('paymentDate').value;
+            const paymentAmountInput = document.getElementById('paymentAmount').value;
+            const observation = document.getElementById('paymentObs').value;
+
+            if (!paymentDate) {
+                showNotification('Informe a data do pagamento!', 'error');
+                return;
+            }
+
+            const paymentAmount = parseFloat(paymentAmountInput);
+            if (paymentAmountInput && (isNaN(paymentAmount) || paymentAmount <= 0)) {
+                showNotification('Valor de pagamento inválido!', 'error');
+                return;
+            }
+
+            const transaction = localData.transactions.find(t => t.id === transactionId);
+            
+            if (!transaction) {
+                showNotification('Transação não encontrada!', 'error');
+                closePaymentModal();
+                return;
+            }
+
+            const finalAmount = paymentAmount || parseFloat(transaction.amount);
+            const currentInstallment = transaction.installment_number || 1;
+            const totalInstallments = transaction.total_installments || 1;
+            const isLastInstallment = currentInstallment >= totalInstallments;
+            
+            let newStatus;
+            if (transaction.type === 'income') {
+                newStatus = isLastInstallment ? 'received' : 'pending';
+            } else {
+                newStatus = isLastInstallment ? 'paid' : 'pending';
+            }
+
+            const paymentData = {
+                status: newStatus,
+                payment_date: paymentDate,
+                payment_amount: finalAmount,
+                payment_observation: observation || 'Pagamento registrado via sistema',
+                updated_at: new Date().toISOString()
+            };
+
+            const saveBtn = document.querySelector('#paymentModal .btn-save');
+            const originalText = saveBtn.textContent;
+            saveBtn.textContent = '💾 Salvando...';
+            saveBtn.disabled = true;
+
+            try {
+                const result = await registerPayment(transactionId, paymentData);
+                
+                if (!result) {
+                    throw new Error('Falha ao registrar pagamento');
+                }
+
+                await insertPaymentHistory(transactionId, paymentData);
+
+                if (transaction.category === 'installment' && !isLastInstallment) {
+                    await createNextInstallment(transaction);
+                }
+
+                if (transaction.auto_renew && isLastInstallment && transaction.is_fixed) {
+                    await createNextMonthFixed(transaction);
+                }
+
+                showNotification(
+                    isLastInstallment 
+                        ? (transaction.type === 'income' ? '✅ Recebimento confirmado!' : '✅ Dívida quitada!') 
+                        : `✅ Parcela ${currentInstallment}/${totalInstallments} paga!`,
+                    'success'
+                );
+                
+                closePaymentModal();
+                updateDashboard();
+                renderPartitions();
+                
+            } catch (error) {
+                console.error('Erro no pagamento:', error);
+                showNotification('Erro ao registrar pagamento: ' + error.message, 'error');
+            } finally {
+                saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
+            }
+        }
+
+        // ==========================================
+        // HISTÓRICO DE PAGAMENTOS
+        // ==========================================
+
+        async function openPaymentHistoryModal(transactionId) {
+            const modal = document.getElementById('paymentHistoryModal');
+            const container = document.getElementById('paymentHistoryList');
+            
+            container.innerHTML = '<div class="empty-state">Carregando...</div>';
+            modal.classList.add('active');
+
+            let history = [];
+            
+            if (isOnline) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('payment_history')
+                        .select('*')
+                        .eq('transaction_id', transactionId)
+                        .order('payment_date', { ascending: false });
+                        
+                    if (!error) history = data || [];
+                } catch (e) {
+                    console.error('Erro ao buscar histórico do Supabase:', e);
+                }
+            }
+            
+            const localHistory = (localData.paymentHistory || []).filter(h => 
+                h.transaction_id === transactionId
+            );
+            
+            history = [...history, ...localHistory.filter(lh => 
+                !history.some(h => h.id === lh.id)
+            )];
+            
+            const transaction = localData.transactions.find(t => t.id === transactionId);
+            if (transaction?.payment_date && !history.some(h => 
+                h.payment_date === transaction.payment_date && h.amount === transaction.payment_amount
+            )) {
+                history.unshift({
+                    payment_date: transaction.payment_date,
+                    amount: transaction.payment_amount || transaction.amount,
+                    observation: transaction.payment_observation || 'Pagamento registrado'
+                });
+            }
+
+            if (history.length === 0) {
+                container.innerHTML = '<div class="empty-state">Nenhum pagamento registrado</div>';
+                return;
+            }
+
+            history.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+
+            let html = '';
+            history.forEach((h, index) => {
+                html += `
+                    <div class="history-item">
+                        <div class="history-item-header">
+                            Pagamento #${history.length - index} - ${formatDate(h.payment_date)}
+                        </div>
+                        <div class="history-item-detail">
+                            💰 Valor: ${formatCurrency(h.amount)}<br>
+                            📝 ${h.observation || 'Sem observação'}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function closePaymentHistoryModal() {
+            document.getElementById('paymentHistoryModal').classList.remove('active');
+        }
+
+        // ==========================================
+        // HISTÓRICO GERAL
+        // ==========================================
+
+        async function openHistoryModal() {
+            await applyHistoryFilters();
+            document.getElementById('historyModal').classList.add('active');
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').classList.remove('active');
+        }
+
+        async function applyHistoryFilters() {
+            const partition = document.getElementById('filterPartition').value;
+            const category = document.getElementById('filterCategory').value;
+            const type = document.getElementById('filterType').value;
+            const status = document.getElementById('filterStatus').value;
+            const dateStart = document.getElementById('filterDateStart').value;
+            const dateEnd = document.getElementById('filterDateEnd').value;
+            const search = document.getElementById('filterSearch').value.toLowerCase();
+
+            let transactions = [...localData.transactions];
+
+            if (partition) transactions = transactions.filter(t => t.partition_id === parseInt(partition));
+            if (category) transactions = transactions.filter(t => t.category === category);
+            if (type) transactions = transactions.filter(t => t.type.startsWith(type));
+            if (status) transactions = transactions.filter(t => t.status === status);
+            if (dateStart) transactions = transactions.filter(t => t.due_date >= dateStart);
+            if (dateEnd) transactions = transactions.filter(t => t.due_date <= dateEnd);
+            if (search) transactions = transactions.filter(t => t.description.toLowerCase().includes(search));
+
+            let html = '';
+            transactions.forEach(t => {
+                const categoryName = sectionNames[getSectionIdFromType(t.type, t.partition_id)] || t.category;
+                const partitionName = t.partition_id === 1 ? '1ª Repartição' : '2ª Repartição';
+                const typeClass = t.type.startsWith('income') ? 'history-type-income' : 'history-type-expense';
+                const typeLabel = t.type.startsWith('income') ? 'Receita' : 'Despesa';
+                const statusBadge = t.status === 'paid' || t.status === 'received' ? 
+                    '<span class="badge badge-success">Pago</span>' : 
+                    '<span class="badge badge-warning">Pendente</span>';
+
+                html += `
+                    <tr>
+                        <td>${formatDate(t.due_date)}</td>
+                        <td>${t.description}</td>
+                        <td>${categoryName}</td>
+                        <td>${partitionName}</td>
+                        <td class="${typeClass}">${typeLabel}</td>
+                        <td>${formatCurrency(t.amount)}</td>
+                        <td>${statusBadge}</td>
+                    </tr>
+                `;
+            });
+
+            if (transactions.length === 0) {
+                html = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">Nenhuma transação encontrada</td></tr>';
+            }
+
+            document.getElementById('historyTableBody').innerHTML = html;
+        }
+
+        // ==========================================
+        // CALENDÁRIO E COMPROMISSOS
+        // ==========================================
+
+        function openCalendarModal() {
+            renderCalendar();
+            document.getElementById('calendarModal').classList.add('active');
+        }
+
+        function closeCalendarModal() {
+            document.getElementById('calendarModal').classList.remove('active');
+        }
+
+        function changeCalendarMonth(delta) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            
+            document.getElementById('calendarMonthYear').textContent = 
+                currentCalendarDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startingDay = firstDay.getDay();
+            const totalDays = lastDay.getDate();
+
+            const today = new Date();
+            const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
+
+            let html = '';
+            const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            dayNames.forEach(day => {
+                html += `<div class="calendar-day-header">${day}</div>`;
+            });
+
+            for (let i = 0; i < startingDay; i++) {
+                html += `<div class="calendar-day other-month"></div>`;
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isToday = isCurrentMonth && day === today.getDate();
+                const isHoliday = nationalHolidays[dateStr];
+                const isAnapolisHoliday = anapolisHolidays[dateStr];
+                const dayAppointments = localData.appointments.filter(a => a.date === dateStr);
+                
+                let classes = 'calendar-day';
+                if (isToday) classes += ' today';
+                if (isHoliday) classes += ' holiday';
+                if (isAnapolisHoliday) classes += ' anapolis-holiday';
+                if (dayAppointments.length > 0) classes += ' has-appointment';
+
+                let content = `<div class="day-number">${day}</div>`;
+                if (isHoliday) content += `<div class="holiday-name">${isHoliday}</div>`;
+                if (isAnapolisHoliday) content += `<div class="anapolis-name">${isAnapolisHoliday}</div>`;
+                
+                if (dayAppointments.length > 0) {
+                    content += `<div class="day-events">`;
+                    dayAppointments.forEach(app => {
+                        content += `<div><span class="appointment-indicator"></span>${app.description.substring(0, 15)}...</div>`;
+                    });
+                    content += `</div>`;
+                }
+
+                html += `<div class="${classes}" onclick="openDayAppointments('${dateStr}')">${content}</div>`;
+            }
+
+            document.getElementById('calendarGrid').innerHTML = html;
+        }
+
+        function openDayAppointments(dateStr) {
+            selectedDate = dateStr;
+            const date = new Date(dateStr);
+            document.getElementById('dayAppointmentsTitle').textContent = 
+                'Compromissos - ' + date.toLocaleDateString('pt-BR');
+            renderDayAppointments();
+            document.getElementById('dayAppointmentsModal').classList.add('active');
+        }
+
+        function closeDayAppointmentsModal() {
+            document.getElementById('dayAppointmentsModal').classList.remove('active');
+            document.getElementById('appointmentDesc').value = '';
+            document.getElementById('appointmentTime').value = '';
+            document.getElementById('appointmentAlert').checked = false;
+            selectedDate = null;
+        }
+
+        function renderDayAppointments() {
+            const container = document.getElementById('dayAppointmentsList');
+            const dayAppointments = localData.appointments.filter(a => a.date === selectedDate);
+            
+            if (dayAppointments.length === 0) {
+                container.innerHTML = '<div class="empty-state">Nenhum compromisso para este dia</div>';
+                return;
+            }
+
+            let html = '';
+            dayAppointments.forEach(app => {
+                html += `
+                    <div class="appointment-item">
+                        <div class="appointment-info">
+                            <div class="appointment-date">${app.time || 'Sem horário'}</div>
+                            <div class="appointment-desc">${app.description}</div>
+                            ${app.alert ? '<div class="appointment-alert">🔔 Alerta ativado</div>' : ''}
+                        </div>
+                        <button class="btn-small btn-danger-small" onclick="deleteAppointment('${app.id}')">🗑️</button>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function saveAppointment() {
+            const description = document.getElementById('appointmentDesc').value.trim();
+            const time = document.getElementById('appointmentTime').value;
+            const alert = document.getElementById('appointmentAlert').checked;
+
+            if (!description) {
+                showNotification('Digite uma descrição!', 'error');
+                return;
+            }
+
+            const appointment = {
+                id: Date.now().toString(),
+                user_id: currentUser.id,
+                date: selectedDate,
+                description: description,
+                time: time,
+                alert: alert,
+                created_at: new Date().toISOString()
+            };
+
+            localData.appointments.push(appointment);
+            
+            renderDayAppointments();
+            renderCalendar();
+            
+            document.getElementById('appointmentDesc').value = '';
+            document.getElementById('appointmentTime').value = '';
+            document.getElementById('appointmentAlert').checked = false;
+            
+            showNotification('Compromisso salvo!');
+            checkAlerts();
+        }
+
+        function deleteAppointment(id) {
+            if (confirm('Excluir este compromisso?')) {
+                localData.appointments = localData.appointments.filter(a => a.id !== id);
+                
+                renderDayAppointments();
+                renderCalendar();
+                checkAlerts();
+            }
+        }
+
+        function checkAlerts() {
+            const today = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            const upcomingAlerts = localData.appointments.filter(a => {
+                if (!a.alert) return false;
+                if (a.date < today) return false;
+                if (a.date === today && a.time && a.time < currentTime) return false;
+                return true;
+            });
+
+            const bell = document.getElementById('alertBell');
+            const badge = document.getElementById('alertBadge');
+            
+            if (upcomingAlerts.length > 0) {
+                bell.classList.add('has-alerts');
+                badge.textContent = upcomingAlerts.length;
+                badge.style.display = 'flex';
+            } else {
+                bell.classList.remove('has-alerts');
+                badge.style.display = 'none';
+            }
+        }
+
+        function openAlertsModal() {
+            const container = document.getElementById('alertsList');
+            const today = new Date().toISOString().split('T')[0];
+            
+            const upcomingAlerts = localData.appointments.filter(a => a.alert && a.date >= today)
+                .sort((a, b) => a.date.localeCompare(b.date));
+
+            if (upcomingAlerts.length === 0) {
+                container.innerHTML = '<div class="empty-state">Nenhum alerta ativo</div>';
+            } else {
+                let html = '';
+                upcomingAlerts.forEach(app => {
+                    const isToday = app.date === today;
+                    html += `
+                        <div class="appointment-item">
+                            <div class="appointment-info">
+                                <div class="appointment-date">
+                                    ${isToday ? '📅 Hoje' : formatDate(app.date)} ${app.time ? 'às ' + app.time : ''}
+                                </div>
+                                <div class="appointment-desc">${app.description}</div>
+                            </div>
+                            <button class="btn-small btn-danger-small" onclick="deleteAppointment('${app.id}'); openAlertsModal();">🗑️</button>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+            
+            document.getElementById('alertsModal').classList.add('active');
+        }
+
+        function closeAlertsModal() {
+            document.getElementById('alertsModal').classList.remove('active');
+        }
+
+        // ==========================================
+        // BLOCO DE NOTAS
+        // ==========================================
+
+        function toggleNotes() {
+            notesExpanded = !notesExpanded;
+            const container = document.getElementById('notesContainer');
+            
+            if (notesExpanded) {
+                container.classList.add('active');
+                renderNotebooks();
+            } else {
+                container.classList.remove('active');
+            }
+        }
+
+        function renderNotebooks() {
+            const container = document.getElementById('notebooksList');
+            
+            if (localData.notebooks.length === 0) {
+                container.innerHTML = '<div style="color: #9ca3af; text-align: center; padding: 1rem;">Nenhum caderno</div>';
+                return;
+            }
+
+            let html = '';
+            localData.notebooks.forEach(nb => {
+                const noteCount = localData.notes.filter(n => n.notebook_id === nb.id).length;
+                const isActive = nb.id === currentNotebookId;
+                
+                html += `
+                    <div class="notebook-item ${isActive ? 'active' : ''}" onclick="selectNotebook('${nb.id}')">
+                        <span class="notebook-name">${nb.name}</span>
+                        <span class="notebook-count">${noteCount}</span>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function selectNotebook(id) {
+            currentNotebookId = id;
+            currentNoteId = null;
+            renderNotebooks();
+            renderNotes();
+            closeNoteEditor();
+        }
+
+        function createNotebook() {
+            const name = prompt('Nome do caderno:');
+            if (name && name.trim()) {
+                const notebook = {
+                    id: Date.now().toString(),
+                    user_id: currentUser.id,
+                    name: name.trim(),
+                    created_at: new Date().toISOString()
+                };
+                localData.notebooks.push(notebook);
+                
+                selectNotebook(notebook.id);
+                showNotification('Caderno criado!');
+            }
+        }
+
+        function renderNotes() {
+            const container = document.getElementById('notesList');
+            
+            if (!currentNotebookId) {
+                container.innerHTML = '<div class="empty-notes">Selecione um caderno</div>';
+                return;
+            }
+
+            const notes = localData.notes
+                .filter(n => n.notebook_id === currentNotebookId)
+                .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+            if (notes.length === 0) {
+                container.innerHTML = '<div class="empty-notes">Nenhuma nota</div>';
+                return;
+            }
+
+            let html = '';
+            notes.forEach(note => {
+                const isActive = note.id === currentNoteId;
+                const preview = note.content ? note.content.substring(0, 100).replace(/<[^>]*>/g, '') + '...' : 'Sem conteúdo';
+                
+                html += `
+                    <div class="note-item ${isActive ? 'active' : ''}" onclick="openNote('${note.id}')">
+                        <div class="note-title">${note.title || 'Sem título'}</div>
+                        <div class="note-preview">${preview}</div>
+                        <div class="note-date">${formatDate(note.updated_at)}</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function createNote() {
+            if (!currentNotebookId) {
+                showNotification('Selecione um caderno primeiro!', 'error');
+                return;
+            }
+
+            const note = {
+                id: Date.now().toString(),
+                user_id: currentUser.id,
+                notebook_id: currentNotebookId,
+                title: 'Nova Nota',
+                content: '',
+                media: [],
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+            
+            localData.notes.push(note);
+            
+            openNote(note.id);
+            showNotification('Nota criada!');
+        }
+
+        function openNote(id) {
+            currentNoteId = id;
+            const note = localData.notes.find(n => n.id === id);
+            if (!note) return;
+
+            document.getElementById('noteTitle').value = note.title || '';
+            document.getElementById('noteContent').value = note.content || '';
+            renderNoteMedia(note.media);
+            
+            document.getElementById('notesListView').style.display = 'none';
+            document.getElementById('noteEditorView').classList.add('active');
+            renderNotes();
+        }
+
+        function closeNoteEditor() {
+            document.getElementById('notesListView').style.display = 'block';
+            document.getElementById('noteEditorView').classList.remove('active');
+            currentNoteId = null;
+            renderNotes();
+        }
+
+        function saveNote() {
+            if (!currentNoteId) return;
+            
+            const note = localData.notes.find(n => n.id === currentNoteId);
+            if (note) {
+                note.title = document.getElementById('noteTitle').value;
+                note.content = document.getElementById('noteContent').value;
+                note.updated_at = new Date().toISOString();
+                
+                showNotification('Nota salva!');
+            }
+        }
+
+        function deleteCurrentNote() {
+            if (!currentNoteId) return;
+            
+            if (confirm('Excluir esta nota?')) {
+                localData.notes = localData.notes.filter(n => n.id !== currentNoteId);
+                
+                closeNoteEditor();
+                renderNotes();
+                showNotification('Nota excluída!');
+            }
+        }
+
+        function formatText(command) {
+            const textarea = document.getElementById('noteContent');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selected = text.substring(start, end);
+            
+            let formatted = '';
+            switch(command) {
+                case 'bold': formatted = `**${selected}**`; break;
+                case 'italic': formatted = `*${selected}*`; break;
+                case 'underline': formatted = `__${selected}__`; break;
+            }
+            
+            textarea.value = text.substring(0, start) + formatted + text.substring(end);
+        }
+
+        function insertList() {
+            const textarea = document.getElementById('noteContent');
+            const pos = textarea.selectionStart;
+            textarea.value = textarea.value.substring(0, pos) + '\n• ' + textarea.value.substring(pos);
+        }
+
+        function handleNoteImage(event) {
+            const file = event.target.files[0];
+            if (!file || !currentNoteId) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const note = localData.notes.find(n => n.id === currentNoteId);
+                if (note) {
+                    note.media = note.media || [];
+                    note.media.push({
+                        id: Date.now().toString(),
+                        type: 'image',
+                        data: e.target.result
+                    });
+                    
+                    renderNoteMedia(note.media);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function renderNoteMedia(media) {
+            const container = document.getElementById('noteMediaPreview');
+            if (!media || media.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            media.forEach((item, index) => {
+                html += `
+                    <div class="media-item">
+                        <img src="${item.data}" alt="">
+                        <button class="media-remove" onclick="removeMedia(${index})">×</button>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function removeMedia(index) {
+            if (!currentNoteId) return;
+            const note = localData.notes.find(n => n.id === currentNoteId);
+            if (note && note.media) {
+                note.media.splice(index, 1);
+                
+                renderNoteMedia(note.media);
+            }
+        }
+
+        // ==========================================
+        // BACKUP E CONFIGURAÇÕES
+        // ==========================================
+
+        function openBackupModal() {
+            document.getElementById('backupModal').classList.add('active');
+        }
+
+        function closeBackupModal() {
+            document.getElementById('backupModal').classList.remove('active');
+        }
+
+        function exportBackup() {
+            const backupData = {
+                version: '2.1-offline-first',
+                exportDate: new Date().toISOString(),
+                user_id: currentUser ? currentUser.id : 'dev-mode',
+                localData: localData
+            };
+
+            const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `financas_pedrosa_backup_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showNotification('Backup exportado!');
+        }
+
+        function setupBackupDragAndDrop() {
+            const area = document.getElementById('backupDropArea');
+            
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.classList.add('dragover');
+            });
+
+            area.addEventListener('dragleave', () => {
+                area.classList.remove('dragover');
+            });
+
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) {
+                    processBackupFile(e.dataTransfer.files[0]);
+                }
+            });
+        }
+
+        function handleBackupFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) processBackupFile(file);
+        }
+
+        function processBackupFile(file) {
+            if (!file.name.endsWith('.json')) {
+                showNotification('Selecione um arquivo JSON válido!', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backup = JSON.parse(e.target.result);
+                    if (confirm(`Restaurar backup de ${new Date(backup.exportDate).toLocaleString('pt-BR')}?
+
+Isso substituirá os dados atuais!`)) {
+                        localData = backup.localData || backup;
+                        // Garante que todas as propriedades existam
+                        if (!localData.transactions) localData.transactions = [];
+                        if (!localData.notebooks) localData.notebooks = [];
+                        if (!localData.notes) localData.notes = [];
+                        if (!localData.appointments) localData.appointments = [];
+                        if (!localData.paymentHistory) localData.paymentHistory = [];
+                        if (!localData._pendingDeletions) localData._pendingDeletions = [];
+                        
+                        // NÃO chama loadAllData() pois iria re-buscar do Supabase e
+                        // SOBRESCREVER os dados do backup com dados atuais do servidor.
+                        updateDashboard();
+                        updateMonthDisplay();
+                        renderPartitions();
+                        renderNotebooks();
+                        showNotification('✅ Backup restaurado com sucesso!');
+                        closeBackupModal();
+                    }
+                } catch (error) {
+                    showNotification('Erro ao ler arquivo: ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function openSettingsModal() {
+            document.getElementById('settingsEmail').value = currentUser.email;
+            document.getElementById('settingsName').value = currentUser.user_metadata?.full_name || '';
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            resetPasswordValidation();
+            
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function validatePassword() {
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+            
+            document.getElementById('req-length').className = newPass.length >= 6 ? 'valid' : 'invalid';
+            document.getElementById('req-number').className = /\d/.test(newPass) ? 'valid' : 'invalid';
+            document.getElementById('req-match').className = (newPass === confirmPass && newPass !== '') ? 'valid' : 'invalid';
+        }
+
+        function resetPasswordValidation() {
+            document.getElementById('req-length').className = 'invalid';
+            document.getElementById('req-number').className = 'invalid';
+            document.getElementById('req-match').className = 'invalid';
+        }
+
+        async function saveSettings() {
+            const currentPass = document.getElementById('currentPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+            const newName = document.getElementById('settingsName').value;
+
+            try {
+                if (newName && newName !== currentUser.user_metadata?.full_name) {
+                    if (isOnline) {
+                        await supabaseClient.auth.updateUser({
+                            data: { full_name: newName }
+                        });
+                        await supabaseClient
+                            .from('profiles')
+                            .update({ full_name: newName })
+                            .eq('id', currentUser.id);
+                    }
+                    currentUser.user_metadata.full_name = newName;
+                    document.getElementById('userNameDisplay').textContent = newName;
+                }
+
+                if (newPass) {
+                    if (newPass !== confirmPass) {
+                        showNotification('As senhas não coincidem!', 'error');
+                        return;
+                    }
+                    if (isOnline) {
+                        await supabaseClient.auth.updateUser({ password: newPass });
+                    }
+                }
+
+                showNotification('Configurações salvas!');
+                closeSettingsModal();
+                
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // ==========================================
+        // CALCULADORA
+        // ==========================================
+
+        function openCalculator() {
+            calcExpression = '';
+            updateCalcDisplay();
+            document.getElementById('calculatorModal').classList.add('active');
+        }
+
+        function closeCalculator() {
+            document.getElementById('calculatorModal').classList.remove('active');
+        }
+
+        function appendCalc(value) {
+            calcExpression += value;
+            updateCalcDisplay();
+        }
+
+        function clearCalc() {
+            calcExpression = '';
+            updateCalcDisplay();
+        }
+
+        function deleteCalc() {
+            calcExpression = calcExpression.slice(0, -1);
+            updateCalcDisplay();
+        }
+
+        function updateCalcDisplay() {
+            document.getElementById('calcDisplay').textContent = calcExpression || '0';
+        }
+
+        function calculatePercentage() {
+            try {
+                if (!calcExpression) return;
+                const operators = ['+', '-', '*', '/'];
+                let lastOpIndex = -1, lastOp = '';
+                
+                for (let op of operators) {
+                    const idx = calcExpression.lastIndexOf(op);
+                    if (idx > lastOpIndex) {
+                        lastOpIndex = idx;
+                        lastOp = op;
+                    }
+                }
+                
+                if (lastOpIndex === -1) {
+                    calcExpression = (parseFloat(calcExpression) / 100).toString();
+                } else {
+                    const base = parseFloat(calcExpression.substring(0, lastOpIndex));
+                    const pct = parseFloat(calcExpression.substring(lastOpIndex + 1));
+                    const result = base * (pct / 100);
+                    calcExpression = (lastOp === '+' ? base + result : 
+                                     lastOp === '-' ? base - result : result).toString();
+                }
+                updateCalcDisplay();
+            } catch (e) {
+                calcExpression = 'Erro';
+                updateCalcDisplay();
+                setTimeout(() => { calcExpression = ''; updateCalcDisplay(); }, 1500);
+            }
+        }
+
+        function calculate() {
+            try {
+                if (!calcExpression) return;
+                let expr = calcExpression.replace(/×/g, '*').replace(/÷/g, '/');
+                calcExpression = eval(expr).toString();
+                updateCalcDisplay();
+            } catch (e) {
+                calcExpression = 'Erro';
+                updateCalcDisplay();
+                setTimeout(() => { calcExpression = ''; updateCalcDisplay(); }, 1500);
+            }
+        }
+
+        // ==========================================
+        // UTILITÁRIOS
+        // ==========================================
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+
+        function formatDate(dateString) {
+            // CORREÇÃO: Evita problema de timezone ao parsear datas
+            // Quando a data vem no formato YYYY-MM-DD, cria a data no fuso local
+            if (!dateString) return '';
+            
+            // Se for uma string de data ISO (YYYY-MM-DD), parseia manualmente
+            if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const [year, month, day] = dateString.split('-').map(Number);
+                return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+            }
+            
+            // Para outros formatos, usa o método padrão com ajuste de timezone
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '';
+            
+            // Adiciona o offset do timezone para evitar o problema de UTC
+            const localDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+            return localDate.toLocaleDateString('pt-BR');
+        }
 
         function showNotification(message, type = 'success') {
             const notification = document.getElementById('notification');
             const title = document.getElementById('notificationTitle');
             const text = document.getElementById('notificationText');
-
+            
             title.textContent = type === 'error' ? 'Erro' : 'Sucesso';
             text.textContent = message;
-
-            notification.className = 'notification show';
-            if (type === 'error') {
-                notification.classList.add('error');
+            
+            notification.className = 'notification show' + (type === 'error' ? ' error' : '');
+            
+            // CORREÇÃO: Duração menor no mobile (1.5s) vs desktop (3s)
+            // Também verifica se é notificação de sincronização para duração ainda menor
+            const isMobile = window.innerWidth < 768;
+            const isSyncNotification = message.toLowerCase().includes('sincronização') || 
+                                       message.toLowerCase().includes('sync');
+            
+            let duration = 3000; // desktop padrão
+            if (isMobile) {
+                duration = isSyncNotification ? 1000 : 1500; // muito curto para sync, curto para outros
+            } else if (isSyncNotification) {
+                duration = 2000; // mais curto para sync mesmo no desktop
             }
-
+            
             setTimeout(() => {
-                notification.className = 'notification';
-            }, 4000);
+                notification.classList.remove('show');
+            }, duration);
         }
 
-        // ====
-        // INICIALIZAÇÃO DA APLICAÇÃO
-        // ====
-
-        let currentMonth = new Date();
-
-        async function initApp() {
-            await loadAllData();
-            updateCurrentMonthDisplay();
-        }
-
-        async function loadAllData(year, month) {
-            year = year || currentMonth.getFullYear();
-            month = month || currentMonth.getMonth() + 1;
-
-            localData.transactions = await fetchTransactions(year, month);
-            // Carregar outros dados (notebooks, notes, appointments, etc.) se necessário
-
-            updateDashboard();
-            updatePendingCard();
-        }
-
-        function updateCurrentMonthDisplay() {
-            const monthNames = [
-                'JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO',
-                'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'
-            ];
-
-            const monthText = document.getElementById('currentMonth');
-            monthText.textContent = `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
-        }
-
-        function changeMonth(offset) {
-            currentMonth.setMonth(currentMonth.getMonth() + offset);
-            updateCurrentMonthDisplay();
-            loadAllData();
-        }
-
-        function updateDashboard() {
-            const totalBalanceEl = document.getElementById('totalBalance');
-            const totalIncomeEl = document.getElementById('totalIncome');
-            const totalExpensesEl = document.getElementById('totalExpenses');
-            const totalPendingEl = document.getElementById('totalPending');
-
-            let totalBalance = 0;
-            let totalIncome = 0;
-            let totalExpenses = 0;
-            let totalPending = 0;
-
-            localData.transactions.forEach(t => {
-                if (t.status === 'paid' || t.status === 'received') {
-                    if (t.type === 'income') {
-                        totalIncome += t.amount;
-                    } else {
-                        totalExpenses += t.amount;
-                    }
-                } else if (t.status === 'pending') {
-                    totalPending += t.amount;
-                }
-            });
-
-            totalBalance = totalIncome - totalExpenses;
-
-            totalBalanceEl.textContent = `R$ ${totalBalance.toFixed(2).replace('.', ',')}`;
-            totalIncomeEl.textContent = `R$ ${totalIncome.toFixed(2).replace('.', ',')}`;
-            totalExpensesEl.textContent = `R$ ${totalExpenses.toFixed(2).replace('.', ',')}`;
-            totalPendingEl.textContent = `R$ ${totalPending.toFixed(2).replace('.', ',')}`;
-        }
-
-        function updatePendingCard() {
-            const pendingCard = document.getElementById('pendingCard');
-            const totalPendingEl = document.getElementById('totalPending');
-
-            if (localData.transactions.some(t => t.status === 'pending')) {
-                pendingCard.style.display = 'block';
-            } else {
-                pendingCard.style.display = 'none';
+        // Event Listeners
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
             }
         }
 
-        // Inicializa a aplicação
-        window.addEventListener('load', () => {
-            initSupabase();
+        document.addEventListener('keydown', function(e) {
+            if (!document.getElementById('calculatorModal').classList.contains('active')) return;
+            if (e.key >= '0' && e.key <= '9') appendCalc(e.key);
+            if (e.key === '.') appendCalc('.');
+            if (e.key === '+') appendCalc('+');
+            if (e.key === '-') appendCalc('-');
+            if (e.key === '*') appendCalc('*');
+            if (e.key === '/') appendCalc('/');
+            if (e.key === '%') calculatePercentage();
+            if (e.key === 'Enter') calculate();
+            if (e.key === 'Escape') clearCalc();
+            if (e.key === 'Backspace') deleteCalc();
         });
+
+        // Expor funções para o escopo global
+        window.deleteTransactionHandler = deleteTransactionHandler;
+        window.openEditModal = openEditModal;
+        window.openPaymentModal = openPaymentModal;
+        window.openPaymentHistoryModal = openPaymentHistoryModal;
+        window.togglePartition = togglePartition;
+        window.changeMonth = changeMonth;
+        window.openDayAppointments = openDayAppointments;
+        window.deleteAppointment = deleteAppointment;
+        window.saveAppointment = saveAppointment;
+        window.openAlertsModal = openAlertsModal;
+        window.closeAlertsModal = closeAlertsModal;
+        window.changeCalendarMonth = changeCalendarMonth;
+        window.selectNotebook = selectNotebook;
+        window.openNote = openNote;
+        window.removeMedia = removeMedia;
+        window.handleNoteImage = handleNoteImage;
+        window.formatText = formatText;
+        window.insertList = insertList;
+        window.confirmPayment = confirmPayment;
+        window.closePaymentModal = closePaymentModal;
+        window.closePaymentHistoryModal = closePaymentHistoryModal;
+        window.applyHistoryFilters = applyHistoryFilters;
+        window.closeHistoryModal = closeHistoryModal;
+        window.closeCalendarModal = closeCalendarModal;
+        window.closeDayAppointmentsModal = closeDayAppointmentsModal;
+        window.closeBackupModal = closeBackupModal;
+        window.handleBackupFileSelect = handleBackupFileSelect;
+        window.closeSettingsModal = closeSettingsModal;
+        window.validatePassword = validatePassword;
+        window.closeCalculator = closeCalculator;
+        window.appendCalc = appendCalc;
+        window.clearCalc = clearCalc;
+        window.deleteCalc = deleteCalc;
+        window.calculatePercentage = calculatePercentage;
+        window.calculate = calculate;
+        window.closeRegisterModal = closeRegisterModal;
+        window.registerUser = registerUser;
+        window.showRegister = showRegister;
+        window.devLogin = devLogin;
+        window.logout = logout;
+        window.showView = showView;
+        window.openCalculator = openCalculator;
+        window.openCalendarModal = openCalendarModal;
+        window.openHistoryModal = openHistoryModal;
+        window.toggleNotes = toggleNotes;
+        window.createNotebook = createNotebook;
+        window.createNote = createNote;
+        window.closeNoteEditor = closeNoteEditor;
+        window.saveNote = saveNote;
+        window.deleteCurrentNote = deleteCurrentNote;
+        window.openBackupModal = openBackupModal;
+        window.exportBackup = exportBackup;
+        window.openSettingsModal = openSettingsModal;
+        window.saveSettings = saveSettings;
+        window.openAddModal = openAddModal;
+        window.closeModal = closeModal;
+        window.saveTransaction = saveTransaction;
+        window.gerarRelatorioPDF = gerarRelatorioPDF;
+        window.monitorar = monitorar;
+        window.openPendingModal = openPendingModal;
+        window.closePendingModal = closePendingModal;
+        window.openPaymentModalFromPending = openPaymentModalFromPending;
+        window.openEditModalFromPending = openEditModalFromPending;
+        window.deleteTransactionFromPending = deleteTransactionFromPending;
+        window.resetAllData = resetAllData;
+
+        // NOVAS FUNÇÕES EXPORTADAS
+        window.handleManualSync = handleManualSync;
+        window.setupRealtimeSubscription = setupRealtimeSubscription;
+        window.publishSyncEvent = publishSyncEvent;
+        window.closeRealtimeChannel = closeRealtimeChannel;
+        window.updatePartitionTotals = updatePartitionTotals;
+
+        // Inicializar ao carregar
+        window.addEventListener('DOMContentLoaded', initSupabase);
     </script>
 </body>
 </html>

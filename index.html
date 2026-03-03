@@ -78,45 +78,6 @@
             font-family: 'Cinzel', serif;
         }
 
-        /* NOVO: Sync Spinner - Indicador discreto de sincronização */
-        .sync-spinner-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .sync-spinner-container.active {
-            display: flex;
-            opacity: 1;
-        }
-
-        .sync-spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid rgba(30, 58, 138, 0.2);
-            border-top-color: var(--blue-royal);
-            border-radius: 50%;
-            animation: sync-spin 0.8s linear infinite;
-        }
-
-        @keyframes sync-spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Variante para tema escuro */
-        @media (prefers-color-scheme: dark) {
-            .sync-spinner {
-                border-color: rgba(212, 175, 55, 0.2);
-                border-top-color: var(--gold-primary);
-            }
-        }
-
         /* Connection Status */
         .connection-status {
             position: static;
@@ -1155,34 +1116,6 @@
             color: #6b7280;
         }
 
-        /* CORREÇÃO: Notificação menos intrusiva no mobile */
-        @media (max-width: 768px) {
-            .notification {
-                top: auto;
-                bottom: 1rem;
-                left: 1rem;
-                right: 1rem;
-                max-width: none;
-                padding: 0.6rem 1rem;
-                font-size: 0.85rem;
-                border-radius: 8px;
-                transform: translateY(200px);
-            }
-            
-            .notification.show {
-                transform: translateY(0);
-            }
-            
-            .notification-title {
-                font-size: 0.9rem;
-                margin-bottom: 0.1rem;
-            }
-            
-            .notification-text {
-                font-size: 0.8rem;
-            }
-        }
-
         /* Settings Panel */
         .settings-panel {
             background-color: white;
@@ -2001,7 +1934,7 @@
             color: #9ca3af;
         }
 
-        /* Sync Indicator (texto) */
+        /* Sync Indicator */
         .sync-indicator {
             display: inline-flex;
             align-items: center;
@@ -2115,72 +2048,6 @@
             font-weight: 700;
             color: var(--warning);
         }
-
-        /* CORREÇÃO: Totalizadores de Receitas e Despesas nas Repartições */
-        .partition-totals-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-top: 1.5rem;
-            padding-top: 1rem;
-            border-top: 2px solid #e5e7eb;
-        }
-
-        .partition-total-card {
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            border: 2px solid #86efac;
-            border-radius: 12px;
-            padding: 1rem;
-            text-align: center;
-        }
-
-        .partition-total-card.expenses {
-            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-            border-color: #fecaca;
-        }
-
-        .partition-total-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .partition-total-card .partition-total-label {
-            color: #065f46;
-        }
-
-        .partition-total-card.expenses .partition-total-label {
-            color: #991b1b;
-        }
-
-        .partition-total-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .partition-total-card .partition-total-value {
-            color: var(--success);
-        }
-
-        .partition-total-card.expenses .partition-total-value {
-            color: var(--danger);
-        }
-
-        @media (max-width: 480px) {
-            .partition-totals-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .partition-total-value {
-                font-size: 1.25rem;
-            }
-        }
     </style>
 <base target="_blank">
 </head>
@@ -2189,11 +2056,6 @@
     <div class="loading-screen" id="loadingScreen">
         <div class="loading-spinner"></div>
         <div class="loading-text">Conectando ao Supabase...</div>
-    </div>
-
-    <!-- NOVO: Sync Spinner Discreto (substitui o card de notificação) -->
-    <div class="sync-spinner-container" id="syncSpinner" title="Sincronizando...">
-        <div class="sync-spinner"></div>
     </div>
 
     <!-- Tela de Login -->
@@ -2252,6 +2114,8 @@
             </p>
         </div>
     </div>
+
+    <!-- Aplicação Principal -->
     <div class="app-container" id="appContainer">
         <!-- Header -->
         <header class="header">
@@ -2358,18 +2222,6 @@
                     </div>
                     <button class="btn-action" onclick="openAddModal(1)">+ Nova Transação</button>
                     <div id="contentPartition1"></div>
-                    
-                    <!-- CORREÇÃO: Totalizadores da 1ª Repartição -->
-                    <div class="partition-totals-container" id="totalsPartition1">
-                        <div class="partition-total-card">
-                            <div class="partition-total-label">📥 Total Receitas</div>
-                            <div class="partition-total-value" id="totalIncome1">R$ 0,00</div>
-                        </div>
-                        <div class="partition-total-card expenses">
-                            <div class="partition-total-label">📤 Total Despesas</div>
-                            <div class="partition-total-value" id="totalExpenses1">R$ 0,00</div>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="partition-content" id="partitionContent2">
@@ -2386,18 +2238,6 @@
                     </div>
                     <button class="btn-action" onclick="openAddModal(2)">+ Nova Transação</button>
                     <div id="contentPartition2"></div>
-                    
-                    <!-- CORREÇÃO: Totalizadores da 2ª Repartição -->
-                    <div class="partition-totals-container" id="totalsPartition2">
-                        <div class="partition-total-card">
-                            <div class="partition-total-label">📥 Total Receitas</div>
-                            <div class="partition-total-value" id="totalIncome2">R$ 0,00</div>
-                        </div>
-                        <div class="partition-total-card expenses">
-                            <div class="partition-total-label">📤 Total Despesas</div>
-                            <div class="partition-total-value" id="totalExpenses2">R$ 0,00</div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Bloco de Notas Resumo -->
@@ -2997,34 +2837,17 @@
         ];
 
         // ==========================================
-        // NOVO: FUNÇÕES DO SYNC SPINNER (substitui notificação)
-        // ==========================================
-        
-        /**
-         * Mostra o spinner de sincronização no canto inferior direito
-         */
-        function showSyncSpinner() {
-            const spinner = document.getElementById('syncSpinner');
-            if (spinner) {
-                spinner.classList.add('active');
-            }
-        }
-
-        /**
-         * Esconde o spinner de sincronização
-         */
-        function hideSyncSpinner() {
-            const spinner = document.getElementById('syncSpinner');
-            if (spinner) {
-                spinner.classList.remove('active');
-            }
-        }
-
-        // ==========================================
         // MOTOR DE MONITORAMENTO DE QUALIDADE (V3.0 - CORRIGIDO E CONSOLIDADO)
         // ==========================================
 
+        /**
+         * Função central de monitoramento - registra métricas no Supabase
+         * @param {string} nomeFuncao - Nome da função sendo monitorada
+         * @param {Function} acao - Função assíncrona a ser executada e monitorada
+         * @returns {Promise} - Retorna o resultado da ação ou lança erro
+         */
         async function monitorar(nomeFuncao, acao) {
+            // Validação defensiva do cliente Supabase
             if (!supabaseClient || typeof supabaseClient.from !== 'function') {
                 console.warn(`[Monitoramento] Cliente Supabase não inicializado. Executando ${nomeFuncao} sem log.`);
                 try {
@@ -3155,9 +2978,13 @@
         }
 
         // ==========================================
-        // VARIÁVEIS GLOBAIS
+        // VARIÁVEIS GLOBAIS (APÓS calcExpression)
         // ==========================================
         let calcExpression = '';
+
+        // ==========================================
+        // VARIÁVEIS GLOBAIS PARA REALTIME
+        // ==========================================
         let realtimeChannel = null;
 
         const sectionMapping = {
@@ -3224,6 +3051,7 @@
                     await loadUserProfile();
                     showApp();
 
+                    // Configura subscription Realtime para sincronização em tempo real (apenas se não for modo dev)
                     if (!isDevMode) {
                         setupRealtimeSubscription();
                     }
@@ -3252,17 +3080,14 @@
                 case 'online':
                     iconEl.textContent = '🟢';
                     textEl.textContent = 'Online';
-                    hideSyncSpinner(); // Esconde spinner quando online
                     break;
                 case 'offline':
                     iconEl.textContent = '⚠️';
                     textEl.textContent = 'Offline';
-                    hideSyncSpinner();
                     break;
                 case 'syncing':
                     iconEl.textContent = '🔄';
                     textEl.textContent = 'Sincronizando...';
-                    showSyncSpinner(); // Mostra spinner quando sincronizando
                     break;
             }
         }
@@ -3302,12 +3127,17 @@
             }
         });
 
+        /**
+         * Função otimizada de cadastro de novos usuários
+         * Inclui validações completas e tratamento de erros robusto
+         */
         async function registerUser() {
             const name = document.getElementById('regName').value.trim();
             const email = document.getElementById('regEmail').value.trim();
             const password = document.getElementById('regPassword').value;
             const confirmPassword = document.getElementById('regConfirmPassword').value;
 
+            // Validações de entrada
             if (!name) {
                 showNotification('❌ Por favor, informe seu nome completo!', 'error');
                 return;
@@ -3318,6 +3148,7 @@
                 return;
             }
 
+            // Validação de email
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!email || !emailRegex.test(email)) {
                 showNotification('❌ Por favor, informe um email válido!', 'error');
@@ -3345,12 +3176,14 @@
             }
 
             try {
+                // Feedback visual durante o cadastro
                 const registerBtn = event?.target;
                 if (registerBtn) {
                     registerBtn.disabled = true;
                     registerBtn.textContent = 'Cadastrando...';
                 }
 
+                // Cria usuário no Supabase Auth
                 const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
                     password: password,
@@ -3367,6 +3200,7 @@
                     throw new Error('Erro ao criar usuário. Tente novamente.');
                 }
 
+                // Cria perfil na tabela profiles
                 try {
                     const { error: profileError } = await supabaseClient
                         .from('profiles')
@@ -3381,14 +3215,17 @@
 
                     if (profileError) {
                         console.warn('⚠️ Erro ao criar perfil (pode já existir):', profileError);
+                        // Não falha se o perfil já existir
                     }
                 } catch (profileError) {
                     console.warn('⚠️ Erro ao criar perfil:', profileError);
+                    // Continua mesmo se houver erro no perfil
                 }
 
                 showNotification('✅ Cadastro realizado com sucesso! Verifique seu email para confirmar.', 'success');
                 closeRegisterModal();
                 
+                // Limpa os campos do formulário
                 document.getElementById('regName').value = '';
                 document.getElementById('regEmail').value = '';
                 document.getElementById('regPassword').value = '';
@@ -3409,6 +3246,7 @@
                 
                 showNotification('❌ ' + errorMessage, 'error');
             } finally {
+                // Restaura o botão
                 const registerBtn = event?.target;
                 if (registerBtn) {
                     registerBtn.disabled = false;
@@ -3419,6 +3257,7 @@
 
         async function logout() {
             try {
+                // Fecha canal Realtime antes de fazer logout
                 closeRealtimeChannel();
 
                 if (isOnline) {
@@ -3491,6 +3330,7 @@
 
             initApp();
 
+            // Configura Realtime se ainda não configurado e estiver online (e não for modo dev)
             if (isOnline && !realtimeChannel && !isDevMode) {
                 setupRealtimeSubscription();
             }
@@ -3505,9 +3345,13 @@
         }
 
         // ==========================================
-        // OPERAÇÕES CRUD COM SUPABASE
+        // OPERAÇÕES CRUD COM SUPABASE - VERSÃO CORRIGIDA E OTIMIZADA (OFFLINE-FIRST)
         // ==========================================
 
+        /**
+         * Carrega transações DIRETAMENTE do Supabase (sem localStorage)
+         * Todos os usuários veem TODAS as transações
+         */
         async function fetchTransactions(year, month) {
             if (!currentUser) return [];
             
@@ -3522,6 +3366,8 @@
             try {
                 updateConnectionStatus('syncing');
                 
+                // IMPORTANTE: Remove o filtro .eq('user_id', currentUser.id) 
+                // para que TODOS vejam TODAS as transações da família
                 const { data, error } = await supabaseClient
                     .from('transactions')
                     .select('*')
@@ -3531,13 +3377,16 @@
 
                 if (error) throw error;
                 
+                // Substitui completamente os dados em memória com os do servidor
                 const serverData = data || [];
                 
+                // Remove transações do mês atual e adiciona as do servidor
                 localData.transactions = localData.transactions.filter(t => {
                     const tDate = new Date(t.due_date);
                     return !(tDate.getFullYear() === year && tDate.getMonth() === month - 1);
                 });
                 
+                // Adiciona todas as transações do servidor
                 localData.transactions.push(...serverData);
                 
                 updateConnectionStatus('online');
@@ -3552,6 +3401,10 @@
             }
         }
 
+        /**
+         * Insere transação diretamente no Supabase
+         * Outros usuários receberão via Realtime
+         */
         async function insertTransaction(transaction) {
             if (!currentUser) return null;
 
@@ -3560,6 +3413,7 @@
                 return null;
             }
 
+            // Constrói objeto apenas com campos permitidos
             const supabaseData = {};
             ALLOWED_INSERT_FIELDS.forEach(field => {
                 if (transaction[field] !== undefined) supabaseData[field] = transaction[field];
@@ -3574,9 +3428,12 @@
 
                 if (error) throw error;
                 
+                // Adiciona à memória local
                 localData.transactions.push(data);
                 
                 console.log('✅ Transação inserida no Supabase:', data.id);
+                
+                // Notifica outros usuários via Realtime (o Realtime Database Changes já faz isso automaticamente)
                 
                 return data;
                 
@@ -3587,6 +3444,9 @@
             }
         }
 
+        /**
+         * Atualiza transação diretamente no Supabase
+         */
         async function updateTransaction(id, updates) {
             if (!currentUser) return null;
 
@@ -3596,6 +3456,7 @@
             }
 
             try {
+                // Filtra apenas campos permitidos para update
                 const supabaseUpdates = {};
                 ALLOWED_UPDATE_FIELDS.forEach(field => {
                     if (updates[field] !== undefined) supabaseUpdates[field] = updates[field];
@@ -3610,6 +3471,7 @@
 
                 if (error) throw error;
                 
+                // Atualiza memória local
                 const localIndex = localData.transactions.findIndex(t => t.id === id);
                 if (localIndex !== -1 && data) {
                     localData.transactions[localIndex] = data;
@@ -3625,6 +3487,9 @@
             }
         }
 
+        /**
+         * Deleta transação diretamente do Supabase
+         */
         async function deleteTransaction(id) {
             if (!currentUser) return;
 
@@ -3641,6 +3506,7 @@
 
                 if (error) throw error;
                 
+                // Remove da memória local
                 localData.transactions = localData.transactions.filter(t => t.id !== id);
                 
                 console.log('✅ Transação removida do Supabase:', id);
@@ -3652,7 +3518,7 @@
         }
 
         // ==========================================
-        // REGISTRO DE PAGAMENTOS
+        // REGISTRO DE PAGAMENTOS - VERSÃO COMPLETA E CORRIGIDA (OFFLINE-FIRST)
         // ==========================================
 
         async function registerPayment(id, paymentData) {
@@ -3677,6 +3543,7 @@
             try {
                 updateConnectionStatus('syncing');
                 
+                // Filtra campos permitidos para update
                 const supabaseUpdates = {};
                 ALLOWED_UPDATE_FIELDS.forEach(field => {
                     if (paymentData[field] !== undefined) supabaseUpdates[field] = paymentData[field];
@@ -3693,6 +3560,7 @@
                     if (error.code === 'PGRST301' || error.code === 'ECONNREFUSED' || !navigator.onLine) {
                         if (localIndex !== -1) {
                             localData.transactions[localIndex]._syncPending = true;
+                            
                         }
                         updateConnectionStatus('offline');
                         return localData.transactions[localIndex];
@@ -3706,6 +3574,7 @@
                         _syncPending: false,
                         _syncedAt: new Date().toISOString()
                     };
+                    
                 }
 
                 updateConnectionStatus('online');
@@ -3716,6 +3585,7 @@
                 
                 if (localIndex !== -1) {
                     localData.transactions[localIndex]._syncPending = true;
+                    
                 }
                 
                 updateConnectionStatus('offline');
@@ -3739,6 +3609,7 @@
                 id: 'local_hist_' + Date.now(),
                 _syncPending: true
             });
+            
 
             if (!isOnline) return;
 
@@ -3792,7 +3663,12 @@
             }
         }
 
+        // ==========================================
+        // RENOVAÇÃO AUTOMÁTICA - CORRIGIDA PARA 6 MESES
+        // ==========================================
+
         async function createNextMonthFixed(currentTransaction) {
+            // Criar 6 meses à frente
             for (let i = 1; i <= 6; i++) {
                 const currentDueDate = new Date(currentTransaction.due_date);
                 const nextDueDate = new Date(currentDueDate);
@@ -3840,9 +3716,22 @@
         }
 
         // ==========================================
-        // FUNÇÕES REALTIME - SINCRONIZAÇÃO EM TEMPO REAL (MODIFICADO)
+        // SINCRONIZAÇÃO - VERSÃO APRIMORADA (CORRIGIDA)
         // ==========================================
 
+        // ==========================================
+        // NOTA: função forceSync removida - não é mais necessária
+        // Todas as operações são sincronizadas automaticamente via Supabase
+        // ==========================================
+
+        // ==========================================
+        // FUNÇÕES REALTIME - SINCRONIZAÇÃO EM TEMPO REAL
+        // ==========================================
+
+        /**
+         * Configura Realtime para escutar mudanças na tabela transactions
+         * Todos os usuários recebem notificações de INSERT, UPDATE e DELETE em tempo real
+         */
         function setupRealtimeSubscription() {
             if (!isOnline || !supabaseClient || isDevMode) {
                 console.log('📡 Realtime: ignorando setup (offline, sem cliente ou modo dev)');
@@ -3855,68 +3744,68 @@
 
             console.log('📡 Configurando Realtime para tabela transactions');
 
+            // Cria canal para escutar mudanças na tabela transactions
             realtimeChannel = supabaseClient
                 .channel('transactions-changes')
                 .on(
                     'postgres_changes',
                     { 
-                        event: '*',
+                        event: '*', // Escuta INSERT, UPDATE, DELETE
                         schema: 'public',
                         table: 'transactions'
                     },
                     (payload) => {
                         console.log('📡 Mudança detectada na tabela transactions:', payload);
                         
-                        // Mostra o spinner enquanto processa a mudança
-                        showSyncSpinner();
-                        
                         const { eventType, new: newRecord, old: oldRecord } = payload;
                         
+                        // Recarrega dados do mês atual
                         const currentYear = currentMonth.getFullYear();
                         const currentMonthNum = currentMonth.getMonth() + 1;
                         
                         if (eventType === 'INSERT' && newRecord) {
                             console.log('➕ Nova transação inserida:', newRecord.id);
+                            // Verifica se é do mês atual antes de adicionar
                             const recordDate = new Date(newRecord.due_date);
                             if (recordDate.getFullYear() === currentYear && 
                                 recordDate.getMonth() === currentMonthNum - 1) {
                                 
+                                // Verifica se já não existe (para evitar duplicatas)
                                 if (!localData.transactions.find(t => t.id === newRecord.id)) {
                                     localData.transactions.push(newRecord);
-                                    renderData();
-                                    // NÃO mostra notificação - apenas atualiza silenciosamente
+                                    renderData(); // Atualiza interface
+                                    showNotification('📡 Nova transação adicionada!', 'info');
                                 }
                             }
                         } 
                         else if (eventType === 'UPDATE' && newRecord) {
                             console.log('✏️ Transação atualizada:', newRecord.id);
+                            // Atualiza na memória local
                             const index = localData.transactions.findIndex(t => t.id === newRecord.id);
                             if (index !== -1) {
                                 localData.transactions[index] = newRecord;
-                                renderData();
+                                renderData(); // Atualiza interface
+                                showNotification('📡 Transação atualizada!', 'info');
                             }
                         } 
                         else if (eventType === 'DELETE' && oldRecord) {
                             console.log('🗑️ Transação deletada:', oldRecord.id);
+                            // Remove da memória local
                             localData.transactions = localData.transactions.filter(t => t.id !== oldRecord.id);
-                            renderData();
+                            renderData(); // Atualiza interface
+                            showNotification('📡 Transação removida!', 'info');
                         }
-                        
-                        // Esconde o spinner após processar
-                        setTimeout(() => {
-                            hideSyncSpinner();
-                        }, 500);
                     }
                 )
                 .subscribe((status) => {
                     console.log('📡 Status do Realtime:', status);
                     if (status === 'SUBSCRIBED') {
                         console.log('✅ Realtime conectado - sincronização automática ativa!');
-                        // REMOVIDO: showNotification de sincronização
-                        // Apenas loga no console, sem notificação intrusiva
+                        showNotification('✅ Sincronização em tempo real ativada!', 'success');
                     } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
                         console.warn('⚠️ Realtime desconectado:', status);
-                        // REMOVIDO: showNotification de desconexão
+                        showNotification('⚠️ Sincronização automática desconectada', 'warning');
+                        // Tenta reconectar após 5 segundos
                         setTimeout(() => {
                             if (isOnline && currentUser && !isDevMode) {
                                 setupRealtimeSubscription();
@@ -3926,6 +3815,17 @@
                 });
         }
 
+        /**
+         * Publica evento de sincronização para outros usuários
+         */
+        // ==========================================
+        // NOTA: Funções de sincronização manual removidas
+        // Agora a sincronização é 100% automática via Realtime Database Changes
+        // ==========================================
+
+        /**
+         * Fecha o canal Realtime
+         */
         function closeRealtimeChannel() {
             if (realtimeChannel) {
                 console.log('📡 Fechando canal Realtime');
@@ -3934,13 +3834,10 @@
             }
         }
 
-        // Função auxiliar para renderizar dados após mudanças Realtime
-        function renderData() {
-            updateDashboard();
-            renderPartitions();
-            updatePartitionTotals(1);
-            updatePartitionTotals(2);
-        }
+        // ==========================================
+        // NOTA: localStorage foi removido - todos os dados vêm do Supabase
+        // Sincronização em tempo real via Supabase Realtime
+        // ==========================================
 
         // ==========================================
         // INICIALIZAÇÃO DO APP
@@ -3979,6 +3876,7 @@
         };
 
         async function initApp() {
+            // localStorage removido - dados carregados apenas do Supabase
             updateDateTime();
             setInterval(updateDateTime, 1000);
             updateMonthDisplay();
@@ -3990,6 +3888,7 @@
             checkAlerts();
             setInterval(checkAlerts, 60000);
             setupBackupDragAndDrop();
+            
         }
 
         function updateDateTime() {
@@ -4023,9 +3922,6 @@
             await fetchTransactions(year, month);
             updateDashboard();
             renderPartitions();
-            // CORREÇÃO: Atualiza os totalizadores após carregar os dados
-            updatePartitionTotals(1);
-            updatePartitionTotals(2);
         }
 
         // ==========================================
@@ -4054,8 +3950,6 @@
                 arrow.textContent = '▲';
                 card.classList.add('active');
                 renderPartitionContent(partition);
-                // CORREÇÃO: Atualiza os totalizadores quando a repartição é aberta
-                updatePartitionTotals(partition);
             } else {
                 content.classList.remove('open');
                 arrow.classList.remove('open');
@@ -4085,47 +3979,8 @@
         async function renderPartitions() {
             if (openPartitions[1]) renderPartitionContent(1);
             if (openPartitions[2]) renderPartitionContent(2);
-            // CORREÇÃO: Atualiza os totalizadores quando as repartições são renderizadas
-            updatePartitionTotals(1);
-            updatePartitionTotals(2);
         }
 
-        // CORREÇÃO IMPLEMENTADA: Função para calcular e atualizar os totais de receitas e despesas POR REPARTIÇÃO
-        function updatePartitionTotals(partition) {
-            const year = currentMonth.getFullYear();
-            const month = currentMonth.getMonth() + 1;
-            
-            // Filtra transações APENAS da repartição específica e mês atual
-            const partitionTransactions = localData.transactions.filter(t => {
-                const tDate = new Date(t.due_date);
-                const tPartition = parseInt(t.partition_id);
-                return tDate.getFullYear() === year && 
-                       tDate.getMonth() === month - 1 &&
-                       tPartition === partition; // IMPORTANTE: Filtra APENAS pela repartição específica
-            });
-            
-            let totalIncome = 0;
-            let totalExpenses = 0;
-            
-            // Calcula totais APENAS das transações dessa repartição
-            partitionTransactions.forEach(t => {
-                const amount = parseFloat(t.amount) || 0;
-                if (t.type === 'income') {
-                    totalIncome += amount;
-                } else {
-                    totalExpenses += amount;
-                }
-            });
-            
-            // Atualiza os elementos do DOM específicos de cada repartição
-            const incomeEl = document.getElementById(`totalIncome${partition}`);
-            const expensesEl = document.getElementById(`totalExpenses${partition}`);
-            
-            if (incomeEl) incomeEl.textContent = formatCurrency(totalIncome);
-            if (expensesEl) expensesEl.textContent = formatCurrency(totalExpenses);
-            
-            console.log(`📊 Totais da ${partition}ª Repartição: Receitas=${formatCurrency(totalIncome)}, Despesas=${formatCurrency(totalExpenses)}`);
-        }
         async function renderPartitionContent(partition) {
             try {
                 const section = getActiveSection(partition);
@@ -5658,23 +5513,7 @@ Isso substituirá os dados atuais!`)) {
         }
 
         function formatDate(dateString) {
-            // CORREÇÃO: Evita problema de timezone ao parsear datas
-            // Quando a data vem no formato YYYY-MM-DD, cria a data no fuso local
-            if (!dateString) return '';
-            
-            // Se for uma string de data ISO (YYYY-MM-DD), parseia manualmente
-            if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                const [year, month, day] = dateString.split('-').map(Number);
-                return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
-            }
-            
-            // Para outros formatos, usa o método padrão com ajuste de timezone
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return '';
-            
-            // Adiciona o offset do timezone para evitar o problema de UTC
-            const localDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
-            return localDate.toLocaleDateString('pt-BR');
+            return new Date(dateString).toLocaleDateString('pt-BR');
         }
 
         function showNotification(message, type = 'success') {
@@ -5687,22 +5526,9 @@ Isso substituirá os dados atuais!`)) {
             
             notification.className = 'notification show' + (type === 'error' ? ' error' : '');
             
-            // CORREÇÃO: Duração menor no mobile (1.5s) vs desktop (3s)
-            // Também verifica se é notificação de sincronização para duração ainda menor
-            const isMobile = window.innerWidth < 768;
-            const isSyncNotification = message.toLowerCase().includes('sincronização') || 
-                                       message.toLowerCase().includes('sync');
-            
-            let duration = 3000; // desktop padrão
-            if (isMobile) {
-                duration = isSyncNotification ? 1000 : 1500; // muito curto para sync, curto para outros
-            } else if (isSyncNotification) {
-                duration = 2000; // mais curto para sync mesmo no desktop
-            }
-            
             setTimeout(() => {
                 notification.classList.remove('show');
-            }, duration);
+            }, 3000);
         }
 
         // Event Listeners
@@ -5793,12 +5619,9 @@ Isso substituirá os dados atuais!`)) {
         window.deleteTransactionFromPending = deleteTransactionFromPending;
         window.resetAllData = resetAllData;
 
-        // NOVAS FUNÇÕES EXPORTADAS
-        window.handleManualSync = handleManualSync;
+        // FUNÇÕES REALTIME EXPORTADAS
         window.setupRealtimeSubscription = setupRealtimeSubscription;
-        window.publishSyncEvent = publishSyncEvent;
         window.closeRealtimeChannel = closeRealtimeChannel;
-        window.updatePartitionTotals = updatePartitionTotals;
 
         // Inicializar ao carregar
         window.addEventListener('DOMContentLoaded', initSupabase);

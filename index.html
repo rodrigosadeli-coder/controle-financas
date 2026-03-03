@@ -3149,13 +3149,14 @@
                     }
                 });
                 
-                const { data, error } = await supabaseClient
-                    .from('profiles')
-                    .select('count', { count: 'exact', head: true });
-                
-                if (error) {
-                    console.error('❌ Erro no teste de conexão:', error);
-                    throw error;
+                try {
+                                        const testResult = await Promise.race([
+                                                                    supabaseClient.from('profiles').select('count', { count: 'exact', head: true }),
+                                                                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 8000))
+                                                                ]);
+                                        if (testResult.error) console.warn('Teste de conexao com erro:', testResult.error);
+                } catch (testErr) {
+                                        console.warn('Teste de conexao falhou (continuando):', testErr.message);
                 }
                 
                 isOnline = true;
@@ -3211,7 +3212,7 @@
         }
 
         function hideLoading() {
-            document.getElementById('loadingScreen').classList.add('hidden');
+                        const el = document.getElementById('loadingScreen'); el.classList.add('hidden'); setTimeout(() => { el.style.display = 'none'; }, 600);
         }
 
         // ==========================================
@@ -5809,14 +5810,14 @@ Isso substituirá os dados atuais!`)) {
         window.resetAllData = resetAllData;
 
         // NOVAS FUNÇÕES EXPORTADAS
-        window.handleManualSync = handleManualSync;
+        window.handleManualSync = typeof handleManualSync !== 'undefined' ? handleManualSync : function() { console.log('handleManualSync not implemented'); };
         window.setupRealtimeSubscription = setupRealtimeSubscription;
-        window.publishSyncEvent = publishSyncEvent;
+        window.publishSyncEvent = typeof publishSyncEvent !== 'undefined' ? publishSyncEvent : function() {};
         window.closeRealtimeChannel = closeRealtimeChannel;
         window.updatePartitionTotals = updatePartitionTotals;
 
         // Inicializar ao carregar
-        window.addEventListener('DOMContentLoaded', initSupabase);
+                                setTimeout(function() { initSupabase().catch(function(e) { console.error(e); hideLoading(); }); setTimeout(function() { hideLoading(); }, 15000); }, 100);
     </script>
 </body>
 </html>

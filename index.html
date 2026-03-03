@@ -2048,6 +2048,82 @@
             font-weight: 700;
             color: var(--warning);
         }
+
+        /* Totalizadores por Repartição */
+        .partition-totals {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px dashed #e5e7eb;
+        }
+
+        .partition-total-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .partition-total-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .partition-total-card.receitas {
+            border: 2px solid #86efac;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .partition-total-card.despesas {
+            border: 2px solid #fecaca;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        }
+
+        .partition-total-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .partition-total-card.receitas .partition-total-label {
+            color: #059669;
+        }
+
+        .partition-total-card.despesas .partition-total-label {
+            color: #dc2626;
+        }
+
+        .partition-total-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .partition-total-card.receitas .partition-total-value {
+            color: #059669;
+        }
+
+        .partition-total-card.despesas .partition-total-value {
+            color: #dc2626;
+        }
+
+        @media (max-width: 480px) {
+            .partition-totals {
+                grid-template-columns: 1fr;
+            }
+            .partition-total-value {
+                font-size: 1.25rem;
+            }
+        }
     </style>
 <base target="_blank">
 </head>
@@ -2222,6 +2298,17 @@
                     </div>
                     <button class="btn-action" onclick="openAddModal(1)">+ Nova Transação</button>
                     <div id="contentPartition1"></div>
+                    <!-- Totalizadores da 1ª Repartição -->
+                    <div class="partition-totals" id="partitionTotals1">
+                        <div class="partition-total-card receitas">
+                            <div class="partition-total-label">📥 Total Receitas</div>
+                            <div class="partition-total-value" id="totalReceitas1">R$ 0,00</div>
+                        </div>
+                        <div class="partition-total-card despesas">
+                            <div class="partition-total-label">📤 Total Despesas</div>
+                            <div class="partition-total-value" id="totalDespesas1">R$ 0,00</div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="partition-content" id="partitionContent2">
@@ -2238,6 +2325,17 @@
                     </div>
                     <button class="btn-action" onclick="openAddModal(2)">+ Nova Transação</button>
                     <div id="contentPartition2"></div>
+                    <!-- Totalizadores da 2ª Repartição -->
+                    <div class="partition-totals" id="partitionTotals2">
+                        <div class="partition-total-card receitas">
+                            <div class="partition-total-label">📥 Total Receitas</div>
+                            <div class="partition-total-value" id="totalReceitas2">R$ 0,00</div>
+                        </div>
+                        <div class="partition-total-card despesas">
+                            <div class="partition-total-label">📤 Total Despesas</div>
+                            <div class="partition-total-value" id="totalDespesas2">R$ 0,00</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Bloco de Notas Resumo -->
@@ -3950,6 +4048,8 @@
                 arrow.textContent = '▲';
                 card.classList.add('active');
                 renderPartitionContent(partition);
+                // Atualiza os totalizadores quando a repartição é aberta
+                updatePartitionTotals(partition);
             } else {
                 content.classList.remove('open');
                 arrow.classList.remove('open');
@@ -3977,8 +4077,14 @@
         }
 
         async function renderPartitions() {
-            if (openPartitions[1]) renderPartitionContent(1);
-            if (openPartitions[2]) renderPartitionContent(2);
+            if (openPartitions[1]) {
+                renderPartitionContent(1);
+                updatePartitionTotals(1);
+            }
+            if (openPartitions[2]) {
+                renderPartitionContent(2);
+                updatePartitionTotals(2);
+            }
         }
 
         async function renderPartitionContent(partition) {
@@ -4130,6 +4236,58 @@
             const balanceEl = document.getElementById('totalBalance');
             balanceEl.textContent = formatCurrency(balance);
             balanceEl.style.color = balance >= 0 ? 'var(--success)' : 'var(--danger)';
+            
+            // Atualiza os totalizadores das repartições abertas
+            updatePartitionTotals(1);
+            updatePartitionTotals(2);
+        }
+
+        // ==========================================
+        // TOTALIZADORES POR REPARTIÇÃO
+        // ==========================================
+        
+        function updatePartitionTotals(partition) {
+            try {
+                const year = currentMonth.getFullYear();
+                const month = currentMonth.getMonth() + 1;
+                
+                // Filtra todas as transações da repartição específica no mês atual
+                const transactions = localData.transactions.filter(t => {
+                    const tDate = new Date(t.due_date);
+                    const tPartition = parseInt(t.partition_id);
+                    return tDate.getFullYear() === year && 
+                           tDate.getMonth() === month - 1 &&
+                           tPartition === partition;
+                });
+
+                let totalReceitas = 0;
+                let totalDespesas = 0;
+
+                transactions.forEach(t => {
+                    const amount = parseFloat(t.amount) || 0;
+                    
+                    if (t.type === 'income') {
+                        totalReceitas += amount;
+                    } else {
+                        totalDespesas += amount;
+                    }
+                });
+
+                // Atualiza os elementos na UI
+                const receitasEl = document.getElementById(`totalReceitas${partition}`);
+                const despesasEl = document.getElementById(`totalDespesas${partition}`);
+                
+                if (receitasEl) {
+                    receitasEl.textContent = formatCurrency(totalReceitas);
+                }
+                
+                if (despesasEl) {
+                    despesasEl.textContent = formatCurrency(totalDespesas);
+                }
+                
+            } catch (error) {
+                console.error(`Erro ao atualizar totais da repartição ${partition}:`, error);
+            }
         }
 
         // ==========================================

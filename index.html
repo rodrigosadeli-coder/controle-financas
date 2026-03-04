@@ -2052,7 +2052,7 @@
         /* Totalizadores por Repartição */
         .partition-totals {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 1rem;
             margin-top: 1.5rem;
             padding-top: 1.5rem;
@@ -2078,6 +2078,26 @@
             background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
         }
 
+        .partition-total-card.saldo {
+            border: 2px solid #60a5fa;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        }
+
+        .partition-total-card.saldo.positivo {
+            border: 2px solid #86efac;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .partition-total-card.saldo.zerado {
+            border: 2px solid #fcd34d;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        }
+
+        .partition-total-card.saldo.bloqueado {
+            border: 2px solid #f87171;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        }
+
         .partition-total-card.despesas {
             border: 2px solid #fecaca;
             background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
@@ -2099,6 +2119,22 @@
             color: #059669;
         }
 
+        .partition-total-card.saldo .partition-total-label {
+            color: #2563eb;
+        }
+
+        .partition-total-card.saldo.positivo .partition-total-label {
+            color: #059669;
+        }
+
+        .partition-total-card.saldo.zerado .partition-total-label {
+            color: #d97706;
+        }
+
+        .partition-total-card.saldo.bloqueado .partition-total-label {
+            color: #dc2626;
+        }
+
         .partition-total-card.despesas .partition-total-label {
             color: #dc2626;
         }
@@ -2112,8 +2148,36 @@
             color: #059669;
         }
 
+        .partition-total-card.saldo .partition-total-value {
+            color: #2563eb;
+        }
+
+        .partition-total-card.saldo.positivo .partition-total-value {
+            color: #059669;
+        }
+
+        .partition-total-card.saldo.zerado .partition-total-value {
+            color: #d97706;
+        }
+
+        .partition-total-card.saldo.bloqueado .partition-total-value {
+            color: #dc2626;
+        }
+
         .partition-total-card.despesas .partition-total-value {
             color: #dc2626;
+        }
+
+        .saldo-status {
+            font-size: 0.7rem;
+            margin-top: 0.25rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .partition-totals {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
         }
 
         @media (max-width: 480px) {
@@ -2304,6 +2368,11 @@
                             <div class="partition-total-label">📥 Total Receitas</div>
                             <div class="partition-total-value" id="totalReceitas1">R$ 0,00</div>
                         </div>
+                        <div class="partition-total-card saldo" id="saldoCard1">
+                            <div class="partition-total-label">💰 Saldo Atual</div>
+                            <div class="partition-total-value" id="saldoAtual1">R$ 0,00</div>
+                            <div class="saldo-status" id="saldoStatus1">Disponível</div>
+                        </div>
                         <div class="partition-total-card despesas">
                             <div class="partition-total-label">📤 Total Despesas</div>
                             <div class="partition-total-value" id="totalDespesas1">R$ 0,00</div>
@@ -2330,6 +2399,11 @@
                         <div class="partition-total-card receitas">
                             <div class="partition-total-label">📥 Total Receitas</div>
                             <div class="partition-total-value" id="totalReceitas2">R$ 0,00</div>
+                        </div>
+                        <div class="partition-total-card saldo" id="saldoCard2">
+                            <div class="partition-total-label">💰 Saldo Atual</div>
+                            <div class="partition-total-value" id="saldoAtual2">R$ 0,00</div>
+                            <div class="saldo-status" id="saldoStatus2">Disponível</div>
                         </div>
                         <div class="partition-total-card despesas">
                             <div class="partition-total-label">📤 Total Despesas</div>
@@ -3506,6 +3580,19 @@
         async function insertTransaction(transaction) {
             if (!currentUser) return null;
 
+            // MODO DEV: permite inserções locais sem Supabase
+            if (isDevMode) {
+                const devTransaction = {
+                    ...transaction,
+                    id: 'dev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                    user_id: 'dev',
+                    created_at: new Date().toISOString()
+                };
+                localData.transactions.push(devTransaction);
+                console.log('✅ [DEV] Transação inserida localmente:', devTransaction.id);
+                return devTransaction;
+            }
+
             if (!isOnline || !supabaseClient) {
                 showNotification('⚠️ Sem conexão. Não é possível adicionar transação.', 'error');
                 return null;
@@ -3547,6 +3634,17 @@
          */
         async function updateTransaction(id, updates) {
             if (!currentUser) return null;
+
+            // MODO DEV: permite atualizações locais sem Supabase
+            if (isDevMode) {
+                const localIndex = localData.transactions.findIndex(t => t.id === id);
+                if (localIndex !== -1) {
+                    localData.transactions[localIndex] = { ...localData.transactions[localIndex], ...updates };
+                    console.log('✅ [DEV] Transação atualizada localmente:', id);
+                    return localData.transactions[localIndex];
+                }
+                return null;
+            }
 
             if (!isOnline || !supabaseClient) {
                 showNotification('⚠️ Sem conexão. Não é possível atualizar.', 'error');
@@ -3633,6 +3731,15 @@
                 console.log('💾 Pagamento registrado localmente:', id);
             }
 
+            // MODO DEV: apenas atualiza localmente
+            if (isDevMode || String(id).startsWith('dev_')) {
+                if (localIndex !== -1) {
+                    localData.transactions[localIndex]._syncPending = false;
+                }
+                console.log('✅ [DEV] Pagamento registrado localmente:', id);
+                return localData.transactions[localIndex];
+            }
+
             if (!isOnline || String(id).startsWith('local_')) {
                 updateConnectionStatus('offline');
                 return localData.transactions[localIndex];
@@ -3708,8 +3815,8 @@
                 _syncPending: true
             });
             
-
-            if (!isOnline) return;
+            // MODO DEV: não tenta salvar no Supabase
+            if (isDevMode || !isOnline) return;
 
             try {
                 const { error } = await supabaseClient
@@ -4260,35 +4367,156 @@
                            tPartition === partition;
                 });
 
-                let totalReceitas = 0;
-                let totalDespesas = 0;
+                let totalReceitas = 0;           // Acumulador de receitas (nunca diminui)
+                let totalDespesasPendentes = 0;  // Contas programadas ainda não pagas
+                let despesasPagas = 0;           // Contas programadas já pagas
+                let gastosAVistaEfetuados = 0;   // Gastos à vista realizados
 
                 transactions.forEach(t => {
                     const amount = parseFloat(t.amount) || 0;
                     
                     if (t.type === 'income') {
+                        // Receitas: acumulador que nunca diminui
                         totalReceitas += amount;
+                    } else if (t.type === 'cash' || t.category === 'cash') {
+                        // Gastos à vista: sempre reduzem o saldo quando realizados
+                        if (t.status === 'paid') {
+                            gastosAVistaEfetuados += amount;
+                        }
                     } else {
-                        totalDespesas += amount;
+                        // Contas programadas (fixas, variáveis, parceladas)
+                        if (t.status === 'paid') {
+                            despesasPagas += amount;
+                        } else {
+                            totalDespesasPendentes += amount;
+                        }
                     }
                 });
+
+                // CÁLCULO DO SALDO ATUAL (conforme documentação)
+                // Saldo_Rx = Total_Receitas_Rx – (débito_programado_pago_Rx + gastos_à_vista_Rx)
+                // O saldo NUNCA pode ser negativo
+                let saldoAtual = totalReceitas - despesasPagas - gastosAVistaEfetuados;
+                saldoAtual = Math.max(0, saldoAtual); // Garantir que não fique negativo
+
+                // Determinar status do saldo para estilização
+                let saldoStatus = 'Disponível';
+                let saldoClass = '';
+                
+                if (saldoAtual > 0) {
+                    saldoStatus = '✅ Disponível';
+                    saldoClass = 'positivo';
+                } else if (saldoAtual === 0 && totalReceitas > 0) {
+                    saldoStatus = '⚠️ Totalmente consumido';
+                    saldoClass = 'zerado';
+                } else if (saldoAtual === 0 && totalReceitas === 0) {
+                    saldoStatus = '📝 Sem receitas cadastradas';
+                    saldoClass = '';
+                }
+
+                // Verificar se está perto de esgotar (< 10% das receitas)
+                if (saldoAtual > 0 && totalReceitas > 0 && (saldoAtual / totalReceitas) < 0.1) {
+                    saldoStatus = '⚠️ Quase esgotado';
+                    saldoClass = 'zerado';
+                }
 
                 // Atualiza os elementos na UI
                 const receitasEl = document.getElementById(`totalReceitas${partition}`);
                 const despesasEl = document.getElementById(`totalDespesas${partition}`);
+                const saldoEl = document.getElementById(`saldoAtual${partition}`);
+                const saldoStatusEl = document.getElementById(`saldoStatus${partition}`);
+                const saldoCard = document.getElementById(`saldoCard${partition}`);
                 
                 if (receitasEl) {
                     receitasEl.textContent = formatCurrency(totalReceitas);
                 }
                 
                 if (despesasEl) {
-                    despesasEl.textContent = formatCurrency(totalDespesas);
+                    // Total Despesas = despesas pendentes (diminui ao pagar)
+                    despesasEl.textContent = formatCurrency(totalDespesasPendentes);
+                }
+
+                if (saldoEl) {
+                    saldoEl.textContent = formatCurrency(saldoAtual);
+                }
+
+                if (saldoStatusEl) {
+                    saldoStatusEl.textContent = saldoStatus;
+                }
+
+                if (saldoCard) {
+                    // Remove classes anteriores e adiciona a nova
+                    saldoCard.classList.remove('positivo', 'zerado', 'bloqueado');
+                    if (saldoClass) {
+                        saldoCard.classList.add(saldoClass);
+                    }
                 }
                 
             } catch (error) {
                 console.error(`Erro ao atualizar totais da repartição ${partition}:`, error);
             }
         }
+
+        // ==========================================
+        // FUNÇÃO AUXILIAR: CALCULAR SALDO DA REPARTIÇÃO
+        // ==========================================
+        
+        function getPartitionSaldo(partition, excludeTransactionId = null) {
+            try {
+                const year = currentMonth.getFullYear();
+                const month = currentMonth.getMonth() + 1;
+                
+                // Filtra todas as transações da repartição específica no mês atual
+                const transactions = localData.transactions.filter(t => {
+                    const tDate = new Date(t.due_date);
+                    const tPartition = parseInt(t.partition_id);
+                    // Exclui a transação sendo editada para cálculo correto
+                    if (excludeTransactionId && t.id === excludeTransactionId) {
+                        return false;
+                    }
+                    return tDate.getFullYear() === year && 
+                           tDate.getMonth() === month - 1 &&
+                           tPartition === partition;
+                });
+
+                let totalReceitas = 0;
+                let despesasPagas = 0;
+                let gastosAVistaEfetuados = 0;
+
+                transactions.forEach(t => {
+                    const amount = parseFloat(t.amount) || 0;
+                    
+                    if (t.type === 'income') {
+                        totalReceitas += amount;
+                    } else if (t.type === 'cash' || t.category === 'cash') {
+                        if (t.status === 'paid') {
+                            gastosAVistaEfetuados += amount;
+                        }
+                    } else {
+                        if (t.status === 'paid') {
+                            despesasPagas += amount;
+                        }
+                    }
+                });
+
+                // Saldo atual (nunca negativo)
+                return Math.max(0, totalReceitas - despesasPagas - gastosAVistaEfetuados);
+            } catch (error) {
+                console.error('Erro ao calcular saldo da repartição:', error);
+                return 0;
+            }
+        }
+
+        // Verifica se há saldo suficiente para uma operação de débito
+        function verificarSaldoSuficiente(partition, valor, excludeTransactionId = null) {
+            const saldoAtual = getPartitionSaldo(partition, excludeTransactionId);
+            return {
+                temSaldo: saldoAtual >= valor,
+                saldoAtual: saldoAtual,
+                diferenca: saldoAtual - valor
+            };
+        }
+
 
         // ==========================================
         // MODAL DE CONTAS PENDENTES
@@ -4593,6 +4821,28 @@
                     throw new Error('Data de vencimento inválida');
                 }
 
+                // VALIDAÇÃO DE SALDO - Conforme documentação do sistema
+                // Operações de débito (despesas/gastos à vista marcados como pagos) 
+                // devem ser bloqueadas se tornarem o saldo da repartição negativo
+                if (mapping.type !== 'income' && status === 'paid') {
+                    // Verifica se é o mesmo mês corrente
+                    if (dateObj.getFullYear() === currentMonth.getFullYear() && 
+                        dateObj.getMonth() === currentMonth.getMonth()) {
+                        
+                        const verificacao = verificarSaldoSuficiente(partitionId, amount, editingId);
+                        
+                        if (!verificacao.temSaldo) {
+                            throw new Error(
+                                `❌ Saldo insuficiente na Repartição ${partitionId}!\n\n` +
+                                `Saldo disponível: ${formatCurrency(verificacao.saldoAtual)}\n` +
+                                `Valor da operação: ${formatCurrency(amount)}\n` +
+                                `Faltam: ${formatCurrency(Math.abs(verificacao.diferenca))}\n\n` +
+                                `Para prosseguir, adicione mais receitas ou marque como "Pendente".`
+                            );
+                        }
+                    }
+                }
+
                 const baseTransaction = {
                     type: mapping.type,
                     category: mapping.category,
@@ -4757,6 +5007,23 @@
             }
 
             const finalAmount = paymentAmount || parseFloat(transaction.amount);
+
+            // VALIDAÇÃO DE SALDO - Conforme documentação do sistema
+            // Operações de débito devem ser bloqueadas se tornarem o saldo negativo
+            if (transaction.type !== 'income') {
+                const partitionId = parseInt(transaction.partition_id);
+                const verificacao = verificarSaldoSuficiente(partitionId, finalAmount, transactionId);
+                
+                if (!verificacao.temSaldo) {
+                    showNotification(
+                        `❌ Saldo insuficiente na Repartição ${partitionId}!\n` +
+                        `Saldo disponível: ${formatCurrency(verificacao.saldoAtual)}\n` +
+                        `Valor da operação: ${formatCurrency(finalAmount)}`,
+                        'error'
+                    );
+                    return;
+                }
+            }
             const currentInstallment = transaction.installment_number || 1;
             const totalInstallments = transaction.total_installments || 1;
             const isLastInstallment = currentInstallment >= totalInstallments;

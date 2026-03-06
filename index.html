@@ -2188,6 +2188,141 @@
                 font-size: 1.25rem;
             }
         }
+
+        /* ==========================================
+           CARD GASTOS À VISTA E SEPARADORES DE DIAS
+           ========================================== */
+        
+        /* Card Gastos à Vista */
+        .gastos-avista-card {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 2px solid #f87171;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(248, 113, 113, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .gastos-avista-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(248, 113, 113, 0.3);
+        }
+
+        .gastos-avista-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .gastos-avista-icon {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            padding: 0.75rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gastos-avista-label {
+            font-size: 0.9rem;
+            color: #7f1d1d;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+        }
+
+        .gastos-avista-sublabel {
+            font-size: 0.75rem;
+            color: #991b1b;
+            opacity: 0.8;
+        }
+
+        .gastos-avista-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #dc2626;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Separador de Dias */
+        .day-separator {
+            background: linear-gradient(135deg, #1e40af 0%, var(--blue-royal) 100%);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            margin: 1.25rem 0 0.75rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+        }
+
+        .day-separator:first-of-type {
+            margin-top: 0;
+        }
+
+        .day-separator-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .day-separator-icon {
+            font-size: 1.25rem;
+        }
+
+        .day-separator-date {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .day-separator-weekday {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            font-style: italic;
+        }
+
+        .day-separator-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        /* Responsividade do Card Gastos à Vista */
+        @media (max-width: 480px) {
+            .gastos-avista-card {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .gastos-avista-info {
+                flex-direction: column;
+            }
+
+            .gastos-avista-value {
+                font-size: 1.5rem;
+            }
+
+            .day-separator {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.5rem;
+            }
+
+            .day-separator-info {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+        }
     </style>
 <base target="_blank">
 </head>
@@ -2983,7 +3118,7 @@
         let currentUser = null;
         let isDevMode = false;
         let isOnline = false;
-                const LOGS_QUALIDADE_HABILITADOS = false; // Altere para true após criar a tabela logs_qualidade no Supabase
+        const LOGS_QUALIDADE_HABILITADOS = false; // Altere para true após criar a tabela logs_qualidade no Supabase
         
         let localData = {
             transactions: [],
@@ -3062,17 +3197,17 @@
                     dispositivo: window.innerWidth < 768 ? 'Mobile' : 'Desktop'
                 };
 
-                                if (LOGS_QUALIDADE_HABILITADOS) {
-                supabaseClient
-                    .from('logs_qualidade')
-                    .insert([logEntry])
-                    .then(({ error }) => {
-                        if (error) console.warn('[Monitoramento] Falha ao salvar log:', error);
-                    })
-                    .catch(e => {
-                        console.warn('[Monitoramento] Erro de conexão ao salvar log:', e);
-                    });
-                                }
+                if (LOGS_QUALIDADE_HABILITADOS) {
+                    supabaseClient
+                        .from('logs_qualidade')
+                        .insert([logEntry])
+                        .then(({ error }) => {
+                            if (error) console.warn('[Monitoramento] Falha ao salvar log:', error);
+                        })
+                        .catch(e => {
+                            console.warn('[Monitoramento] Erro de conexão ao salvar log:', e);
+                        });
+                }
             }
         }
 
@@ -3081,10 +3216,10 @@
         // ==========================================
 
         async function gerarRelatorioPDF() {
-                        if (!LOGS_QUALIDADE_HABILITADOS) {
-                                            showNotification('Logs de qualidade desabilitados. Crie a tabela logs_qualidade primeiro.', 'warning');
-                                            return;
-                        }
+            if (!LOGS_QUALIDADE_HABILITADOS) {
+                showNotification('Logs de qualidade desabilitados. Crie a tabela logs_qualidade primeiro.', 'warning');
+                return;
+            }
             if (!supabaseClient || typeof supabaseClient.from !== 'function') {
                 showNotification('Erro: Cliente não inicializado', 'error');
                 return;
@@ -3210,7 +3345,7 @@
                     }
                 });
                 
-                                // Verifica conexão via auth (não faz query sem autenticação, evita erro 406)
+                // Verifica conexão via auth (não faz query sem autenticação, evita erro 406)
                 isOnline = true;
                 updateConnectionStatus('online');
                 console.log('✅ Supabase conectado com sucesso!');
@@ -4228,6 +4363,26 @@
                 let html = '';
                 let total = 0;
 
+                // ==========================================
+                // SEÇÃO À VISTA (CASH) - Card Gastos e Separadores de Dias
+                // ==========================================
+                if (mapping.category === 'cash') {
+                    // Calcula o total de gastos (apenas débitos/valores negativos)
+                    const totalGastosAvista = calcularTotalGastosAvista(transactions);
+                    
+                    // Renderiza o card "Gastos à Vista" no topo
+                    html += renderGastosAvistaCard(totalGastosAvista);
+                    
+                    // Agrupa transações por data e renderiza com separadores
+                    html += renderTransacoesPorDia(transactions, mapping);
+                    
+                    container.innerHTML = html;
+                    return;
+                }
+
+                // ==========================================
+                // OUTRAS SEÇÕES (comportamento padrão)
+                // ==========================================
                 transactions.forEach(t => {
                     const isPaid = t.status === 'paid' || t.status === 'received';
                     const isIncome = t.type === 'income';
@@ -4287,6 +4442,160 @@
                 document.getElementById(`contentPartition${partition}`).innerHTML = 
                     '<div class="empty-state">Erro ao carregar dados</div>';
             }
+        }
+
+        // ==========================================
+        // FUNÇÕES AUXILIARES - SEÇÃO À VISTA
+        // ==========================================
+
+        /**
+         * Calcula o total de gastos à vista (apenas valores de despesas/débitos)
+         * Soma todos os valores de transações que são despesas (não receitas)
+         * @param {Array} transactions - Lista de transações
+         * @returns {number} Total de gastos à vista
+         */
+        function calcularTotalGastosAvista(transactions) {
+            return transactions.reduce((total, t) => {
+                // Considera apenas despesas (não receitas)
+                if (t.type !== 'income') {
+                    return total + parseFloat(t.amount);
+                }
+                return total;
+            }, 0);
+        }
+
+        /**
+         * Renderiza o card "Gastos à Vista" com o total de gastos
+         * @param {number} total - Total de gastos à vista
+         * @returns {string} HTML do card
+         */
+        function renderGastosAvistaCard(total) {
+            return `
+                <div class="gastos-avista-card">
+                    <div class="gastos-avista-info">
+                        <div class="gastos-avista-icon">💸</div>
+                        <div>
+                            <div class="gastos-avista-label">Gastos à Vista</div>
+                            <div class="gastos-avista-sublabel">Total de despesas do período</div>
+                        </div>
+                    </div>
+                    <div class="gastos-avista-value">${formatCurrency(total)}</div>
+                </div>
+            `;
+        }
+
+        /**
+         * Obtém o nome do dia da semana em português
+         * @param {Date} date - Objeto Date
+         * @returns {string} Nome do dia da semana
+         */
+        function getDiaDaSemana(date) {
+            const dias = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+            return dias[date.getDay()];
+        }
+
+        /**
+         * Formata a data no formato DD/MM/AAAA
+         * @param {Date} date - Objeto Date
+         * @returns {string} Data formatada
+         */
+        function formatDateBR(date) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        /**
+         * Renderiza transações agrupadas por dia com separadores visuais
+         * @param {Array} transactions - Lista de transações
+         * @param {Object} mapping - Mapeamento da seção
+         * @returns {string} HTML das transações agrupadas por dia
+         */
+        function renderTransacoesPorDia(transactions, mapping) {
+            // Agrupa transações por data
+            const transacoesPorDia = {};
+            
+            transactions.forEach(t => {
+                const dateKey = t.due_date; // Formato YYYY-MM-DD
+                if (!transacoesPorDia[dateKey]) {
+                    transacoesPorDia[dateKey] = [];
+                }
+                transacoesPorDia[dateKey].push(t);
+            });
+
+            // Ordena as datas (mais recente primeiro)
+            const datasOrdenadas = Object.keys(transacoesPorDia).sort((a, b) => new Date(b) - new Date(a));
+
+            let html = '';
+            let totalGeral = 0;
+
+            datasOrdenadas.forEach(dateKey => {
+                const transacoesDoDia = transacoesPorDia[dateKey];
+                const date = new Date(dateKey + 'T00:00:00'); // Evita problemas de timezone
+                const diaDaSemana = getDiaDaSemana(date);
+                const dataFormatada = formatDateBR(date);
+                
+                // Calcula o total de gastos do dia
+                const totalDoDia = transacoesDoDia.reduce((sum, t) => {
+                    if (t.type !== 'income') {
+                        return sum + parseFloat(t.amount);
+                    }
+                    return sum;
+                }, 0);
+                totalGeral += totalDoDia;
+
+                // Separador de dia
+                html += `
+                    <div class="day-separator">
+                        <div class="day-separator-info">
+                            <span class="day-separator-icon">📅</span>
+                            <span class="day-separator-date">${dataFormatada}</span>
+                            <span class="day-separator-weekday">${diaDaSemana}</span>
+                        </div>
+                        <span class="day-separator-count">${transacoesDoDia.length} transação(ões) • ${formatCurrency(totalDoDia)}</span>
+                    </div>
+                `;
+
+                // Renderiza as transações do dia
+                transacoesDoDia.forEach(t => {
+                    const isPaid = t.status === 'paid' || t.status === 'received';
+                    const isIncome = t.type === 'income';
+                    const amountClass = isIncome ? 'positive' : (isPaid ? 'positive' : 'negative');
+                    const itemClass = isPaid ? 'paid' : '';
+
+                    // Badge de sincronização só aparece se realmente pendente
+                    const syncBadge = t._syncPending && !isOnline ? '<span class="badge badge-warning" title="Pendente de sincronização">☁️</span>' : '';
+
+                    html += `
+                        <div class="expense-item ${itemClass}">
+                            <div class="expense-header">
+                                <div>
+                                    <div class="expense-name">${t.description}</div>
+                                    <div class="expense-details">
+                                        ${isPaid ? '<span class="badge badge-success">✓ Pago</span>' : '<span class="badge badge-warning">⏳ Pendente</span>'}
+                                        ${syncBadge}
+                                    </div>
+                                    ${t.payment_observation ? `<div style="font-size: 0.85rem; color: #059669; margin-top: 0.25rem;">📝 ${t.payment_observation}</div>` : ''}
+                                </div>
+                                <div class="expense-amount ${amountClass}">
+                                    ${isIncome ? '+' : '-'} ${formatCurrency(t.amount)}
+                                </div>
+                            </div>
+                            <div class="expense-actions">
+                                ${!isPaid && !isIncome ? `
+                                    <button class="btn-small btn-success-small" onclick="openPaymentModal('${t.id}')">✓ Marcar Pago</button>
+                                ` : ''}
+                                <button class="btn-small btn-warning-small" onclick="openPaymentHistoryModal('${t.id}')">📜 Histórico</button>
+                                <button class="btn-small btn-secondary-small" onclick="openEditModal('${t.id}')">✏️ Editar</button>
+                                <button class="btn-small btn-danger-small" onclick="deleteTransactionHandler('${t.id}')">🗑️ Excluir</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+
+            return html;
         }
 
         function renderInstallmentSummary(transaction) {

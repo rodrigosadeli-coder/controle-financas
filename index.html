@@ -2983,6 +2983,7 @@
         let currentUser = null;
         let isDevMode = false;
         let isOnline = false;
+                const LOGS_QUALIDADE_HABILITADOS = false; // Altere para true após criar a tabela logs_qualidade no Supabase
         
         let localData = {
             transactions: [],
@@ -3061,6 +3062,7 @@
                     dispositivo: window.innerWidth < 768 ? 'Mobile' : 'Desktop'
                 };
 
+                                if (LOGS_QUALIDADE_HABILITADOS) {
                 supabaseClient
                     .from('logs_qualidade')
                     .insert([logEntry])
@@ -3070,6 +3072,7 @@
                     .catch(e => {
                         console.warn('[Monitoramento] Erro de conexão ao salvar log:', e);
                     });
+                                }
             }
         }
 
@@ -3078,6 +3081,10 @@
         // ==========================================
 
         async function gerarRelatorioPDF() {
+                        if (!LOGS_QUALIDADE_HABILITADOS) {
+                                            showNotification('Logs de qualidade desabilitados. Crie a tabela logs_qualidade primeiro.', 'warning');
+                                            return;
+                        }
             if (!supabaseClient || typeof supabaseClient.from !== 'function') {
                 showNotification('Erro: Cliente não inicializado', 'error');
                 return;
@@ -3203,15 +3210,7 @@
                     }
                 });
                 
-                const { data, error } = await supabaseClient
-                    .from('profiles')
-                    .select('count', { count: 'exact', head: true });
-                
-                if (error) {
-                    console.error('❌ Erro no teste de conexão:', error);
-                    throw error;
-                }
-                
+                                // Verifica conexão via auth (não faz query sem autenticação, evita erro 406)
                 isOnline = true;
                 updateConnectionStatus('online');
                 console.log('✅ Supabase conectado com sucesso!');

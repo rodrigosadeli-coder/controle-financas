@@ -2048,262 +2048,6 @@
             font-weight: 700;
             color: var(--warning);
         }
-
-
-        /* ==========================================
-           CARD GASTOS À VISTA E SEPARADORES DE DIAS
-           ========================================== */
-        
-        /* Card Gastos à Vista */
-        .gastos-avista-card {
-            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-            border: 2px solid #f87171;
-            border-radius: 12px;
-            padding: 1.25rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 4px 12px rgba(248, 113, 113, 0.2);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .gastos-avista-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(248, 113, 113, 0.3);
-        }
-
-        .gastos-avista-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .gastos-avista-icon {
-            font-size: 2rem;
-            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-            padding: 0.75rem;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .gastos-avista-label {
-            font-size: 0.9rem;
-            color: #7f1d1d;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.25rem;
-        }
-
-        .gastos-avista-sublabel {
-            font-size: 0.75rem;
-            color: #991b1b;
-            opacity: 0.8;
-        }
-
-        .gastos-avista-value {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #dc2626;
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* Separador de Dias */
-        .day-separator {
-            background: linear-gradient(135deg, #1e40af 0%, var(--blue-royal) 100%);
-            color: white;
-            padding: 0.75rem 1.25rem;
-            border-radius: 10px;
-            margin: 1.25rem 0 0.75rem 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
-        }
-
-        .day-separator:first-of-type {
-            margin-top: 0;
-        }
-
-        .day-separator-info {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .day-separator-icon {
-            font-size: 1.25rem;
-        }
-
-        .day-separator-date {
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .day-separator-weekday {
-            font-size: 0.85rem;
-            opacity: 0.9;
-            font-style: italic;
-        }
-
-        .day-separator-count {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 0.35rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        /* Responsividade do Card Gastos à Vista */
-        @media (max-width: 480px) {
-            .gastos-avista-card {
-                flex-direction: column;
-                text-align: center;
-                gap: 1rem;
-            }
-
-            .gastos-avista-info {
-                flex-direction: column;
-            }
-
-            .gastos-avista-value {
-                font-size: 1.5rem;
-            }
-
-            .day-separator {
-                flex-direction: column;
-                text-align: center;
-                gap: 0.5rem;
-            }
-
-            .day-separator-info {
-                flex-direction: column;
-                gap: 0.25rem;
-            }
-        }
-
-        /* === Cards Resumo no Topo da Seção À Vista === */
-        .avista-cards-topo {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.75rem;
-            margin-bottom: 1.25rem;
-        }
-
-        .avista-card-resumo {
-            border-radius: 12px;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .avista-card-resumo:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-        }
-
-        .avista-card-resumo .card-icon {
-            font-size: 1.5rem;
-            margin-bottom: 0.4rem;
-        }
-
-        .avista-card-resumo .card-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.25rem;
-        }
-
-        .avista-card-resumo .card-value {
-            font-size: 1.25rem;
-            font-weight: 700;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .avista-card-resumo.gastos {
-            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-            border: 2px solid #f87171;
-        }
-        .avista-card-resumo.gastos .card-label { color: #7f1d1d; }
-        .avista-card-resumo.gastos .card-value { color: #dc2626; }
-
-        .avista-card-resumo.receitas {
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            border: 2px solid #4ade80;
-        }
-        .avista-card-resumo.receitas .card-label { color: #14532d; }
-        .avista-card-resumo.receitas .card-value { color: #16a34a; }
-
-        .avista-card-resumo.saldo {
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-            border: 2px solid #60a5fa;
-        }
-        .avista-card-resumo.saldo .card-label { color: #1e3a5f; }
-        .avista-card-resumo.saldo .card-value { color: #2563eb; }
-
-        .avista-card-resumo.dividas {
-            background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
-            border: 2px solid #facc15;
-        }
-        .avista-card-resumo.dividas .card-label { color: #713f12; }
-        .avista-card-resumo.dividas .card-value { color: #ca8a04; }
-
-        @media (max-width: 600px) {
-            .avista-cards-topo {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        /* === Expandir / Colapsar Dias === */
-        .day-separator {
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .day-separator .day-toggle-btn {
-            background: rgba(255,255,255,0.25);
-            border: none;
-            color: white;
-            font-size: 1rem;
-            cursor: pointer;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-            margin-left: 0.5rem;
-            flex-shrink: 0;
-        }
-
-        .day-separator .day-toggle-btn:hover {
-            background: rgba(255,255,255,0.4);
-        }
-
-        .day-transactions {
-            overflow: hidden;
-            transition: max-height 0.35s ease, opacity 0.25s ease;
-        }
-
-        .day-transactions.collapsed {
-            max-height: 0 !important;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .day-transactions.expanded {
-            opacity: 1;
-        }
-
     </style>
 <base target="_blank">
 </head>
@@ -2399,7 +2143,6 @@
             <button class="nav-btn" onclick="toggleNotes()">📝 Bloco de Notas</button>
             <button class="nav-btn btn-backup-nav" onclick="openBackupModal()">💾 Backup</button>
             <button class="nav-btn" onclick="openSettingsModal()">⚙️ Configurações</button>
-            <button class="nav-btn" onclick="runFinancialCardsTestSuite()" style="background-color: rgba(147, 51, 234, 0.3);" title="Executa testes automatizados do sistema financeiro">🧪 Testar Sistema</button>
             <button class="nav-btn exit" onclick="logout()">🚪 Sair</button>
             <div class="nav-notification" style="display: inline-block; position: relative; margin-left: 10px; cursor: pointer; vertical-align: middle;">
                 <span style="color: white; font-size: 1.1rem;">🔔</span>
@@ -2426,24 +2169,23 @@
                     <button class="month-btn" onclick="changeMonth(1)">▶</button>
                 </div>
 
-                <!-- Cards Grid - REFATORADO conforme especificação -->
-                <!-- Labels atualizados: Total de Dívidas, Total de Receitas, Total de Gastos, Pagamentos Pendentes -->
+                <!-- Cards Grid -->
                 <div class="cards-grid">
-                    <div class="card" onclick="openPendingModal()" style="cursor: pointer;">
-                    <div class="card-label">💳 Total de Dívidas</div>
-                    <div class="card-value card-despesas" id="totalBalance">R$ 0,00</div>
+                    <div class="card">
+                        <div class="card-label">💰 Saldo Total</div>
+                        <div class="card-value card-saldo" id="totalBalance">R$ 0,00</div>
                     </div>
                     <div class="card">
-                    <div class="card-label">📥 Total de Receitas</div>
-                    <div class="card-value card-receitas" id="totalIncome">R$ 0,00</div>
+                        <div class="card-label">📥 Receitas</div>
+                        <div class="card-value card-receitas" id="totalIncome">R$ 0,00</div>
                     </div>
                     <div class="card">
-                    <div class="card-label">📤 Total de Gastos</div>
-                    <div class="card-value card-despesas" id="totalExpenses">R$ 0,00</div>
+                        <div class="card-label">📤 Despesas</div>
+                        <div class="card-value card-despesas" id="totalExpenses">R$ 0,00</div>
                     </div>
                     <div class="card" id="pendingCard" onclick="openPendingModal()">
-                    <div class="card-label">⏰ Pagamentos Pendentes</div>
-                    <div class="card-value card-pendencias" id="totalPending">R$ 0,00</div>
+                        <div class="card-label">⏰ Pendentes</div>
+                        <div class="card-value card-pendencias" id="totalPending">R$ 0,00</div>
                     </div>
                 </div>
 
@@ -2479,28 +2221,7 @@
                         <button class="section-tab" data-section="5" data-partition="1">Entradas</button>
                     </div>
                     <button class="btn-action" onclick="openAddModal(1)">+ Nova Transação</button>
-<<<<<<< HEAD
-                    <!-- Totalizadores da 1ª Repartição - REFATORADO conforme especificação -->
-                    <!-- Ordem: 1) Total de Dívidas, 2) Saldo Disponível (verde), 3) Gastos à Vista -->
-                    <div class="partition-totals" id="partitionTotals1">
-                    <div class="partition-total-card despesas">
-                    <div class="partition-total-label">💳 Total de Dívidas</div>
-                    <div class="partition-total-value" id="totalDividas1">R$ 0,00</div>
-                    </div>
-                    <div class="partition-total-card receitas" id="saldoCard1">
-                    <div class="partition-total-label">💰 Saldo Disponível</div>
-                    <div class="partition-total-value" id="saldoAtual1">R$ 0,00</div>
-                    <div class="saldo-status" id="saldoStatus1">Disponível</div>
-                    </div>
-                    <div class="partition-total-card despesas">
-                    <div class="partition-total-label">🛒 Gastos à Vista</div>
-                    <div class="partition-total-value" id="gastosVista1">R$ 0,00</div>
-                    </div>
-                    </div>
-                    </div>
-=======
                     <div id="contentPartition1"></div>
->>>>>>> 8cf8c1b1e59f6677a6cf90890698db9fb72f0d1d
                 </div>
 
                 <div class="partition-content" id="partitionContent2">
@@ -2516,29 +2237,7 @@
                         <button class="section-tab" data-section="10" data-partition="2">Entradas</button>
                     </div>
                     <button class="btn-action" onclick="openAddModal(2)">+ Nova Transação</button>
-<<<<<<< HEAD
-                    <!-- Totalizadores da 2ª Repartição - REFATORADO conforme especificação -->
-                    <!-- Ordem: 1) Total de Dívidas, 2) Saldo Disponível (verde), 3) Gastos à Vista -->
-                    <div class="partition-totals" id="partitionTotals2">
-                    <div class="partition-total-card despesas">
-                    <div class="partition-total-label">💳 Total de Dívidas</div>
-                    <div class="partition-total-value" id="totalDividas2">R$ 0,00</div>
-                    </div>
-                    <div class="partition-total-card receitas" id="saldoCard2">
-                    <div class="partition-total-label">💰 Saldo Disponível</div>
-                    <div class="partition-total-value" id="saldoAtual2">R$ 0,00</div>
-                    <div class="saldo-status" id="saldoStatus2">Disponível</div>
-                    </div>
-                    <div class="partition-total-card despesas">
-                    <div class="partition-total-label">🛒 Gastos à Vista</div>
-                    <div class="partition-total-value" id="gastosVista2">R$ 0,00</div>
-                    </div>
-                    </div>
-                        </div>
-                    </div>
-=======
                     <div id="contentPartition2"></div>
->>>>>>> 8cf8c1b1e59f6677a6cf90890698db9fb72f0d1d
                 </div>
 
                 <!-- Bloco de Notas Resumo -->
@@ -2556,8 +2255,8 @@
                 <!-- Bloco de Notas Expandido -->
                 <div class="notes-container" id="notesContainer">
                     <div class="notes-header">
-                        <div class="notes-title" id="notesHeaderTitle">📝 Bloco de Notas</div>
-                        <button class="notas-btn" onclick="closeNotesStep()">✕ Fechar</button>
+                        <div class="notes-title">📝 Bloco de Notas</div>
+                        <button class="notas-btn" onclick="toggleNotes()">✕ Fechar</button>
                     </div>
                     <div class="notes-layout">
                         <div class="notebooks-sidebar">
@@ -3112,7 +2811,6 @@
         let currentUser = null;
         let isDevMode = false;
         let isOnline = false;
-        const LOGS_QUALIDADE_HABILITADOS = false; // Altere para true após criar a tabela logs_qualidade no Supabase
         
         let localData = {
             transactions: [],
@@ -3191,17 +2889,15 @@
                     dispositivo: window.innerWidth < 768 ? 'Mobile' : 'Desktop'
                 };
 
-                if (LOGS_QUALIDADE_HABILITADOS) {
-                    supabaseClient
-                        .from('logs_qualidade')
-                        .insert([logEntry])
-                        .then(({ error }) => {
-                            if (error) console.warn('[Monitoramento] Falha ao salvar log:', error);
-                        })
-                        .catch(e => {
-                            console.warn('[Monitoramento] Erro de conexão ao salvar log:', e);
-                        });
-                }
+                supabaseClient
+                    .from('logs_qualidade')
+                    .insert([logEntry])
+                    .then(({ error }) => {
+                        if (error) console.warn('[Monitoramento] Falha ao salvar log:', error);
+                    })
+                    .catch(e => {
+                        console.warn('[Monitoramento] Erro de conexão ao salvar log:', e);
+                    });
             }
         }
 
@@ -3210,10 +2906,6 @@
         // ==========================================
 
         async function gerarRelatorioPDF() {
-            if (!LOGS_QUALIDADE_HABILITADOS) {
-                showNotification('Logs de qualidade desabilitados. Crie a tabela logs_qualidade primeiro.', 'warning');
-                return;
-            }
             if (!supabaseClient || typeof supabaseClient.from !== 'function') {
                 showNotification('Erro: Cliente não inicializado', 'error');
                 return;
@@ -3339,7 +3031,15 @@
                     }
                 });
                 
-                // Verifica conexão via auth (não faz query sem autenticação, evita erro 406)
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (error) {
+                    console.error('❌ Erro no teste de conexão:', error);
+                    throw error;
+                }
+                
                 isOnline = true;
                 updateConnectionStatus('online');
                 console.log('✅ Supabase conectado com sucesso!');
@@ -3708,19 +3408,6 @@
         async function insertTransaction(transaction) {
             if (!currentUser) return null;
 
-            // MODO DEV: permite inserções locais sem Supabase
-            if (isDevMode) {
-                const devTransaction = {
-                    ...transaction,
-                    id: 'dev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-                    user_id: 'dev',
-                    created_at: new Date().toISOString()
-                };
-                localData.transactions.push(devTransaction);
-                console.log('✅ [DEV] Transação inserida localmente:', devTransaction.id);
-                return devTransaction;
-            }
-
             if (!isOnline || !supabaseClient) {
                 showNotification('⚠️ Sem conexão. Não é possível adicionar transação.', 'error');
                 return null;
@@ -3762,17 +3449,6 @@
          */
         async function updateTransaction(id, updates) {
             if (!currentUser) return null;
-
-            // MODO DEV: permite atualizações locais sem Supabase
-            if (isDevMode) {
-                const localIndex = localData.transactions.findIndex(t => t.id === id);
-                if (localIndex !== -1) {
-                    localData.transactions[localIndex] = { ...localData.transactions[localIndex], ...updates };
-                    console.log('✅ [DEV] Transação atualizada localmente:', id);
-                    return localData.transactions[localIndex];
-                }
-                return null;
-            }
 
             if (!isOnline || !supabaseClient) {
                 showNotification('⚠️ Sem conexão. Não é possível atualizar.', 'error');
@@ -3859,15 +3535,6 @@
                 console.log('💾 Pagamento registrado localmente:', id);
             }
 
-            // MODO DEV: apenas atualiza localmente
-            if (isDevMode || String(id).startsWith('dev_')) {
-                if (localIndex !== -1) {
-                    localData.transactions[localIndex]._syncPending = false;
-                }
-                console.log('✅ [DEV] Pagamento registrado localmente:', id);
-                return localData.transactions[localIndex];
-            }
-
             if (!isOnline || String(id).startsWith('local_')) {
                 updateConnectionStatus('offline');
                 return localData.transactions[localIndex];
@@ -3943,8 +3610,8 @@
                 _syncPending: true
             });
             
-            // MODO DEV: não tenta salvar no Supabase
-            if (isDevMode || !isOnline) return;
+
+            if (!isOnline) return;
 
             try {
                 const { error } = await supabaseClient
@@ -4181,7 +3848,6 @@
         let currentNotebookId = null;
         let currentNoteId = null;
         let notesExpanded = false;
-        let notesViewLevel = 'notebooks'; // 'notebooks' | 'notes' | 'note'
         let currentCalendarDate = new Date();
         let selectedDate = null;
         let editingId = null;
@@ -4311,12 +3977,8 @@
         }
 
         async function renderPartitions() {
-            if (openPartitions[1]) {
-                renderPartitionContent(1);
-            }
-            if (openPartitions[2]) {
-                renderPartitionContent(2);
-            }
+            if (openPartitions[1]) renderPartitionContent(1);
+            if (openPartitions[2]) renderPartitionContent(2);
         }
 
         async function renderPartitionContent(partition) {
@@ -4353,30 +4015,6 @@
                 let html = '';
                 let total = 0;
 
-                // ==========================================
-                // SEÇÃO À VISTA (CASH) - Card Gastos e Separadores de Dias
-                // ==========================================
-                if (mapping.category === 'cash') {
-                    // Calcula o total de gastos (apenas débitos/valores negativos)
-                    const totalGastosAvista = calcularTotalGastosAvista(transactions);
-                    
-                    // Renderiza o card "Gastos à Vista" no topo
-                    html += renderGastosAvistaCard(totalGastosAvista, transactions);
-                    
-                    // Agrupa transações por data e renderiza com separadores
-                    html += renderTransacoesPorDia(transactions, mapping);
-                    
-                    container.innerHTML = html;
-                    // Inicializa alturas dos dias expandidos
-                    container.querySelectorAll('.day-transactions.expanded').forEach(el => {
-                        el.style.maxHeight = el.scrollHeight + 'px';
-                    });
-                    return;
-                }
-
-                // ==========================================
-                // OUTRAS SEÇÕES (comportamento padrão)
-                // ==========================================
                 transactions.forEach(t => {
                     const isPaid = t.status === 'paid' || t.status === 'received';
                     const isIncome = t.type === 'income';
@@ -4438,230 +4076,6 @@
             }
         }
 
-        // ==========================================
-        // FUNÇÕES AUXILIARES - SEÇÃO À VISTA
-        // ==========================================
-
-        /**
-         * Calcula o total de gastos à vista (apenas valores de despesas/débitos)
-         * Soma todos os valores de transações que são despesas (não receitas)
-         * @param {Array} transactions - Lista de transações
-         * @returns {number} Total de gastos à vista
-         */
-        function calcularTotalGastosAvista(transactions) {
-            return transactions.reduce((total, t) => {
-                // Considera apenas despesas (não receitas)
-                if (t.type !== 'income') {
-                    return total + parseFloat(t.amount);
-                }
-                return total;
-            }, 0);
-        }
-
-        /**
-         * Renderiza o card "Gastos à Vista" com o total de gastos
-         * @param {number} total - Total de gastos à vista
-         * @returns {string} HTML do card
-         */
-        function renderGastosAvistaCard(total, transactions) {
-            // Calcula Total de Receitas
-            const totalReceitas = transactions.reduce((sum, t) => {
-                if (t.type === 'income') return sum + parseFloat(t.amount);
-                return sum;
-            }, 0);
-            // Saldo = Receitas - Gastos
-            const saldo = totalReceitas - total;
-            // Total de Dívidas = despesas pendentes
-            const totalDividas = transactions.reduce((sum, t) => {
-                if (t.type !== 'income' && t.status === 'pending') return sum + parseFloat(t.amount);
-                return sum;
-            }, 0);
-
-            return `
-                <div class="avista-cards-topo">
-                    <div class="avista-card-resumo gastos">
-                        <div class="card-icon">💸</div>
-                        <div class="card-label">Gastos à Vista</div>
-                        <div class="card-value">${formatCurrency(total)}</div>
-                    </div>
-                    <div class="avista-card-resumo receitas">
-                        <div class="card-icon">📥</div>
-                        <div class="card-label">Total de Receitas</div>
-                        <div class="card-value">${formatCurrency(totalReceitas)}</div>
-                    </div>
-                    <div class="avista-card-resumo saldo">
-                        <div class="card-icon">💰</div>
-                        <div class="card-label">Saldo Atual</div>
-                        <div class="card-value">${formatCurrency(saldo)}</div>
-                    </div>
-                    <div class="avista-card-resumo dividas">
-                        <div class="card-icon">📋</div>
-                        <div class="card-label">Total de Dívidas</div>
-                        <div class="card-value">${formatCurrency(totalDividas)}</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        /**
-         * Obtém o nome do dia da semana em português
-         * @param {Date} date - Objeto Date
-         * @returns {string} Nome do dia da semana
-         */
-        function getDiaDaSemana(date) {
-            const dias = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-            return dias[date.getDay()];
-        }
-
-        /**
-         * Formata a data no formato DD/MM/AAAA
-         * @param {Date} date - Objeto Date
-         * @returns {string} Data formatada
-         */
-        function formatDateBR(date) {
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            return `${day}/${month}/${year}`;
-        }
-
-        /**
-         * Renderiza transações agrupadas por dia com separadores visuais
-         * @param {Array} transactions - Lista de transações
-         * @param {Object} mapping - Mapeamento da seção
-         * @returns {string} HTML das transações agrupadas por dia
-         */
-        function renderTransacoesPorDia(transactions, mapping) {
-            // Agrupa transações por data
-            const transacoesPorDia = {};
-            
-            transactions.forEach(t => {
-                const dateKey = t.due_date; // Formato YYYY-MM-DD
-                if (!transacoesPorDia[dateKey]) {
-                    transacoesPorDia[dateKey] = [];
-                }
-                transacoesPorDia[dateKey].push(t);
-            });
-
-            // Ordena as datas (mais recente primeiro)
-            const datasOrdenadas = Object.keys(transacoesPorDia).sort((a, b) => new Date(b) - new Date(a));
-
-            // Determina hoje e ontem para abrir por padrão
-            const hoje = new Date();
-            hoje.setHours(0,0,0,0);
-            const ontem = new Date(hoje);
-            ontem.setDate(ontem.getDate() - 1);
-            const hojeStr = hoje.toISOString().slice(0,10);
-            const ontemStr = ontem.toISOString().slice(0,10);
-
-            let html = '';
-            let totalGeral = 0;
-
-            datasOrdenadas.forEach((dateKey, idx) => {
-                const transacoesDoDia = transacoesPorDia[dateKey];
-                const date = new Date(dateKey + 'T00:00:00'); // Evita problemas de timezone
-                const diaDaSemana = getDiaDaSemana(date);
-                const dataFormatada = formatDateBR(date);
-                
-                // Calcula o total de gastos do dia
-                const totalDoDia = transacoesDoDia.reduce((sum, t) => {
-                    if (t.type !== 'income') {
-                        return sum + parseFloat(t.amount);
-                    }
-                    return sum;
-                }, 0);
-                totalGeral += totalDoDia;
-
-                // Apenas hoje e ontem ficam abertos por padrão
-                const isOpen = (dateKey === hojeStr || dateKey === ontemStr);
-                const dayId = 'day-' + dateKey.replace(/-/g, '');
-                const expandedClass = isOpen ? 'expanded' : 'collapsed';
-                const toggleIcon = isOpen ? '✕' : '▼';
-
-                // Separador de dia (clicável para expandir/colapsar)
-                html += `
-                    <div class="day-separator" onclick="toggleDaySection('${dayId}', this)" title="Clique para expandir/colapsar">
-                        <div class="day-separator-info">
-                            <span class="day-separator-icon">📅</span>
-                            <span class="day-separator-date">${dataFormatada}</span>
-                            <span class="day-separator-weekday">${diaDaSemana}</span>
-                        </div>
-                        <div style="display:flex;align-items:center;">
-                            <span class="day-separator-count">${transacoesDoDia.length} transação(ões) • ${formatCurrency(totalDoDia)}</span>
-                            <button class="day-toggle-btn" onclick="event.stopPropagation(); toggleDaySection('${dayId}', this.closest('.day-separator'))" title="${isOpen ? 'Fechar' : 'Expandir'}">${toggleIcon}</button>
-                        </div>
-                    </div>
-                `;
-
-                // Container colapsável das transações do dia
-                html += `<div id="${dayId}" class="day-transactions ${expandedClass}">`;
-
-                // Renderiza as transações do dia
-                transacoesDoDia.forEach(t => {
-                    const isPaid = t.status === 'paid' || t.status === 'received';
-                    const isIncome = t.type === 'income';
-                    const amountClass = isIncome ? 'positive' : (isPaid ? 'positive' : 'negative');
-                    const itemClass = isPaid ? 'paid' : '';
-
-                    // Badge de sincronização só aparece se realmente pendente
-                    const syncBadge = t._syncPending && !isOnline ? '<span class="badge badge-warning" title="Pendente de sincronização">☁️</span>' : '';
-
-                    html += `
-                        <div class="expense-item ${itemClass}">
-                            <div class="expense-header">
-                                <div>
-                                    <div class="expense-name">${t.description}</div>
-                                    <div class="expense-details">
-                                        ${isPaid ? '<span class="badge badge-success">✓ Pago</span>' : '<span class="badge badge-warning">⏳ Pendente</span>'}
-                                        ${syncBadge}
-                                    </div>
-                                    ${t.payment_observation ? `<div style="font-size: 0.85rem; color: #059669; margin-top: 0.25rem;">📝 ${t.payment_observation}</div>` : ''}
-                                </div>
-                                <div class="expense-amount ${amountClass}">
-                                    ${isIncome ? '+' : '-'} ${formatCurrency(t.amount)}
-                                </div>
-                            </div>
-                            <div class="expense-actions">
-                                ${!isPaid && !isIncome ? `
-                                    <button class="btn-small btn-success-small" onclick="openPaymentModal('${t.id}')">✓ Marcar Pago</button>
-                                ` : ''}
-                                <button class="btn-small btn-warning-small" onclick="openPaymentHistoryModal('${t.id}')">📜 Histórico</button>
-                                <button class="btn-small btn-secondary-small" onclick="openEditModal('${t.id}')">✏️ Editar</button>
-                                <button class="btn-small btn-danger-small" onclick="deleteTransactionHandler('${t.id}')">🗑️ Excluir</button>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                html += `</div>`; // fecha day-transactions
-
-            });
-
-            return html;
-        }
-
-        /**
-         * Alterna expandir/colapsar de uma seção de dia
-         * @param {string} dayId - ID do container do dia
-         * @param {HTMLElement} separatorEl - Elemento do separador clicado
-         */
-        function toggleDaySection(dayId, separatorEl) {
-            const container = document.getElementById(dayId);
-            if (!container) return;
-            const btn = separatorEl.querySelector('.day-toggle-btn');
-            if (container.classList.contains('collapsed')) {
-                container.classList.remove('collapsed');
-                container.classList.add('expanded');
-                container.style.maxHeight = container.scrollHeight + 'px';
-                if (btn) { btn.textContent = '✕'; btn.title = 'Fechar'; }
-            } else {
-                container.classList.remove('expanded');
-                container.classList.add('collapsed');
-                container.style.maxHeight = '0';
-                if (btn) { btn.textContent = '▼'; btn.title = 'Expandir'; }
-            }
-        }
-
         function renderInstallmentSummary(transaction) {
             const totalDebt = parseFloat(transaction.amount) * (transaction.total_installments || 1);
             const paidAmount = transaction.status === 'paid' ? parseFloat(transaction.amount) : 0;
@@ -4681,285 +4095,10 @@
                         <span class="installment-label">⏳ Restante:</span>
                         <span class="installment-value remaining">${formatCurrency(remaining)}</span>
                     </div>
-        // ====================================================================
-        // FUNÇÕES AUXILIARES DE CLASSIFICAÇÃO - REFATORADO CONFORME ESPECIFICAÇÃO
-        // ====================================================================
-        // Definições:
-        // - Dívidas: type='expense' && category IN ('fixed','variable','installment')
-        // - Gastos à Vista: type='expense' && category='cash'
-        // - Receitas: type='income'
-        // - Pendentes: status='pending'
-        // - Pagos/Recebidos: status IN ('paid','received')
-        // ====================================================================
-
-        /**
-         * Verifica se a transação é uma dívida (despesa programada)
-         * @param {Object} t - Transação
-         * @returns {boolean}
-         */
-        function isDebt(t) {
-            return t.type === 'expense' && ['fixed', 'variable', 'installment'].includes(t.category);
+                </div>
+            `;
         }
 
-<<<<<<< HEAD
-        /**
-         * Verifica se a transação é um gasto à vista
-         * @param {Object} t - Transação
-         * @returns {boolean}
-         */
-        function isCashExpense(t) {
-            return t.type === 'expense' && t.category === 'cash';
-        }
-
-        /**
-         * Verifica se a transação é uma receita
-         * @param {Object} t - Transação
-         * @returns {boolean}
-         */
-        function isIncome(t) {
-            return t.type === 'income';
-        }
-
-        /**
-         * Verifica se a transação está pendente
-         * @param {Object} t - Transação
-         * @returns {boolean}
-         */
-        function isPending(t) {
-            return t.status === 'pending';
-        }
-
-        /**
-         * Verifica se a transação está paga ou recebida
-         * @param {Object} t - Transação
-         * @returns {boolean}
-         */
-        function isPaidOrReceived(t) {
-            return t.status === 'paid' || t.status === 'received';
-        }
-
-        // ====================================================================
-        // FUNÇÃO CENTRAL DE RECÁLCULO - refreshFinancialState()
-        // ====================================================================
-        // Esta função recalcula todos os agregados financeiros e atualiza o DOM.
-        // Deve ser chamada após qualquer operação que altere transações.
-        // ====================================================================
-
-        /**
-         * Recalcula todos os agregados financeiros e atualiza a interface
-         * @param {number} year - Ano selecionado (opcional, usa currentMonth se não fornecido)
-         * @param {number} month - Mês selecionado (opcional, usa currentMonth se não fornecido)
-         */
-        async function refreshFinancialState(year = null, month = null) {
-            try {
-                // Usa o mês/ano atual se não fornecido
-                const targetYear = year || currentMonth.getFullYear();
-                const targetMonth = month || (currentMonth.getMonth() + 1);
-
-                // Filtra transações do período
-                const transactions = localData.transactions.filter(t => {
-                    const tDate = new Date(t.due_date);
-                    return tDate.getFullYear() === targetYear && tDate.getMonth() === targetMonth - 1;
-                });
-
-                // ====================================================================
-                // CÁLCULOS DO DASHBOARD (GLOBAL)
-                // ====================================================================
-
-                // Total de Dívidas = soma de amount onde isDebt(t) && isPending(t)
-                const totalDebts = transactions
-                    .filter(t => isDebt(t) && isPending(t))
-                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-
-                // Pagamentos Pendentes = mesmo valor de Total de Dívidas
-                const pendingPayments = totalDebts;
-
-                // Total de Receitas = soma de amount onde isIncome(t)
-                const totalIncome = transactions
-                    .filter(t => isIncome(t))
-                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-
-                // Total de Gastos = soma de amount onde t.type === 'expense' (todas despesas)
-                const totalExpenses = transactions
-                    .filter(t => t.type === 'expense')
-                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-
-                // ====================================================================
-                // ATUALIZA DOM DO DASHBOARD
-                // ====================================================================
-
-                // Total de Dívidas (#totalBalance)
-                const balanceEl = document.getElementById('totalBalance');
-                if (balanceEl) {
-                    balanceEl.textContent = formatCurrency(totalDebts);
-                    balanceEl.style.color = 'var(--danger)';
-                }
-
-                // Total de Receitas (#totalIncome)
-                const incomeEl = document.getElementById('totalIncome');
-                if (incomeEl) {
-                    incomeEl.textContent = formatCurrency(totalIncome);
-                }
-
-                // Total de Gastos (#totalExpenses)
-                const expensesEl = document.getElementById('totalExpenses');
-                if (expensesEl) {
-                    expensesEl.textContent = formatCurrency(totalExpenses);
-                }
-
-                // Pagamentos Pendentes (#totalPending)
-                const pendingEl = document.getElementById('totalPending');
-                if (pendingEl) {
-                    pendingEl.textContent = formatCurrency(pendingPayments);
-                }
-
-                // ====================================================================
-                // ATUALIZA TOTALIZADORES DAS REPARTIÇÕES
-                // ====================================================================
-                updatePartitionTotalsNew(1, transactions);
-                updatePartitionTotalsNew(2, transactions);
-
-                console.log('✅ refreshFinancialState() executado com sucesso');
-            } catch (error) {
-                console.error('❌ Erro em refreshFinancialState:', error);
-            }
-        }
-
-        /**
-         * Atualiza os totalizadores de uma repartição específica
-         * @param {number} partition - ID da repartição (1 ou 2)
-         * @param {Array} allTransactions - Todas as transações do período
-         */
-        function updatePartitionTotalsNew(partition, allTransactions) {
-            try {
-                // Filtra transações da repartição (usando campo 'partition', não 'partitionId')
-                const transactions = allTransactions.filter(t => {
-                    const tPartition = parseInt(t.partition_id) || parseInt(t.partition);
-                    return tPartition === partition;
-                });
-
-                // ====================================================================
-                // CÁLCULOS POR REPARTIÇÃO - CONFORME ESPECIFICAÇÃO
-                // ====================================================================
-
-                // Total de Dívidas = soma onde isDebt(t) && isPending(t) && t.partition === X
-                const totalDividas = transactions
-                    .filter(t => isDebt(t) && isPending(t))
-                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-
-                // Income_PX = soma onde isIncome(t) && t.partition === X
-                const incomePX = transactions
-                    .filter(t => isIncome(t))
-                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-
-                // Paid_Debts_PX = soma onde isDebt(t) && t.status === 'paid' && t.partition === X
-                const paidDebtsPX = transactions
-                    .filter(t => isDebt(t) && t.status === 'paid')
-                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-
-                // Cash_Expenses_PX = soma onde isCashExpense(t) && t.partition === X
-                const cashExpensesPX = transactions
-                    .filter(t => isCashExpense(t))
-                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-
-                // Saldo Disponível = Income_PX - Paid_Debts_PX - Cash_Expenses_PX
-                const saldoDisponivel = incomePX - paidDebtsPX - cashExpensesPX;
-
-                // Gastos à Vista = soma onde isCashExpense(t) && t.partition === X
-                const gastosVista = cashExpensesPX;
-
-                // ====================================================================
-                // ATUALIZA DOM DA REPARTIÇÃO
-                // ====================================================================
-
-                // Total de Dívidas
-                const dividasEl = document.getElementById(`totalDividas${partition}`);
-                if (dividasEl) {
-                    dividasEl.textContent = formatCurrency(totalDividas);
-                }
-
-                // Saldo Disponível
-                const saldoEl = document.getElementById(`saldoAtual${partition}`);
-                const saldoStatusEl = document.getElementById(`saldoStatus${partition}`);
-                const saldoCard = document.getElementById(`saldoCard${partition}`);
-
-                if (saldoEl) {
-                    saldoEl.textContent = formatCurrency(saldoDisponivel);
-                }
-
-                // Determinar status do saldo para estilização
-                let saldoStatus = 'Disponível';
-                let saldoClass = '';
-                
-                if (saldoDisponivel > 0) {
-                    saldoStatus = '✅ Disponível';
-                    saldoClass = 'positivo';
-                } else if (saldoDisponivel === 0 && incomePX > 0) {
-                    saldoStatus = '⚠️ Totalmente consumido';
-                    saldoClass = 'zerado';
-                } else if (saldoDisponivel < 0) {
-                    saldoStatus = '❌ Saldo negativo';
-                    saldoClass = 'bloqueado';
-                } else {
-                    saldoStatus = '📝 Sem receitas cadastradas';
-                    saldoClass = '';
-                }
-
-                // Verificar se está perto de esgotar (< 10% das receitas)
-                if (saldoDisponivel > 0 && incomePX > 0 && (saldoDisponivel / incomePX) < 0.1) {
-                    saldoStatus = '⚠️ Quase esgotado';
-                    saldoClass = 'zerado';
-                }
-
-                if (saldoStatusEl) {
-                    saldoStatusEl.textContent = saldoStatus;
-                }
-
-                if (saldoCard) {
-                    saldoCard.classList.remove('positivo', 'zerado', 'bloqueado');
-                    if (saldoClass) {
-                        saldoCard.classList.add(saldoClass);
-                    }
-                }
-
-                // Gastos à Vista
-                const gastosVistaEl = document.getElementById(`gastosVista${partition}`);
-                if (gastosVistaEl) {
-                    gastosVistaEl.textContent = formatCurrency(gastosVista);
-                }
-
-            } catch (error) {
-                console.error(`❌ Erro ao atualizar totais da repartição ${partition}:`, error);
-            }
-        }
-
-        // ====================================================================
-        // FUNÇÃO LEGADA - updateDashboard() - Agora chama refreshFinancialState()
-        // ====================================================================
-        async function updateDashboard() {
-            await refreshFinancialState();
-        }
-
-        // ====================================================================
-        // FUNÇÃO LEGADA - updatePartitionTotals() - Mantida para compatibilidade
-        // ====================================================================
-        function updatePartitionTotals(partition) {
-            const year = currentMonth.getFullYear();
-            const month = currentMonth.getMonth() + 1;
-            
-            const transactions = localData.transactions.filter(t => {
-                const tDate = new Date(t.due_date);
-                return tDate.getFullYear() === year && tDate.getMonth() === month - 1;
-            });
-            
-            updatePartitionTotalsNew(partition, transactions);
-        }
-
-            } catch (error) {
-                console.error(`Erro ao atualizar totais da repartição ${partition}:`, error);
-            }
-        }
-=======
         async function updateDashboard() {
             const year = currentMonth.getFullYear();
             const month = currentMonth.getMonth() + 1;
@@ -4991,71 +4130,7 @@
             const balanceEl = document.getElementById('totalBalance');
             balanceEl.textContent = formatCurrency(balance);
             balanceEl.style.color = balance >= 0 ? 'var(--success)' : 'var(--danger)';
-            
         }
-
->>>>>>> 8cf8c1b1e59f6677a6cf90890698db9fb72f0d1d
-
-        // ==========================================
-        // FUNÇÃO AUXILIAR: CALCULAR SALDO DA REPARTIÇÃO
-        // ==========================================
-        
-        function getPartitionSaldo(partition, excludeTransactionId = null) {
-            try {
-                const year = currentMonth.getFullYear();
-                const month = currentMonth.getMonth() + 1;
-                
-                // Filtra todas as transações da repartição específica no mês atual
-                const transactions = localData.transactions.filter(t => {
-                    const tDate = new Date(t.due_date);
-                    const tPartition = parseInt(t.partition_id);
-                    // Exclui a transação sendo editada para cálculo correto
-                    if (excludeTransactionId && t.id === excludeTransactionId) {
-                        return false;
-                    }
-                    return tDate.getFullYear() === year && 
-                           tDate.getMonth() === month - 1 &&
-                           tPartition === partition;
-                });
-
-                let totalReceitas = 0;
-                let despesasPagas = 0;
-                let gastosAVistaEfetuados = 0;
-
-                transactions.forEach(t => {
-                    const amount = parseFloat(t.amount) || 0;
-                    
-                    if (t.type === 'income') {
-                        totalReceitas += amount;
-                    } else if (t.type === 'cash' || t.category === 'cash') {
-                        if (t.status === 'paid') {
-                            gastosAVistaEfetuados += amount;
-                        }
-                    } else {
-                        if (t.status === 'paid') {
-                            despesasPagas += amount;
-                        }
-                    }
-                });
-
-                // Saldo atual (nunca negativo)
-                return Math.max(0, totalReceitas - despesasPagas - gastosAVistaEfetuados);
-            } catch (error) {
-                console.error('Erro ao calcular saldo da repartição:', error);
-                return 0;
-            }
-        }
-
-        // Verifica se há saldo suficiente para uma operação de débito
-        function verificarSaldoSuficiente(partition, valor, excludeTransactionId = null) {
-            const saldoAtual = getPartitionSaldo(partition, excludeTransactionId);
-            return {
-                temSaldo: saldoAtual >= valor,
-                saldoAtual: saldoAtual,
-                diferenca: saldoAtual - valor
-            };
-        }
-
 
         // ==========================================
         // MODAL DE CONTAS PENDENTES
@@ -5070,22 +4145,16 @@
             document.getElementById('pendingModal').classList.remove('active');
         }
 
-        /**
-         * Renderiza lista de dívidas pendentes no modal
-         * REFATORADO: Filtra apenas dívidas (não receitas) usando isDebt()
-         */
         function renderPendingList() {
             const container = document.getElementById('pendingList');
             const year = currentMonth.getFullYear();
             const month = currentMonth.getMonth() + 1;
             
-            // IMPORTANTE: Filtra apenas dívidas pendentes (não receitas)
-            // Usa a função auxiliar isDebt() para classificação correta
             const pendingTransactions = localData.transactions.filter(t => {
                 const tDate = new Date(t.due_date);
                 return tDate.getFullYear() === year && 
                        tDate.getMonth() === month - 1 &&
-                       isDebt(t) && isPending(t);  // Apenas dívidas pendentes
+                       (t.status === 'pending' || t.status === null);
             });
 
             if (pendingTransactions.length === 0) {
@@ -5366,28 +4435,6 @@
                     throw new Error('Data de vencimento inválida');
                 }
 
-                // VALIDAÇÃO DE SALDO - Conforme documentação do sistema
-                // Operações de débito (despesas/gastos à vista marcados como pagos) 
-                // devem ser bloqueadas se tornarem o saldo da repartição negativo
-                if (mapping.type !== 'income' && status === 'paid') {
-                    // Verifica se é o mesmo mês corrente
-                    if (dateObj.getFullYear() === currentMonth.getFullYear() && 
-                        dateObj.getMonth() === currentMonth.getMonth()) {
-                        
-                        const verificacao = verificarSaldoSuficiente(partitionId, amount, editingId);
-                        
-                        if (!verificacao.temSaldo) {
-                            throw new Error(
-                                `❌ Saldo insuficiente na Repartição ${partitionId}!\n\n` +
-                                `Saldo disponível: ${formatCurrency(verificacao.saldoAtual)}\n` +
-                                `Valor da operação: ${formatCurrency(amount)}\n` +
-                                `Faltam: ${formatCurrency(Math.abs(verificacao.diferenca))}\n\n` +
-                                `Para prosseguir, adicione mais receitas ou marque como "Pendente".`
-                            );
-                        }
-                    }
-                }
-
                 const baseTransaction = {
                     type: mapping.type,
                     category: mapping.category,
@@ -5552,23 +4599,6 @@
             }
 
             const finalAmount = paymentAmount || parseFloat(transaction.amount);
-
-            // VALIDAÇÃO DE SALDO - Conforme documentação do sistema
-            // Operações de débito devem ser bloqueadas se tornarem o saldo negativo
-            if (transaction.type !== 'income') {
-                const partitionId = parseInt(transaction.partition_id);
-                const verificacao = verificarSaldoSuficiente(partitionId, finalAmount, transactionId);
-                
-                if (!verificacao.temSaldo) {
-                    showNotification(
-                        `❌ Saldo insuficiente na Repartição ${partitionId}!\n` +
-                        `Saldo disponível: ${formatCurrency(verificacao.saldoAtual)}\n` +
-                        `Valor da operação: ${formatCurrency(finalAmount)}`,
-                        'error'
-                    );
-                    return;
-                }
-            }
             const currentInstallment = transaction.installment_number || 1;
             const totalInstallments = transaction.total_installments || 1;
             const isLastInstallment = currentInstallment >= totalInstallments;
@@ -5988,162 +5018,25 @@
         }
 
         // ==========================================
-        // BLOCO DE NOTAS - INTEGRAÇÃO COM SUPABASE
+        // BLOCO DE NOTAS
         // ==========================================
 
-        /**
-         * Atualiza o indicador de sincronização das notas
-         * @param {string} status - 'syncing' | 'synced' | 'offline' | 'error'
-         */
-        function updateNotesSyncStatus(status) {
-            const indicator = document.getElementById('notesSyncStatus');
-            if (!indicator) return;
-
-            switch (status) {
-                case 'syncing':
-                    indicator.innerHTML = '🔄 Sincronizando...';
-                    indicator.className = 'sync-indicator syncing';
-                    break;
-                case 'synced':
-                    indicator.innerHTML = '✅ Sincronizado';
-                    indicator.className = 'sync-indicator synced';
-                    break;
-                case 'offline':
-                    indicator.innerHTML = '📴 Modo Offline';
-                    indicator.className = 'sync-indicator offline';
-                    break;
-                case 'error':
-                    indicator.innerHTML = '❌ Erro de Sincronização';
-                    indicator.className = 'sync-indicator error';
-                    break;
-                default:
-                    indicator.innerHTML = '';
-                    indicator.className = 'sync-indicator';
-            }
-        }
-
-        /**
-         * Define o nível de visualização e atualiza o título do header
-         * @param {string} level - 'notebooks' | 'notes' | 'note'
-         */
-        function setNotesViewLevel(level) {
-            notesViewLevel = level;
-            const titleEl = document.getElementById('notesHeaderTitle');
-            
-            switch (level) {
-                case 'notebooks':
-                    titleEl.innerHTML = '📝 Bloco de Notas';
-                    break;
-                case 'notes':
-                    const notebook = localData.notebooks.find(nb => nb.id === currentNotebookId);
-                    titleEl.innerHTML = `📚 ${notebook ? notebook.name : 'Caderno'}`;
-                    break;
-                case 'note':
-                    const note = localData.notes.find(n => n.id === currentNoteId);
-                    titleEl.innerHTML = `📄 ${note && note.title ? note.title : 'Nota'}`;
-                    break;
-            }
-        }
-
-        /**
-         * Fechamento em cascata: Nota -> Notas -> Cadernos -> Fechar
-         */
-        function closeNotesStep() {
-            if (notesViewLevel === 'note') {
-                // Estamos em uma nota, voltar para lista de notas
-                closeNoteEditor();
-                setNotesViewLevel('notes');
-            } else if (notesViewLevel === 'notes') {
-                // Estamos na lista de notas, voltar para cadernos
-                currentNotebookId = null;
-                currentNoteId = null;
-                setNotesViewLevel('notebooks');
-                renderNotebooks();
-                renderNotes();
-            } else {
-                // Estamos na lista de cadernos, fechar painel
-                notesExpanded = false;
-                currentNotebookId = null;
-                currentNoteId = null;
-                notesViewLevel = 'notebooks';
-                document.getElementById('notesContainer').classList.remove('active');
-            }
-        }
-
-        /**
-         * Carrega notebooks e notes do Supabase ou localStorage (fallback)
-         */
-        async function loadNotebooksAndNotes() {
-            if (!currentUser) return;
-
-            // MODO DEV ou OFFLINE: usa dados locais
-            if (isDevMode || !isOnline || !supabaseClient) {
-                console.log('📴 [Notas] Modo offline/dev - usando dados locais');
-                updateNotesSyncStatus('offline');
-                return;
-            }
-
-            try {
-                updateNotesSyncStatus('syncing');
-
-                // Carrega notebooks
-                const { data: notebooksData, error: notebooksError } = await supabaseClient
-                    .from('notebooks')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
-                if (notebooksError) throw notebooksError;
-
-                // Carrega notes
-                const { data: notesData, error: notesError } = await supabaseClient
-                    .from('notes')
-                    .select('*')
-                    .order('updated_at', { ascending: false });
-
-                if (notesError) throw notesError;
-
-                // Substitui dados locais
-                localData.notebooks = notebooksData || [];
-                localData.notes = notesData || [];
-
-                updateNotesSyncStatus('synced');
-                console.log(`✅ [Notas] Carregados ${localData.notebooks.length} cadernos e ${localData.notes.length} notas`);
-
-            } catch (error) {
-                console.error('❌ [Notas] Erro ao carregar dados:', error);
-                updateNotesSyncStatus('error');
-            }
-        }
-
-        /**
-         * Toggle do painel de notas
-         */
         function toggleNotes() {
             notesExpanded = !notesExpanded;
             const container = document.getElementById('notesContainer');
-
+            
             if (notesExpanded) {
                 container.classList.add('active');
-                setNotesViewLevel('notebooks');
-                loadNotebooksAndNotes().then(() => {
-                    renderNotebooks();
-                    renderNotes();
-                });
+                renderNotebooks();
             } else {
                 container.classList.remove('active');
-                currentNotebookId = null;
-                currentNoteId = null;
-                notesViewLevel = 'notebooks';
             }
         }
 
-        /**
-         * Renderiza lista de cadernos com botão de exclusão
-         */
         function renderNotebooks() {
             const container = document.getElementById('notebooksList');
-
-            if (!localData.notebooks || localData.notebooks.length === 0) {
+            
+            if (localData.notebooks.length === 0) {
                 container.innerHTML = '<div style="color: #9ca3af; text-align: center; padding: 1rem;">Nenhum caderno</div>';
                 return;
             }
@@ -6152,190 +5045,85 @@
             localData.notebooks.forEach(nb => {
                 const noteCount = localData.notes.filter(n => n.notebook_id === nb.id).length;
                 const isActive = nb.id === currentNotebookId;
-
+                
                 html += `
-                    <div class="notebook-item ${isActive ? 'active' : ''}" style="position: relative;">
-                        <div onclick="selectNotebook('${nb.id}')" style="flex: 1; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-                            <span class="notebook-name">${nb.name}</span>
-                            <span class="notebook-count">${noteCount}</span>
-                        </div>
-                        <button onclick="event.stopPropagation(); deleteNotebook('${nb.id}')" 
-                                style="background: #fee2e2; color: #dc2626; border: none; border-radius: 4px; padding: 4px 8px; margin-left: 8px; cursor: pointer; font-size: 0.75rem;"
-                                title="Excluir caderno">🗑️</button>
+                    <div class="notebook-item ${isActive ? 'active' : ''}" onclick="selectNotebook('${nb.id}')">
+                        <span class="notebook-name">${nb.name}</span>
+                        <span class="notebook-count">${noteCount}</span>
                     </div>
                 `;
             });
-
+            
             container.innerHTML = html;
         }
 
-        /**
-         * Seleciona um caderno e mostra suas notas
-         */
         function selectNotebook(id) {
             currentNotebookId = id;
             currentNoteId = null;
-            setNotesViewLevel('notes');
             renderNotebooks();
             renderNotes();
             closeNoteEditor();
         }
 
-        /**
-         * Cria novo caderno com integração Supabase
-         */
-        async function createNotebook() {
+        function createNotebook() {
             const name = prompt('Nome do caderno:');
-            if (!name || !name.trim()) return;
-
-            const notebook = {
-                id: Date.now().toString(),
-                user_id: currentUser ? currentUser.id : 'dev',
-                name: name.trim(),
-                created_at: new Date().toISOString()
-            };
-
-            // Adiciona localmente primeiro (otimista)
-            localData.notebooks.push(notebook);
-            renderNotebooks();
-            showNotification('Caderno criado!');
-
-            // Sincroniza com Supabase
-            if (!isDevMode && isOnline && supabaseClient) {
-                try {
-                    updateNotesSyncStatus('syncing');
-
-                    const { data, error } = await supabaseClient
-                        .from('notebooks')
-                        .insert([{
-                            name: notebook.name,
-                            user_id: currentUser.id
-                        }])
-                        .select()
-                        .single();
-
-                    if (error) throw error;
-
-                    // Atualiza ID local com o ID do Supabase
-                    const localIndex = localData.notebooks.findIndex(nb => nb.id === notebook.id);
-                    if (localIndex !== -1 && data) {
-                        localData.notebooks[localIndex] = data;
-                    }
-
-                    updateNotesSyncStatus('synced');
-                    renderNotebooks();
-                    console.log('✅ [Notas] Caderno sincronizado:', data.id);
-
-                } catch (error) {
-                    console.error('❌ [Notas] Erro ao sincronizar caderno:', error);
-                    updateNotesSyncStatus('error');
-                }
+            if (name && name.trim()) {
+                const notebook = {
+                    id: Date.now().toString(),
+                    user_id: currentUser.id,
+                    name: name.trim(),
+                    created_at: new Date().toISOString()
+                };
+                localData.notebooks.push(notebook);
+                
+                selectNotebook(notebook.id);
+                showNotification('Caderno criado!');
             }
         }
 
-        /**
-         * Exclui caderno e todas as notas vinculadas (cascata)
-         */
-        async function deleteNotebook(notebookId) {
-            const notebook = localData.notebooks.find(nb => nb.id === notebookId);
-            if (!notebook) return;
-
-            const noteCount = localData.notes.filter(n => n.notebook_id === notebookId).length;
-            const confirmMsg = noteCount > 0
-                ? `Excluir caderno "${notebook.name}" e suas ${noteCount} nota(s)?`
-                : `Excluir caderno "${notebook.name}"?`;
-
-            if (!confirm(confirmMsg)) return;
-
-            // Remove localmente primeiro (otimista)
-            localData.notes = localData.notes.filter(n => n.notebook_id !== notebookId);
-            localData.notebooks = localData.notebooks.filter(nb => nb.id !== notebookId);
-
-            // Reset se era o caderno selecionado
-            if (currentNotebookId === notebookId) {
-                currentNotebookId = null;
-                currentNoteId = null;
-                setNotesViewLevel('notebooks');
-            }
-
-            renderNotebooks();
-            renderNotes();
-            showNotification('Caderno excluído!');
-
-            // Sincroniza com Supabase
-            if (!isDevMode && isOnline && supabaseClient) {
-                try {
-                    updateNotesSyncStatus('syncing');
-
-                    // O CASCADE no banco deleta as notas automaticamente
-                    const { error } = await supabaseClient
-                        .from('notebooks')
-                        .delete()
-                        .eq('id', notebookId);
-
-                    if (error) throw error;
-
-                    updateNotesSyncStatus('synced');
-                    console.log('✅ [Notas] Caderno e notas removidos do Supabase');
-
-                } catch (error) {
-                    console.error('❌ [Notas] Erro ao excluir caderno do Supabase:', error);
-                    updateNotesSyncStatus('error');
-                }
-            }
-        }
-
-        /**
-         * Renderiza lista de notas do caderno selecionado
-         */
         function renderNotes() {
             const container = document.getElementById('notesList');
-
+            
             if (!currentNotebookId) {
                 container.innerHTML = '<div class="empty-notes">Selecione um caderno</div>';
                 return;
             }
 
-            const notes = (localData.notes || [])
+            const notes = localData.notes
                 .filter(n => n.notebook_id === currentNotebookId)
-                .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
+                .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
             if (notes.length === 0) {
-                container.innerHTML = '<div class="empty-notes">Nenhuma nota neste caderno</div>';
+                container.innerHTML = '<div class="empty-notes">Nenhuma nota</div>';
                 return;
             }
 
             let html = '';
             notes.forEach(note => {
                 const isActive = note.id === currentNoteId;
-                const preview = note.content 
-                    ? note.content.substring(0, 100).replace(/<[^>]*>/g, '').replace(/\*\*/g, '').replace(/\*/g, '') + '...'
-                    : 'Sem conteúdo';
-
+                const preview = note.content ? note.content.substring(0, 100).replace(/<[^>]*>/g, '') + '...' : 'Sem conteúdo';
+                
                 html += `
                     <div class="note-item ${isActive ? 'active' : ''}" onclick="openNote('${note.id}')">
                         <div class="note-title">${note.title || 'Sem título'}</div>
                         <div class="note-preview">${preview}</div>
-                        <div class="note-date">${formatDate(note.updated_at || note.created_at)}</div>
+                        <div class="note-date">${formatDate(note.updated_at)}</div>
                     </div>
                 `;
             });
-
+            
             container.innerHTML = html;
         }
 
-        /**
-         * Cria nova nota com integração Supabase
-         */
-        async function createNote() {
+        function createNote() {
             if (!currentNotebookId) {
                 showNotification('Selecione um caderno primeiro!', 'error');
                 return;
             }
 
             const note = {
-                id: 'local_' + Date.now().toString(),
-                user_id: currentUser ? currentUser.id : 'dev',
+                id: Date.now().toString(),
+                user_id: currentUser.id,
                 notebook_id: currentNotebookId,
                 title: 'Nova Nota',
                 content: '',
@@ -6343,52 +5131,13 @@
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
-
-            // Adiciona localmente primeiro (otimista)
+            
             localData.notes.push(note);
-            showNotification('Nota criada!');
-
-            // Sincroniza com Supabase
-            if (!isDevMode && isOnline && supabaseClient) {
-                try {
-                    updateNotesSyncStatus('syncing');
-
-                    const { data, error } = await supabaseClient
-                        .from('notes')
-                        .insert([{
-                            notebook_id: note.notebook_id,
-                            user_id: currentUser.id,
-                            title: note.title,
-                            content: note.content,
-                            media: note.media
-                        }])
-                        .select()
-                        .single();
-
-                    if (error) throw error;
-
-                    // Atualiza ID local com o ID do Supabase
-                    const localIndex = localData.notes.findIndex(n => n.id === note.id);
-                    if (localIndex !== -1 && data) {
-                        localData.notes[localIndex] = data;
-                        note.id = data.id; // Atualiza referência para abrir a nota correta
-                    }
-
-                    updateNotesSyncStatus('synced');
-                    console.log('✅ [Notas] Nota sincronizada:', data.id);
-
-                } catch (error) {
-                    console.error('❌ [Notas] Erro ao sincronizar nota:', error);
-                    updateNotesSyncStatus('error');
-                }
-            }
-
+            
             openNote(note.id);
+            showNotification('Nota criada!');
         }
 
-        /**
-         * Abre nota para edição
-         */
         function openNote(id) {
             currentNoteId = id;
             const note = localData.notes.find(n => n.id === id);
@@ -6397,181 +5146,88 @@
             document.getElementById('noteTitle').value = note.title || '';
             document.getElementById('noteContent').value = note.content || '';
             renderNoteMedia(note.media);
-
+            
             document.getElementById('notesListView').style.display = 'none';
             document.getElementById('noteEditorView').classList.add('active');
-            setNotesViewLevel('note');
             renderNotes();
         }
 
-        /**
-         * Fecha o editor de nota e volta para a lista
-         */
         function closeNoteEditor() {
             document.getElementById('notesListView').style.display = 'block';
             document.getElementById('noteEditorView').classList.remove('active');
             currentNoteId = null;
-            setNotesViewLevel('notes');
             renderNotes();
         }
 
-        /**
-         * Salva nota com integração Supabase
-         */
-        async function saveNote() {
+        function saveNote() {
             if (!currentNoteId) return;
-
+            
             const note = localData.notes.find(n => n.id === currentNoteId);
-            if (!note) return;
-
-            // Atualiza localmente primeiro
-            note.title = document.getElementById('noteTitle').value;
-            note.content = document.getElementById('noteContent').value;
-            note.updated_at = new Date().toISOString();
-
-            // Atualiza título no header
-            setNotesViewLevel('note');
-            showNotification('Nota salva!');
-
-            // Sincroniza com Supabase
-            if (!isDevMode && isOnline && supabaseClient && !String(currentNoteId).startsWith('local_')) {
-                try {
-                    updateNotesSyncStatus('syncing');
-
-                    const { error } = await supabaseClient
-                        .from('notes')
-                        .update({
-                            title: note.title,
-                            content: note.content,
-                            media: note.media,
-                            updated_at: note.updated_at
-                        })
-                        .eq('id', currentNoteId);
-
-                    if (error) throw error;
-
-                    updateNotesSyncStatus('synced');
-                    console.log('✅ [Notas] Nota atualizada no Supabase');
-
-                } catch (error) {
-                    console.error('❌ [Notas] Erro ao salvar nota no Supabase:', error);
-                    updateNotesSyncStatus('error');
-                }
+            if (note) {
+                note.title = document.getElementById('noteTitle').value;
+                note.content = document.getElementById('noteContent').value;
+                note.updated_at = new Date().toISOString();
+                
+                showNotification('Nota salva!');
             }
         }
 
-        /**
-         * Exclui a nota atual
-         */
-        async function deleteCurrentNote() {
+        function deleteCurrentNote() {
             if (!currentNoteId) return;
-
-            if (!confirm('Excluir esta nota?')) return;
-
-            const noteId = currentNoteId;
-
-            // Remove localmente primeiro
-            localData.notes = localData.notes.filter(n => n.id !== noteId);
-
-            closeNoteEditor();
-            renderNotes();
-            showNotification('Nota excluída!');
-
-            // Sincroniza com Supabase
-            if (!isDevMode && isOnline && supabaseClient && !String(noteId).startsWith('local_')) {
-                try {
-                    updateNotesSyncStatus('syncing');
-
-                    const { error } = await supabaseClient
-                        .from('notes')
-                        .delete()
-                        .eq('id', noteId);
-
-                    if (error) throw error;
-
-                    updateNotesSyncStatus('synced');
-                    console.log('✅ [Notas] Nota excluída do Supabase');
-
-                } catch (error) {
-                    console.error('❌ [Notas] Erro ao excluir nota do Supabase:', error);
-                    updateNotesSyncStatus('error');
-                }
+            
+            if (confirm('Excluir esta nota?')) {
+                localData.notes = localData.notes.filter(n => n.id !== currentNoteId);
+                
+                closeNoteEditor();
+                renderNotes();
+                showNotification('Nota excluída!');
             }
         }
 
-        /**
-         * Formata texto selecionado (bold, italic, underline)
-         */
         function formatText(command) {
             const textarea = document.getElementById('noteContent');
             const start = textarea.selectionStart;
             const end = textarea.selectionEnd;
             const text = textarea.value;
             const selected = text.substring(start, end);
-
+            
             let formatted = '';
-            switch (command) {
+            switch(command) {
                 case 'bold': formatted = `**${selected}**`; break;
                 case 'italic': formatted = `*${selected}*`; break;
                 case 'underline': formatted = `__${selected}__`; break;
             }
-
+            
             textarea.value = text.substring(0, start) + formatted + text.substring(end);
-            textarea.focus();
-            textarea.selectionStart = start;
-            textarea.selectionEnd = start + formatted.length;
         }
 
-        /**
-         * Insere item de lista
-         */
         function insertList() {
             const textarea = document.getElementById('noteContent');
             const pos = textarea.selectionStart;
             textarea.value = textarea.value.substring(0, pos) + '\n• ' + textarea.value.substring(pos);
-            textarea.focus();
-            textarea.selectionStart = textarea.selectionEnd = pos + 3;
         }
 
-        /**
-         * Processa imagem adicionada à nota
-         */
         function handleNoteImage(event) {
             const file = event.target.files[0];
             if (!file || !currentNoteId) return;
 
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = function(e) {
                 const note = localData.notes.find(n => n.id === currentNoteId);
-                if (!note) return;
-
-                note.media = note.media || [];
-                note.media.push({
-                    id: Date.now().toString(),
-                    type: 'image',
-                    data: e.target.result
-                });
-
-                renderNoteMedia(note.media);
-
-                // Sincroniza com Supabase
-                if (!isDevMode && isOnline && supabaseClient && !String(currentNoteId).startsWith('local_')) {
-                    try {
-                        await supabaseClient
-                            .from('notes')
-                            .update({ media: note.media, updated_at: new Date().toISOString() })
-                            .eq('id', currentNoteId);
-                    } catch (error) {
-                        console.error('❌ [Notas] Erro ao salvar mídia:', error);
-                    }
+                if (note) {
+                    note.media = note.media || [];
+                    note.media.push({
+                        id: Date.now().toString(),
+                        type: 'image',
+                        data: e.target.result
+                    });
+                    
+                    renderNoteMedia(note.media);
                 }
             };
             reader.readAsDataURL(file);
         }
 
-        /**
-         * Renderiza preview das mídias da nota
-         */
         function renderNoteMedia(media) {
             const container = document.getElementById('noteMediaPreview');
             if (!media || media.length === 0) {
@@ -6583,36 +5239,22 @@
             media.forEach((item, index) => {
                 html += `
                     <div class="media-item">
-                        <img src="${item.data}" alt="Imagem ${index + 1}">
+                        <img src="${item.data}" alt="">
                         <button class="media-remove" onclick="removeMedia(${index})">×</button>
                     </div>
                 `;
             });
-
+            
             container.innerHTML = html;
         }
 
-        /**
-         * Remove mídia da nota
-         */
-        async function removeMedia(index) {
+        function removeMedia(index) {
             if (!currentNoteId) return;
             const note = localData.notes.find(n => n.id === currentNoteId);
-            if (!note || !note.media) return;
-
-            note.media.splice(index, 1);
-            renderNoteMedia(note.media);
-
-            // Sincroniza com Supabase
-            if (!isDevMode && isOnline && supabaseClient && !String(currentNoteId).startsWith('local_')) {
-                try {
-                    await supabaseClient
-                        .from('notes')
-                        .update({ media: note.media, updated_at: new Date().toISOString() })
-                        .eq('id', currentNoteId);
-                } catch (error) {
-                    console.error('❌ [Notas] Erro ao remover mídia:', error);
-                }
+            if (note && note.media) {
+                note.media.splice(index, 1);
+                
+                renderNoteMedia(note.media);
             }
         }
 
@@ -6926,269 +5568,7 @@ Isso substituirá os dados atuais!`)) {
         window.selectNotebook = selectNotebook;
         window.openNote = openNote;
         window.removeMedia = removeMedia;
-        window.deleteNotebook = deleteNotebook;
-        window.closeNotesStep = closeNotesStep;
-        window.loadNotebooksAndNotes = loadNotebooksAndNotes;
-        window.setNotesViewLevel = setNotesViewLevel;
-        window.updateNotesSyncStatus = updateNotesSyncStatus;
         window.handleNoteImage = handleNoteImage;
-        // ====================================================================
-        // SUITE DE TESTES AUTOMATIZADOS - runFinancialCardsTestSuite()
-        // ====================================================================
-        // Esta função executa uma sequência de testes para validar a lógica
-        // dos cards financeiros. Pode ser executada via console ou pelo botão
-        // na interface.
-        //
-        // Como rodar:
-        // 1. Via console: runFinancialCardsTestSuite()
-        // 2. Via interface: Clique no botão "🧪 Testar Sistema" no rodapé
-        //
-        // Os testes criam transações com tag [TEST] e as removem ao final.
-        // ====================================================================
-
-        /**
-         * Cria uma transação de teste
-         * @param {Object} data - Dados da transação
-         * @returns {Object} - Transação criada
-         */
-        async function createTestTransaction(data) {
-            const testData = {
-                ...data,
-                description: `[TEST] ${data.description || 'Transação de teste'}`,
-                user_id: currentUser?.id || 'dev'
-            };
-            
-            const result = await insertTransaction(testData);
-            console.log('📝 Transação de teste criada:', result?.id);
-            return result;
-        }
-
-        /**
-         * Deleta todas as transações de teste (com tag [TEST])
-         */
-        async function deleteTestTransactionsByTag() {
-            const testTransactions = localData.transactions.filter(t => 
-                t.description && t.description.includes('[TEST]')
-            );
-            
-            console.log(`🗑️ Removendo ${testTransactions.length} transações de teste...`);
-            
-            for (const t of testTransactions) {
-                await deleteTransaction(t.id);
-            }
-            
-            console.log('✅ Transações de teste removidas');
-        }
-
-        /**
-         * Função de asserção para validação
-         * @param {string} label - Descrição do teste
-         * @param {boolean} condition - Condição a ser validada
-         * @param {any} expected - Valor esperado (para log)
-         * @param {any} actual - Valor atual (para log)
-         */
-        function assertValue(label, condition, expected = null, actual = null) {
-            if (condition) {
-                console.log(`✅ ${label}`);
-                return true;
-            } else {
-                console.error(`❌ ${label} - Esperado: ${expected}, Atual: ${actual}`);
-                return false;
-            }
-        }
-
-        /**
-         * Executa a suite completa de testes financeiros
-         */
-        async function runFinancialCardsTestSuite() {
-            console.log('🚀 ========================================');
-            console.log('🚀 INICIANDO SUITE DE TESTES FINANCEIROS');
-            console.log('🚀 ========================================');
-            
-            let testsPassed = 0;
-            let testsFailed = 0;
-            const partition = 1; // Usaremos repartição 1 para os testes
-            
-            // Salva estado inicial para comparação
-            const initialState = {
-                totalDividas: parseFloat(document.getElementById('totalBalance')?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0,
-                totalReceitas: parseFloat(document.getElementById('totalIncome')?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0,
-                totalGastos: parseFloat(document.getElementById('totalExpenses')?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0
-            };
-            
-            try {
-                // ========================================
-                // TESTE 1: Criar receita de R$ 500
-                // ========================================
-                console.log('\n📋 TESTE 1: Criando receita de R$ 500...');
-                
-                const dueDate = new Date().toISOString().split('T')[0];
-                const receita = await createTestTransaction({
-                    type: 'income',
-                    category: 'income',
-                    partition_id: partition,
-                    description: 'Receita Teste',
-                    amount: 500,
-                    year: currentMonth.getFullYear(),
-                    month: currentMonth.getMonth() + 1,
-                    due_date: dueDate,
-                    status: 'received'
-                });
-                
-                await refreshFinancialState();
-                
-                // Verifica se o Total de Receitas aumentou
-                const newTotalReceitas = parseFloat(document.getElementById('totalIncome')?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
-                if (assertValue('Total de Receitas aumentou em R$ 500', newTotalReceitas >= initialState.totalReceitas + 500, initialState.totalReceitas + 500, newTotalReceitas)) {
-                    testsPassed++;
-                } else {
-                    testsFailed++;
-                }
-
-                // ========================================
-                // TESTE 2: Criar dívida pendente de R$ 200
-                // ========================================
-                console.log('\n📋 TESTE 2: Criando dívida pendente de R$ 200...');
-                
-                const divida = await createTestTransaction({
-                    type: 'expense',
-                    category: 'fixed',
-                    partition_id: partition,
-                    description: 'Dívida Teste',
-                    amount: 200,
-                    year: currentMonth.getFullYear(),
-                    month: currentMonth.getMonth() + 1,
-                    due_date: dueDate,
-                    status: 'pending'
-                });
-                
-                await refreshFinancialState();
-                
-                // Verifica se o Total de Dívidas aumentou
-                const newTotalDividas = parseFloat(document.getElementById('totalBalance')?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
-                if (assertValue('Total de Dívidas aumentou em R$ 200', newTotalDividas >= initialState.totalDividas + 200, initialState.totalDividas + 200, newTotalDividas)) {
-                    testsPassed++;
-                } else {
-                    testsFailed++;
-                }
-
-                // ========================================
-                // TESTE 3: Pagar a dívida
-                // ========================================
-                console.log('\n📋 TESTE 3: Pagando a dívida de R$ 200...');
-                
-                const dividaBeforePay = newTotalDividas;
-                
-                if (divida && divida.id) {
-                    await registerPayment(divida.id, {
-                        status: 'paid',
-                        payment_date: dueDate,
-                        payment_amount: 200,
-                        payment_observation: '[TEST] Pagamento de teste'
-                    });
-                    
-                    await refreshFinancialState();
-                    
-                    // Verifica se o Total de Dívidas diminuiu
-                    const dividasAfterPay = parseFloat(document.getElementById('totalBalance')?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
-                    if (assertValue('Total de Dívidas diminuiu após pagamento', dividasAfterPay <= dividaBeforePay - 200, dividaBeforePay - 200, dividasAfterPay)) {
-                        testsPassed++;
-                    } else {
-                        testsFailed++;
-                    }
-                } else {
-                    console.error('❌ Não foi possível testar pagamento - dívida não criada');
-                    testsFailed++;
-                }
-
-                // ========================================
-                // TESTE 4: Lançar gasto à vista de R$ 50
-                // ========================================
-                console.log('\n📋 TESTE 4: Criando gasto à vista de R$ 50...');
-                
-                const gastosBefore = parseFloat(document.getElementById('totalExpenses')?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
-                
-                await createTestTransaction({
-                    type: 'expense',
-                    category: 'cash',
-                    partition_id: partition,
-                    description: 'Gasto à Vista Teste',
-                    amount: 50,
-                    year: currentMonth.getFullYear(),
-                    month: currentMonth.getMonth() + 1,
-                    due_date: dueDate,
-                    status: 'paid'
-                });
-                
-                await refreshFinancialState();
-                
-                // Verifica se o Total de Gastos aumentou
-                const gastosAfter = parseFloat(document.getElementById('totalExpenses')?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
-                if (assertValue('Total de Gastos aumentou com gasto à vista', gastosAfter >= gastosBefore + 50, gastosBefore + 50, gastosAfter)) {
-                    testsPassed++;
-                } else {
-                    testsFailed++;
-                }
-
-                // ========================================
-                // TESTE 5: Verificar que Gastos à Vista da repartição está correto
-                // ========================================
-                console.log('\n📋 TESTE 5: Verificando card Gastos à Vista da repartição...');
-                
-                const gastosVistaEl = document.getElementById(`gastosVista${partition}`);
-                const gastosVistaValue = parseFloat(gastosVistaEl?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
-                if (assertValue('Card Gastos à Vista contém valor > 0', gastosVistaValue >= 50, '>=50', gastosVistaValue)) {
-                    testsPassed++;
-                } else {
-                    testsFailed++;
-                }
-
-                // ========================================
-                // LIMPEZA: Remover transações de teste
-                // ========================================
-                console.log('\n🧹 Limpando transações de teste...');
-                await deleteTestTransactionsByTag();
-                await refreshFinancialState();
-
-            } catch (error) {
-                console.error('❌ Erro durante os testes:', error);
-                testsFailed++;
-            }
-
-            // ========================================
-            // RELATÓRIO FINAL
-            // ========================================
-            console.log('\n🏁 ========================================');
-            console.log('🏁 RELATÓRIO FINAL DOS TESTES');
-            console.log('🏁 ========================================');
-            console.log(`✅ Testes aprovados: ${testsPassed}`);
-            console.log(`❌ Testes falhados: ${testsFailed}`);
-            console.log(`📊 Total de testes: ${testsPassed + testsFailed}`);
-            console.log(`📈 Taxa de sucesso: ${((testsPassed / (testsPassed + testsFailed)) * 100).toFixed(1)}%`);
-            console.log('========================================');
-            
-            // Mostra notificação com resultado
-            if (testsFailed === 0) {
-                showNotification(`🧪 Testes concluídos! ${testsPassed} testes aprovados.`, 'success');
-            } else {
-                showNotification(`🧪 Testes concluídos. ${testsFailed} falha(s) detectada(s). Verifique o console.`, 'error');
-            }
-            
-            return {
-                passed: testsPassed,
-                failed: testsFailed,
-                total: testsPassed + testsFailed,
-                successRate: ((testsPassed / (testsPassed + testsFailed)) * 100).toFixed(1)
-            };
-        }
-
-        // Expor função de testes no escopo global
-        window.runFinancialCardsTestSuite = runFinancialCardsTestSuite;
-        window.createTestTransaction = createTestTransaction;
-        window.deleteTestTransactionsByTag = deleteTestTransactionsByTag;
-
-        // ====================================================================
-
         window.formatText = formatText;
         window.insertList = insertList;
         window.confirmPayment = confirmPayment;
@@ -7239,8 +5619,10 @@ Isso substituirá os dados atuais!`)) {
         window.deleteTransactionFromPending = deleteTransactionFromPending;
         window.resetAllData = resetAllData;
 
-        // FUNÇÕES REALTIME EXPORTADAS
+        // NOVAS FUNÇÕES EXPORTADAS
+        window.handleManualSync = handleManualSync;
         window.setupRealtimeSubscription = setupRealtimeSubscription;
+        window.publishSyncEvent = publishSyncEvent;
         window.closeRealtimeChannel = closeRealtimeChannel;
 
         // Inicializar ao carregar

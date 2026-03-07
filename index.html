@@ -2323,126 +2323,6 @@
                 gap: 0.25rem;
             }
         }
-
-        /* === Cards Resumo no Topo da Seção À Vista === */
-        .avista-cards-topo {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.75rem;
-            margin-bottom: 1.25rem;
-        }
-
-        .avista-card-resumo {
-            border-radius: 12px;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .avista-card-resumo:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-        }
-
-        .avista-card-resumo .card-icon {
-            font-size: 1.5rem;
-            margin-bottom: 0.4rem;
-        }
-
-        .avista-card-resumo .card-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.25rem;
-        }
-
-        .avista-card-resumo .card-value {
-            font-size: 1.25rem;
-            font-weight: 700;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .avista-card-resumo.gastos {
-            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-            border: 2px solid #f87171;
-        }
-        .avista-card-resumo.gastos .card-label { color: #7f1d1d; }
-        .avista-card-resumo.gastos .card-value { color: #dc2626; }
-
-        .avista-card-resumo.receitas {
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            border: 2px solid #4ade80;
-        }
-        .avista-card-resumo.receitas .card-label { color: #14532d; }
-        .avista-card-resumo.receitas .card-value { color: #16a34a; }
-
-        .avista-card-resumo.saldo {
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-            border: 2px solid #60a5fa;
-        }
-        .avista-card-resumo.saldo .card-label { color: #1e3a5f; }
-        .avista-card-resumo.saldo .card-value { color: #2563eb; }
-
-        .avista-card-resumo.dividas {
-            background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
-            border: 2px solid #facc15;
-        }
-        .avista-card-resumo.dividas .card-label { color: #713f12; }
-        .avista-card-resumo.dividas .card-value { color: #ca8a04; }
-
-        @media (max-width: 600px) {
-            .avista-cards-topo {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        /* === Expandir / Colapsar Dias === */
-        .day-separator {
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .day-separator .day-toggle-btn {
-            background: rgba(255,255,255,0.25);
-            border: none;
-            color: white;
-            font-size: 1rem;
-            cursor: pointer;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-            margin-left: 0.5rem;
-            flex-shrink: 0;
-        }
-
-        .day-separator .day-toggle-btn:hover {
-            background: rgba(255,255,255,0.4);
-        }
-
-        .day-transactions {
-            overflow: hidden;
-            transition: max-height 0.35s ease, opacity 0.25s ease;
-        }
-
-        .day-transactions.collapsed {
-            max-height: 0 !important;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .day-transactions.expanded {
-            opacity: 1;
-        }
-
     </style>
 <base target="_blank">
 </head>
@@ -4491,16 +4371,12 @@
                     const totalGastosAvista = calcularTotalGastosAvista(transactions);
                     
                     // Renderiza o card "Gastos à Vista" no topo
-                    html += renderGastosAvistaCard(totalGastosAvista, transactions);
+                    html += renderGastosAvistaCard(totalGastosAvista);
                     
                     // Agrupa transações por data e renderiza com separadores
                     html += renderTransacoesPorDia(transactions, mapping);
                     
                     container.innerHTML = html;
-                    // Inicializa alturas dos dias expandidos
-                    container.querySelectorAll('.day-transactions.expanded').forEach(el => {
-                        el.style.maxHeight = el.scrollHeight + 'px';
-                    });
                     return;
                 }
 
@@ -4593,42 +4469,17 @@
          * @param {number} total - Total de gastos à vista
          * @returns {string} HTML do card
          */
-        function renderGastosAvistaCard(total, transactions) {
-            // Calcula Total de Receitas
-            const totalReceitas = transactions.reduce((sum, t) => {
-                if (t.type === 'income') return sum + parseFloat(t.amount);
-                return sum;
-            }, 0);
-            // Saldo = Receitas - Gastos
-            const saldo = totalReceitas - total;
-            // Total de Dívidas = despesas pendentes
-            const totalDividas = transactions.reduce((sum, t) => {
-                if (t.type !== 'income' && t.status === 'pending') return sum + parseFloat(t.amount);
-                return sum;
-            }, 0);
-
+        function renderGastosAvistaCard(total) {
             return `
-                <div class="avista-cards-topo">
-                    <div class="avista-card-resumo gastos">
-                        <div class="card-icon">💸</div>
-                        <div class="card-label">Gastos à Vista</div>
-                        <div class="card-value">${formatCurrency(total)}</div>
+                <div class="gastos-avista-card">
+                    <div class="gastos-avista-info">
+                        <div class="gastos-avista-icon">💸</div>
+                        <div>
+                            <div class="gastos-avista-label">Gastos à Vista</div>
+                            <div class="gastos-avista-sublabel">Total de despesas do período</div>
+                        </div>
                     </div>
-                    <div class="avista-card-resumo receitas">
-                        <div class="card-icon">📥</div>
-                        <div class="card-label">Total de Receitas</div>
-                        <div class="card-value">${formatCurrency(totalReceitas)}</div>
-                    </div>
-                    <div class="avista-card-resumo saldo">
-                        <div class="card-icon">💰</div>
-                        <div class="card-label">Saldo Atual</div>
-                        <div class="card-value">${formatCurrency(saldo)}</div>
-                    </div>
-                    <div class="avista-card-resumo dividas">
-                        <div class="card-icon">📋</div>
-                        <div class="card-label">Total de Dívidas</div>
-                        <div class="card-value">${formatCurrency(totalDividas)}</div>
-                    </div>
+                    <div class="gastos-avista-value">${formatCurrency(total)}</div>
                 </div>
             `;
         }
@@ -4676,18 +4527,10 @@
             // Ordena as datas (mais recente primeiro)
             const datasOrdenadas = Object.keys(transacoesPorDia).sort((a, b) => new Date(b) - new Date(a));
 
-            // Determina hoje e ontem para abrir por padrão
-            const hoje = new Date();
-            hoje.setHours(0,0,0,0);
-            const ontem = new Date(hoje);
-            ontem.setDate(ontem.getDate() - 1);
-            const hojeStr = hoje.toISOString().slice(0,10);
-            const ontemStr = ontem.toISOString().slice(0,10);
-
             let html = '';
             let totalGeral = 0;
 
-            datasOrdenadas.forEach((dateKey, idx) => {
+            datasOrdenadas.forEach(dateKey => {
                 const transacoesDoDia = transacoesPorDia[dateKey];
                 const date = new Date(dateKey + 'T00:00:00'); // Evita problemas de timezone
                 const diaDaSemana = getDiaDaSemana(date);
@@ -4702,29 +4545,17 @@
                 }, 0);
                 totalGeral += totalDoDia;
 
-                // Apenas hoje e ontem ficam abertos por padrão
-                const isOpen = (dateKey === hojeStr || dateKey === ontemStr);
-                const dayId = 'day-' + dateKey.replace(/-/g, '');
-                const expandedClass = isOpen ? 'expanded' : 'collapsed';
-                const toggleIcon = isOpen ? '✕' : '▼';
-
-                // Separador de dia (clicável para expandir/colapsar)
+                // Separador de dia
                 html += `
-                    <div class="day-separator" onclick="toggleDaySection('${dayId}', this)" title="Clique para expandir/colapsar">
+                    <div class="day-separator">
                         <div class="day-separator-info">
                             <span class="day-separator-icon">📅</span>
                             <span class="day-separator-date">${dataFormatada}</span>
                             <span class="day-separator-weekday">${diaDaSemana}</span>
                         </div>
-                        <div style="display:flex;align-items:center;">
-                            <span class="day-separator-count">${transacoesDoDia.length} transação(ões) • ${formatCurrency(totalDoDia)}</span>
-                            <button class="day-toggle-btn" onclick="event.stopPropagation(); toggleDaySection('${dayId}', this.closest('.day-separator'))" title="${isOpen ? 'Fechar' : 'Expandir'}">${toggleIcon}</button>
-                        </div>
+                        <span class="day-separator-count">${transacoesDoDia.length} transação(ões) • ${formatCurrency(totalDoDia)}</span>
                     </div>
                 `;
-
-                // Container colapsável das transações do dia
-                html += `<div id="${dayId}" class="day-transactions ${expandedClass}">`;
 
                 // Renderiza as transações do dia
                 transacoesDoDia.forEach(t => {
@@ -4762,34 +4593,9 @@
                         </div>
                     `;
                 });
-
-                html += `</div>`; // fecha day-transactions
-
             });
 
             return html;
-        }
-
-        /**
-         * Alterna expandir/colapsar de uma seção de dia
-         * @param {string} dayId - ID do container do dia
-         * @param {HTMLElement} separatorEl - Elemento do separador clicado
-         */
-        function toggleDaySection(dayId, separatorEl) {
-            const container = document.getElementById(dayId);
-            if (!container) return;
-            const btn = separatorEl.querySelector('.day-toggle-btn');
-            if (container.classList.contains('collapsed')) {
-                container.classList.remove('collapsed');
-                container.classList.add('expanded');
-                container.style.maxHeight = container.scrollHeight + 'px';
-                if (btn) { btn.textContent = '✕'; btn.title = 'Fechar'; }
-            } else {
-                container.classList.remove('expanded');
-                container.classList.add('collapsed');
-                container.style.maxHeight = '0';
-                if (btn) { btn.textContent = '▼'; btn.title = 'Expandir'; }
-            }
         }
 
         function renderInstallmentSummary(transaction) {

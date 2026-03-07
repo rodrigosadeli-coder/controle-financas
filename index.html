@@ -2283,6 +2283,7 @@
             <button class="nav-btn" onclick="toggleNotes()">📝 Bloco de Notas</button>
             <button class="nav-btn btn-backup-nav" onclick="openBackupModal()">💾 Backup</button>
             <button class="nav-btn" onclick="openSettingsModal()">⚙️ Configurações</button>
+            <button class="nav-btn" onclick="runFinancialCardsTestSuite()" style="background-color: rgba(147, 51, 234, 0.3);" title="Executa testes automatizados do sistema financeiro">🧪 Testar Sistema</button>
             <button class="nav-btn exit" onclick="logout()">🚪 Sair</button>
             <div class="nav-notification" style="display: inline-block; position: relative; margin-left: 10px; cursor: pointer; vertical-align: middle;">
                 <span style="color: white; font-size: 1.1rem;">🔔</span>
@@ -2309,23 +2310,24 @@
                     <button class="month-btn" onclick="changeMonth(1)">▶</button>
                 </div>
 
-                <!-- Cards Grid -->
+                <!-- Cards Grid - REFATORADO conforme especificação -->
+                <!-- Labels atualizados: Total de Dívidas, Total de Receitas, Total de Gastos, Pagamentos Pendentes -->
                 <div class="cards-grid">
-                    <div class="card">
-                        <div class="card-label">💰 Saldo Total</div>
-                        <div class="card-value card-saldo" id="totalBalance">R$ 0,00</div>
+                    <div class="card" onclick="openPendingModal()" style="cursor: pointer;">
+                    <div class="card-label">💳 Total de Dívidas</div>
+                    <div class="card-value card-despesas" id="totalBalance">R$ 0,00</div>
                     </div>
                     <div class="card">
-                        <div class="card-label">📥 Receitas</div>
-                        <div class="card-value card-receitas" id="totalIncome">R$ 0,00</div>
+                    <div class="card-label">📥 Total de Receitas</div>
+                    <div class="card-value card-receitas" id="totalIncome">R$ 0,00</div>
                     </div>
                     <div class="card">
-                        <div class="card-label">📤 Despesas</div>
-                        <div class="card-value card-despesas" id="totalExpenses">R$ 0,00</div>
+                    <div class="card-label">📤 Total de Gastos</div>
+                    <div class="card-value card-despesas" id="totalExpenses">R$ 0,00</div>
                     </div>
                     <div class="card" id="pendingCard" onclick="openPendingModal()">
-                        <div class="card-label">⏰ Pendentes</div>
-                        <div class="card-value card-pendencias" id="totalPending">R$ 0,00</div>
+                    <div class="card-label">⏰ Pagamentos Pendentes</div>
+                    <div class="card-value card-pendencias" id="totalPending">R$ 0,00</div>
                     </div>
                 </div>
 
@@ -2361,22 +2363,23 @@
                         <button class="section-tab" data-section="5" data-partition="1">Entradas</button>
                     </div>
                     <button class="btn-action" onclick="openAddModal(1)">+ Nova Transação</button>
-                    <div id="contentPartition1"></div>
-                    <!-- Totalizadores da 1ª Repartição -->
+                    <!-- Totalizadores da 1ª Repartição - REFATORADO conforme especificação -->
+                    <!-- Ordem: 1) Total de Dívidas, 2) Saldo Disponível (verde), 3) Gastos à Vista -->
                     <div class="partition-totals" id="partitionTotals1">
-                        <div class="partition-total-card receitas">
-                            <div class="partition-total-label">📥 Total Receitas</div>
-                            <div class="partition-total-value" id="totalReceitas1">R$ 0,00</div>
-                        </div>
-                        <div class="partition-total-card saldo" id="saldoCard1">
-                            <div class="partition-total-label">💰 Saldo Atual</div>
-                            <div class="partition-total-value" id="saldoAtual1">R$ 0,00</div>
-                            <div class="saldo-status" id="saldoStatus1">Disponível</div>
-                        </div>
-                        <div class="partition-total-card despesas">
-                            <div class="partition-total-label">📤 Total Despesas</div>
-                            <div class="partition-total-value" id="totalDespesas1">R$ 0,00</div>
-                        </div>
+                    <div class="partition-total-card despesas">
+                    <div class="partition-total-label">💳 Total de Dívidas</div>
+                    <div class="partition-total-value" id="totalDividas1">R$ 0,00</div>
+                    </div>
+                    <div class="partition-total-card receitas" id="saldoCard1">
+                    <div class="partition-total-label">💰 Saldo Disponível</div>
+                    <div class="partition-total-value" id="saldoAtual1">R$ 0,00</div>
+                    <div class="saldo-status" id="saldoStatus1">Disponível</div>
+                    </div>
+                    <div class="partition-total-card despesas">
+                    <div class="partition-total-label">🛒 Gastos à Vista</div>
+                    <div class="partition-total-value" id="gastosVista1">R$ 0,00</div>
+                    </div>
+                    </div>
                     </div>
                 </div>
 
@@ -2393,21 +2396,23 @@
                         <button class="section-tab" data-section="10" data-partition="2">Entradas</button>
                     </div>
                     <button class="btn-action" onclick="openAddModal(2)">+ Nova Transação</button>
-                    <div id="contentPartition2"></div>
-                    <!-- Totalizadores da 2ª Repartição -->
+                    <!-- Totalizadores da 2ª Repartição - REFATORADO conforme especificação -->
+                    <!-- Ordem: 1) Total de Dívidas, 2) Saldo Disponível (verde), 3) Gastos à Vista -->
                     <div class="partition-totals" id="partitionTotals2">
-                        <div class="partition-total-card receitas">
-                            <div class="partition-total-label">📥 Total Receitas</div>
-                            <div class="partition-total-value" id="totalReceitas2">R$ 0,00</div>
-                        </div>
-                        <div class="partition-total-card saldo" id="saldoCard2">
-                            <div class="partition-total-label">💰 Saldo Atual</div>
-                            <div class="partition-total-value" id="saldoAtual2">R$ 0,00</div>
-                            <div class="saldo-status" id="saldoStatus2">Disponível</div>
-                        </div>
-                        <div class="partition-total-card despesas">
-                            <div class="partition-total-label">📤 Total Despesas</div>
-                            <div class="partition-total-value" id="totalDespesas2">R$ 0,00</div>
+                    <div class="partition-total-card despesas">
+                    <div class="partition-total-label">💳 Total de Dívidas</div>
+                    <div class="partition-total-value" id="totalDividas2">R$ 0,00</div>
+                    </div>
+                    <div class="partition-total-card receitas" id="saldoCard2">
+                    <div class="partition-total-label">💰 Saldo Disponível</div>
+                    <div class="partition-total-value" id="saldoAtual2">R$ 0,00</div>
+                    <div class="saldo-status" id="saldoStatus2">Disponível</div>
+                    </div>
+                    <div class="partition-total-card despesas">
+                    <div class="partition-total-label">🛒 Gastos à Vista</div>
+                    <div class="partition-total-value" id="gastosVista2">R$ 0,00</div>
+                    </div>
+                    </div>
                         </div>
                     </div>
                 </div>
@@ -4308,136 +4313,233 @@
                         <span class="installment-label">⏳ Restante:</span>
                         <span class="installment-value remaining">${formatCurrency(remaining)}</span>
                     </div>
-                </div>
-            `;
+        // ====================================================================
+        // FUNÇÕES AUXILIARES DE CLASSIFICAÇÃO - REFATORADO CONFORME ESPECIFICAÇÃO
+        // ====================================================================
+        // Definições:
+        // - Dívidas: type='expense' && category IN ('fixed','variable','installment')
+        // - Gastos à Vista: type='expense' && category='cash'
+        // - Receitas: type='income'
+        // - Pendentes: status='pending'
+        // - Pagos/Recebidos: status IN ('paid','received')
+        // ====================================================================
+
+        /**
+         * Verifica se a transação é uma dívida (despesa programada)
+         * @param {Object} t - Transação
+         * @returns {boolean}
+         */
+        function isDebt(t) {
+            return t.type === 'expense' && ['fixed', 'variable', 'installment'].includes(t.category);
         }
 
-        async function updateDashboard() {
-            const year = currentMonth.getFullYear();
-            const month = currentMonth.getMonth() + 1;
-            
-            const transactions = localData.transactions.filter(t => {
-                const tDate = new Date(t.due_date);
-                return tDate.getFullYear() === year && tDate.getMonth() === month - 1;
-            });
-
-            let income = 0, expenses = 0, pending = 0;
-
-            transactions.forEach(t => {
-                const amount = parseFloat(t.amount);
-                
-                if (t.type === 'income') {
-                    if (t.status === 'received') income += amount;
-                    else pending += amount;
-                } else {
-                    expenses += amount;
-                    if (t.status === 'pending') pending += amount;
-                }
-            });
-
-            document.getElementById('totalIncome').textContent = formatCurrency(income);
-            document.getElementById('totalExpenses').textContent = formatCurrency(expenses);
-            document.getElementById('totalPending').textContent = formatCurrency(pending);
-            
-            const balance = income - expenses;
-            const balanceEl = document.getElementById('totalBalance');
-            balanceEl.textContent = formatCurrency(balance);
-            balanceEl.style.color = balance >= 0 ? 'var(--success)' : 'var(--danger)';
-            
-            // Atualiza os totalizadores das repartições abertas
-            updatePartitionTotals(1);
-            updatePartitionTotals(2);
+        /**
+         * Verifica se a transação é um gasto à vista
+         * @param {Object} t - Transação
+         * @returns {boolean}
+         */
+        function isCashExpense(t) {
+            return t.type === 'expense' && t.category === 'cash';
         }
 
-        // ==========================================
-        // TOTALIZADORES POR REPARTIÇÃO
-        // ==========================================
-        
-        function updatePartitionTotals(partition) {
+        /**
+         * Verifica se a transação é uma receita
+         * @param {Object} t - Transação
+         * @returns {boolean}
+         */
+        function isIncome(t) {
+            return t.type === 'income';
+        }
+
+        /**
+         * Verifica se a transação está pendente
+         * @param {Object} t - Transação
+         * @returns {boolean}
+         */
+        function isPending(t) {
+            return t.status === 'pending';
+        }
+
+        /**
+         * Verifica se a transação está paga ou recebida
+         * @param {Object} t - Transação
+         * @returns {boolean}
+         */
+        function isPaidOrReceived(t) {
+            return t.status === 'paid' || t.status === 'received';
+        }
+
+        // ====================================================================
+        // FUNÇÃO CENTRAL DE RECÁLCULO - refreshFinancialState()
+        // ====================================================================
+        // Esta função recalcula todos os agregados financeiros e atualiza o DOM.
+        // Deve ser chamada após qualquer operação que altere transações.
+        // ====================================================================
+
+        /**
+         * Recalcula todos os agregados financeiros e atualiza a interface
+         * @param {number} year - Ano selecionado (opcional, usa currentMonth se não fornecido)
+         * @param {number} month - Mês selecionado (opcional, usa currentMonth se não fornecido)
+         */
+        async function refreshFinancialState(year = null, month = null) {
             try {
-                const year = currentMonth.getFullYear();
-                const month = currentMonth.getMonth() + 1;
-                
-                // Filtra todas as transações da repartição específica no mês atual
+                // Usa o mês/ano atual se não fornecido
+                const targetYear = year || currentMonth.getFullYear();
+                const targetMonth = month || (currentMonth.getMonth() + 1);
+
+                // Filtra transações do período
                 const transactions = localData.transactions.filter(t => {
                     const tDate = new Date(t.due_date);
-                    const tPartition = parseInt(t.partition_id);
-                    return tDate.getFullYear() === year && 
-                           tDate.getMonth() === month - 1 &&
-                           tPartition === partition;
+                    return tDate.getFullYear() === targetYear && tDate.getMonth() === targetMonth - 1;
                 });
 
-                let totalReceitas = 0;           // Acumulador de receitas (nunca diminui)
-                let totalDespesasPendentes = 0;  // Contas programadas ainda não pagas
-                let despesasPagas = 0;           // Contas programadas já pagas
-                let gastosAVistaEfetuados = 0;   // Gastos à vista realizados
+                // ====================================================================
+                // CÁLCULOS DO DASHBOARD (GLOBAL)
+                // ====================================================================
 
-                transactions.forEach(t => {
-                    const amount = parseFloat(t.amount) || 0;
-                    
-                    if (t.type === 'income') {
-                        // Receitas: acumulador que nunca diminui
-                        totalReceitas += amount;
-                    } else if (t.type === 'cash' || t.category === 'cash') {
-                        // Gastos à vista: sempre reduzem o saldo quando realizados
-                        if (t.status === 'paid') {
-                            gastosAVistaEfetuados += amount;
-                        }
-                    } else {
-                        // Contas programadas (fixas, variáveis, parceladas)
-                        if (t.status === 'paid') {
-                            despesasPagas += amount;
-                        } else {
-                            totalDespesasPendentes += amount;
-                        }
-                    }
+                // Total de Dívidas = soma de amount onde isDebt(t) && isPending(t)
+                const totalDebts = transactions
+                    .filter(t => isDebt(t) && isPending(t))
+                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+                // Pagamentos Pendentes = mesmo valor de Total de Dívidas
+                const pendingPayments = totalDebts;
+
+                // Total de Receitas = soma de amount onde isIncome(t)
+                const totalIncome = transactions
+                    .filter(t => isIncome(t))
+                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+                // Total de Gastos = soma de amount onde t.type === 'expense' (todas despesas)
+                const totalExpenses = transactions
+                    .filter(t => t.type === 'expense')
+                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+                // ====================================================================
+                // ATUALIZA DOM DO DASHBOARD
+                // ====================================================================
+
+                // Total de Dívidas (#totalBalance)
+                const balanceEl = document.getElementById('totalBalance');
+                if (balanceEl) {
+                    balanceEl.textContent = formatCurrency(totalDebts);
+                    balanceEl.style.color = 'var(--danger)';
+                }
+
+                // Total de Receitas (#totalIncome)
+                const incomeEl = document.getElementById('totalIncome');
+                if (incomeEl) {
+                    incomeEl.textContent = formatCurrency(totalIncome);
+                }
+
+                // Total de Gastos (#totalExpenses)
+                const expensesEl = document.getElementById('totalExpenses');
+                if (expensesEl) {
+                    expensesEl.textContent = formatCurrency(totalExpenses);
+                }
+
+                // Pagamentos Pendentes (#totalPending)
+                const pendingEl = document.getElementById('totalPending');
+                if (pendingEl) {
+                    pendingEl.textContent = formatCurrency(pendingPayments);
+                }
+
+                // ====================================================================
+                // ATUALIZA TOTALIZADORES DAS REPARTIÇÕES
+                // ====================================================================
+                updatePartitionTotalsNew(1, transactions);
+                updatePartitionTotalsNew(2, transactions);
+
+                console.log('✅ refreshFinancialState() executado com sucesso');
+            } catch (error) {
+                console.error('❌ Erro em refreshFinancialState:', error);
+            }
+        }
+
+        /**
+         * Atualiza os totalizadores de uma repartição específica
+         * @param {number} partition - ID da repartição (1 ou 2)
+         * @param {Array} allTransactions - Todas as transações do período
+         */
+        function updatePartitionTotalsNew(partition, allTransactions) {
+            try {
+                // Filtra transações da repartição (usando campo 'partition', não 'partitionId')
+                const transactions = allTransactions.filter(t => {
+                    const tPartition = parseInt(t.partition_id) || parseInt(t.partition);
+                    return tPartition === partition;
                 });
 
-                // CÁLCULO DO SALDO ATUAL (conforme documentação)
-                // Saldo_Rx = Total_Receitas_Rx – (débito_programado_pago_Rx + gastos_à_vista_Rx)
-                // O saldo NUNCA pode ser negativo
-                let saldoAtual = totalReceitas - despesasPagas - gastosAVistaEfetuados;
-                saldoAtual = Math.max(0, saldoAtual); // Garantir que não fique negativo
+                // ====================================================================
+                // CÁLCULOS POR REPARTIÇÃO - CONFORME ESPECIFICAÇÃO
+                // ====================================================================
+
+                // Total de Dívidas = soma onde isDebt(t) && isPending(t) && t.partition === X
+                const totalDividas = transactions
+                    .filter(t => isDebt(t) && isPending(t))
+                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+                // Income_PX = soma onde isIncome(t) && t.partition === X
+                const incomePX = transactions
+                    .filter(t => isIncome(t))
+                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+                // Paid_Debts_PX = soma onde isDebt(t) && t.status === 'paid' && t.partition === X
+                const paidDebtsPX = transactions
+                    .filter(t => isDebt(t) && t.status === 'paid')
+                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+                // Cash_Expenses_PX = soma onde isCashExpense(t) && t.partition === X
+                const cashExpensesPX = transactions
+                    .filter(t => isCashExpense(t))
+                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+                // Saldo Disponível = Income_PX - Paid_Debts_PX - Cash_Expenses_PX
+                const saldoDisponivel = incomePX - paidDebtsPX - cashExpensesPX;
+
+                // Gastos à Vista = soma onde isCashExpense(t) && t.partition === X
+                const gastosVista = cashExpensesPX;
+
+                // ====================================================================
+                // ATUALIZA DOM DA REPARTIÇÃO
+                // ====================================================================
+
+                // Total de Dívidas
+                const dividasEl = document.getElementById(`totalDividas${partition}`);
+                if (dividasEl) {
+                    dividasEl.textContent = formatCurrency(totalDividas);
+                }
+
+                // Saldo Disponível
+                const saldoEl = document.getElementById(`saldoAtual${partition}`);
+                const saldoStatusEl = document.getElementById(`saldoStatus${partition}`);
+                const saldoCard = document.getElementById(`saldoCard${partition}`);
+
+                if (saldoEl) {
+                    saldoEl.textContent = formatCurrency(saldoDisponivel);
+                }
 
                 // Determinar status do saldo para estilização
                 let saldoStatus = 'Disponível';
                 let saldoClass = '';
                 
-                if (saldoAtual > 0) {
+                if (saldoDisponivel > 0) {
                     saldoStatus = '✅ Disponível';
                     saldoClass = 'positivo';
-                } else if (saldoAtual === 0 && totalReceitas > 0) {
+                } else if (saldoDisponivel === 0 && incomePX > 0) {
                     saldoStatus = '⚠️ Totalmente consumido';
                     saldoClass = 'zerado';
-                } else if (saldoAtual === 0 && totalReceitas === 0) {
+                } else if (saldoDisponivel < 0) {
+                    saldoStatus = '❌ Saldo negativo';
+                    saldoClass = 'bloqueado';
+                } else {
                     saldoStatus = '📝 Sem receitas cadastradas';
                     saldoClass = '';
                 }
 
                 // Verificar se está perto de esgotar (< 10% das receitas)
-                if (saldoAtual > 0 && totalReceitas > 0 && (saldoAtual / totalReceitas) < 0.1) {
+                if (saldoDisponivel > 0 && incomePX > 0 && (saldoDisponivel / incomePX) < 0.1) {
                     saldoStatus = '⚠️ Quase esgotado';
                     saldoClass = 'zerado';
-                }
-
-                // Atualiza os elementos na UI
-                const receitasEl = document.getElementById(`totalReceitas${partition}`);
-                const despesasEl = document.getElementById(`totalDespesas${partition}`);
-                const saldoEl = document.getElementById(`saldoAtual${partition}`);
-                const saldoStatusEl = document.getElementById(`saldoStatus${partition}`);
-                const saldoCard = document.getElementById(`saldoCard${partition}`);
-                
-                if (receitasEl) {
-                    receitasEl.textContent = formatCurrency(totalReceitas);
-                }
-                
-                if (despesasEl) {
-                    // Total Despesas = despesas pendentes (diminui ao pagar)
-                    despesasEl.textContent = formatCurrency(totalDespesasPendentes);
-                }
-
-                if (saldoEl) {
-                    saldoEl.textContent = formatCurrency(saldoAtual);
                 }
 
                 if (saldoStatusEl) {
@@ -4445,13 +4547,45 @@
                 }
 
                 if (saldoCard) {
-                    // Remove classes anteriores e adiciona a nova
                     saldoCard.classList.remove('positivo', 'zerado', 'bloqueado');
                     if (saldoClass) {
                         saldoCard.classList.add(saldoClass);
                     }
                 }
-                
+
+                // Gastos à Vista
+                const gastosVistaEl = document.getElementById(`gastosVista${partition}`);
+                if (gastosVistaEl) {
+                    gastosVistaEl.textContent = formatCurrency(gastosVista);
+                }
+
+            } catch (error) {
+                console.error(`❌ Erro ao atualizar totais da repartição ${partition}:`, error);
+            }
+        }
+
+        // ====================================================================
+        // FUNÇÃO LEGADA - updateDashboard() - Agora chama refreshFinancialState()
+        // ====================================================================
+        async function updateDashboard() {
+            await refreshFinancialState();
+        }
+
+        // ====================================================================
+        // FUNÇÃO LEGADA - updatePartitionTotals() - Mantida para compatibilidade
+        // ====================================================================
+        function updatePartitionTotals(partition) {
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth() + 1;
+            
+            const transactions = localData.transactions.filter(t => {
+                const tDate = new Date(t.due_date);
+                return tDate.getFullYear() === year && tDate.getMonth() === month - 1;
+            });
+            
+            updatePartitionTotalsNew(partition, transactions);
+        }
+
             } catch (error) {
                 console.error(`Erro ao atualizar totais da repartição ${partition}:`, error);
             }
@@ -4531,16 +4665,22 @@
             document.getElementById('pendingModal').classList.remove('active');
         }
 
+        /**
+         * Renderiza lista de dívidas pendentes no modal
+         * REFATORADO: Filtra apenas dívidas (não receitas) usando isDebt()
+         */
         function renderPendingList() {
             const container = document.getElementById('pendingList');
             const year = currentMonth.getFullYear();
             const month = currentMonth.getMonth() + 1;
             
+            // IMPORTANTE: Filtra apenas dívidas pendentes (não receitas)
+            // Usa a função auxiliar isDebt() para classificação correta
             const pendingTransactions = localData.transactions.filter(t => {
                 const tDate = new Date(t.due_date);
                 return tDate.getFullYear() === year && 
                        tDate.getMonth() === month - 1 &&
-                       (t.status === 'pending' || t.status === null);
+                       isDebt(t) && isPending(t);  // Apenas dívidas pendentes
             });
 
             if (pendingTransactions.length === 0) {
@@ -5994,6 +6134,263 @@ Isso substituirá os dados atuais!`)) {
         window.openNote = openNote;
         window.removeMedia = removeMedia;
         window.handleNoteImage = handleNoteImage;
+        // ====================================================================
+        // SUITE DE TESTES AUTOMATIZADOS - runFinancialCardsTestSuite()
+        // ====================================================================
+        // Esta função executa uma sequência de testes para validar a lógica
+        // dos cards financeiros. Pode ser executada via console ou pelo botão
+        // na interface.
+        //
+        // Como rodar:
+        // 1. Via console: runFinancialCardsTestSuite()
+        // 2. Via interface: Clique no botão "🧪 Testar Sistema" no rodapé
+        //
+        // Os testes criam transações com tag [TEST] e as removem ao final.
+        // ====================================================================
+
+        /**
+         * Cria uma transação de teste
+         * @param {Object} data - Dados da transação
+         * @returns {Object} - Transação criada
+         */
+        async function createTestTransaction(data) {
+            const testData = {
+                ...data,
+                description: `[TEST] ${data.description || 'Transação de teste'}`,
+                user_id: currentUser?.id || 'dev'
+            };
+            
+            const result = await insertTransaction(testData);
+            console.log('📝 Transação de teste criada:', result?.id);
+            return result;
+        }
+
+        /**
+         * Deleta todas as transações de teste (com tag [TEST])
+         */
+        async function deleteTestTransactionsByTag() {
+            const testTransactions = localData.transactions.filter(t => 
+                t.description && t.description.includes('[TEST]')
+            );
+            
+            console.log(`🗑️ Removendo ${testTransactions.length} transações de teste...`);
+            
+            for (const t of testTransactions) {
+                await deleteTransaction(t.id);
+            }
+            
+            console.log('✅ Transações de teste removidas');
+        }
+
+        /**
+         * Função de asserção para validação
+         * @param {string} label - Descrição do teste
+         * @param {boolean} condition - Condição a ser validada
+         * @param {any} expected - Valor esperado (para log)
+         * @param {any} actual - Valor atual (para log)
+         */
+        function assertValue(label, condition, expected = null, actual = null) {
+            if (condition) {
+                console.log(`✅ ${label}`);
+                return true;
+            } else {
+                console.error(`❌ ${label} - Esperado: ${expected}, Atual: ${actual}`);
+                return false;
+            }
+        }
+
+        /**
+         * Executa a suite completa de testes financeiros
+         */
+        async function runFinancialCardsTestSuite() {
+            console.log('🚀 ========================================');
+            console.log('🚀 INICIANDO SUITE DE TESTES FINANCEIROS');
+            console.log('🚀 ========================================');
+            
+            let testsPassed = 0;
+            let testsFailed = 0;
+            const partition = 1; // Usaremos repartição 1 para os testes
+            
+            // Salva estado inicial para comparação
+            const initialState = {
+                totalDividas: parseFloat(document.getElementById('totalBalance')?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0,
+                totalReceitas: parseFloat(document.getElementById('totalIncome')?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0,
+                totalGastos: parseFloat(document.getElementById('totalExpenses')?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0
+            };
+            
+            try {
+                // ========================================
+                // TESTE 1: Criar receita de R$ 500
+                // ========================================
+                console.log('\n📋 TESTE 1: Criando receita de R$ 500...');
+                
+                const dueDate = new Date().toISOString().split('T')[0];
+                const receita = await createTestTransaction({
+                    type: 'income',
+                    category: 'income',
+                    partition_id: partition,
+                    description: 'Receita Teste',
+                    amount: 500,
+                    year: currentMonth.getFullYear(),
+                    month: currentMonth.getMonth() + 1,
+                    due_date: dueDate,
+                    status: 'received'
+                });
+                
+                await refreshFinancialState();
+                
+                // Verifica se o Total de Receitas aumentou
+                const newTotalReceitas = parseFloat(document.getElementById('totalIncome')?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
+                if (assertValue('Total de Receitas aumentou em R$ 500', newTotalReceitas >= initialState.totalReceitas + 500, initialState.totalReceitas + 500, newTotalReceitas)) {
+                    testsPassed++;
+                } else {
+                    testsFailed++;
+                }
+
+                // ========================================
+                // TESTE 2: Criar dívida pendente de R$ 200
+                // ========================================
+                console.log('\n📋 TESTE 2: Criando dívida pendente de R$ 200...');
+                
+                const divida = await createTestTransaction({
+                    type: 'expense',
+                    category: 'fixed',
+                    partition_id: partition,
+                    description: 'Dívida Teste',
+                    amount: 200,
+                    year: currentMonth.getFullYear(),
+                    month: currentMonth.getMonth() + 1,
+                    due_date: dueDate,
+                    status: 'pending'
+                });
+                
+                await refreshFinancialState();
+                
+                // Verifica se o Total de Dívidas aumentou
+                const newTotalDividas = parseFloat(document.getElementById('totalBalance')?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
+                if (assertValue('Total de Dívidas aumentou em R$ 200', newTotalDividas >= initialState.totalDividas + 200, initialState.totalDividas + 200, newTotalDividas)) {
+                    testsPassed++;
+                } else {
+                    testsFailed++;
+                }
+
+                // ========================================
+                // TESTE 3: Pagar a dívida
+                // ========================================
+                console.log('\n📋 TESTE 3: Pagando a dívida de R$ 200...');
+                
+                const dividaBeforePay = newTotalDividas;
+                
+                if (divida && divida.id) {
+                    await registerPayment(divida.id, {
+                        status: 'paid',
+                        payment_date: dueDate,
+                        payment_amount: 200,
+                        payment_observation: '[TEST] Pagamento de teste'
+                    });
+                    
+                    await refreshFinancialState();
+                    
+                    // Verifica se o Total de Dívidas diminuiu
+                    const dividasAfterPay = parseFloat(document.getElementById('totalBalance')?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
+                    if (assertValue('Total de Dívidas diminuiu após pagamento', dividasAfterPay <= dividaBeforePay - 200, dividaBeforePay - 200, dividasAfterPay)) {
+                        testsPassed++;
+                    } else {
+                        testsFailed++;
+                    }
+                } else {
+                    console.error('❌ Não foi possível testar pagamento - dívida não criada');
+                    testsFailed++;
+                }
+
+                // ========================================
+                // TESTE 4: Lançar gasto à vista de R$ 50
+                // ========================================
+                console.log('\n📋 TESTE 4: Criando gasto à vista de R$ 50...');
+                
+                const gastosBefore = parseFloat(document.getElementById('totalExpenses')?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
+                
+                await createTestTransaction({
+                    type: 'expense',
+                    category: 'cash',
+                    partition_id: partition,
+                    description: 'Gasto à Vista Teste',
+                    amount: 50,
+                    year: currentMonth.getFullYear(),
+                    month: currentMonth.getMonth() + 1,
+                    due_date: dueDate,
+                    status: 'paid'
+                });
+                
+                await refreshFinancialState();
+                
+                // Verifica se o Total de Gastos aumentou
+                const gastosAfter = parseFloat(document.getElementById('totalExpenses')?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
+                if (assertValue('Total de Gastos aumentou com gasto à vista', gastosAfter >= gastosBefore + 50, gastosBefore + 50, gastosAfter)) {
+                    testsPassed++;
+                } else {
+                    testsFailed++;
+                }
+
+                // ========================================
+                // TESTE 5: Verificar que Gastos à Vista da repartição está correto
+                // ========================================
+                console.log('\n📋 TESTE 5: Verificando card Gastos à Vista da repartição...');
+                
+                const gastosVistaEl = document.getElementById(`gastosVista${partition}`);
+                const gastosVistaValue = parseFloat(gastosVistaEl?.textContent?.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
+                if (assertValue('Card Gastos à Vista contém valor > 0', gastosVistaValue >= 50, '>=50', gastosVistaValue)) {
+                    testsPassed++;
+                } else {
+                    testsFailed++;
+                }
+
+                // ========================================
+                // LIMPEZA: Remover transações de teste
+                // ========================================
+                console.log('\n🧹 Limpando transações de teste...');
+                await deleteTestTransactionsByTag();
+                await refreshFinancialState();
+
+            } catch (error) {
+                console.error('❌ Erro durante os testes:', error);
+                testsFailed++;
+            }
+
+            // ========================================
+            // RELATÓRIO FINAL
+            // ========================================
+            console.log('\n🏁 ========================================');
+            console.log('🏁 RELATÓRIO FINAL DOS TESTES');
+            console.log('🏁 ========================================');
+            console.log(`✅ Testes aprovados: ${testsPassed}`);
+            console.log(`❌ Testes falhados: ${testsFailed}`);
+            console.log(`📊 Total de testes: ${testsPassed + testsFailed}`);
+            console.log(`📈 Taxa de sucesso: ${((testsPassed / (testsPassed + testsFailed)) * 100).toFixed(1)}%`);
+            console.log('========================================');
+            
+            // Mostra notificação com resultado
+            if (testsFailed === 0) {
+                showNotification(`🧪 Testes concluídos! ${testsPassed} testes aprovados.`, 'success');
+            } else {
+                showNotification(`🧪 Testes concluídos. ${testsFailed} falha(s) detectada(s). Verifique o console.`, 'error');
+            }
+            
+            return {
+                passed: testsPassed,
+                failed: testsFailed,
+                total: testsPassed + testsFailed,
+                successRate: ((testsPassed / (testsPassed + testsFailed)) * 100).toFixed(1)
+            };
+        }
+
+        // Expor função de testes no escopo global
+        window.runFinancialCardsTestSuite = runFinancialCardsTestSuite;
+        window.createTestTransaction = createTestTransaction;
+        window.deleteTestTransactionsByTag = deleteTestTransactionsByTag;
+
+        // ====================================================================
+
         window.formatText = formatText;
         window.insertList = insertList;
         window.confirmPayment = confirmPayment;

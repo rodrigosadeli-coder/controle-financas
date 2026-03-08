@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finanças Família Pedrosa de Lima</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+     <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+   
+
+<base target="_blank">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Conectando ao Supabase...</div>
+    </div>
+
+    <!-- Tela de Login -->
+    <div class="login-screen" id="loginScreen">
+        <div class="coat-of-arms">
+            <svg viewBox="0 0 200 240" fill="none">
+                <path d="M100 20 L180 60 L180 140 Q180 200 100 220 Q20 200 20 140 L20 60 Z" fill="#1e3a8a" stroke="#D4AF37" stroke-width="3"/>
+                <line x1="100" y1="20" x2="100" y2="220" stroke="#D4AF37" stroke-width="2"/>
+                <line x1="20" y1="100" x2="180" y2="100" stroke="#D4AF37" stroke-width="2"/>
+                <circle cx="65" cy="70" r="15" fill="#dc2626" opacity="0.8"/>
+                <path d="M135 55 Q155 50 160 70 Q155 90 135 85 Q120 80 125 65 Q130 55 135 55" fill="#D4AF37"/>
+                <rect x="50" y="145" width="30" height="40" fill="#6b7280"/>
+                <polygon points="50,145 65,130 80,145" fill="#4b5563"/>
+                <rect x="125" y="145" width="40" height="30" fill="#f5f5dc"/>
+                <line x1="145" y1="145" x2="145" y2="175" stroke="#1e3a8a" stroke-width="2"/>
+                <polygon points="100,75 105,90 115,80 110,95 120,90 110,100 115,110 100,100 85,110 90,100 80,90 90,95 85,80 95,90" fill="#D4AF37"/>
+                <line x1="30" y1="180" x2="170" y2="60" stroke="#C0C0C0" stroke-width="8" opacity="0.9"/>
+                <path d="M80 20 Q100 5 120 20 L120 30 Q100 25 80 30 Z" fill="#C0C0C0" stroke="#6b7280" stroke-width="2"/>
+            </svg>
+        </div>
+
+        <div class="login-container">
+            <h1 class="login-title">Finanças Família<br>Pedrosa de Lima</h1>
+            <p class="login-subtitle">Gestão financeira com sabedoria e fé</p>
+
+            <!-- Modo Desenvolvedor -->
+            <div class="dev-mode-box" id="devModeBox" style="display: none;">
+                <div class="dev-mode-title">⚡ Modo Desenvolvedor</div>
+                <div class="dev-mode-text">Acesse sem credenciais para testes</div>
+                <button class="btn-dev" onclick="devLogin()">Entrar como Dev</button>
+            </div>
+
+            <div class="divider" id="loginDivider" style="display: none;">ou</div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="email" placeholder="Digite seu email" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Senha</label>
+                    <input type="password" class="form-input" id="password" placeholder="Digite sua senha" required>
+                </div>
+
+                <button type="submit" class="btn-primary" id="loginBtn">Entrar no Sistema</button>
+            </form>
+
+            <p style="text-align: center; margin-top: 1rem; color: rgba(255,255,255,0.6); font-size: 0.85rem;">
+                Não tem conta? <a href="#" onclick="showRegister()" style="color: var(--gold-primary);">Cadastre-se</a>
+            </p>
+
+            <p class="bible-verse">
+                "Buscai primeiro o Reino de Deus e a sua justiça"<br>
+                — Mateus 6:33
+            </p>
+        </div>
+    </div>
+
+    <!-- Aplicação Principal -->
+    <div class="app-container" id="appContainer">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <span class="fleur-de-lis">⚜️</span>
+                <span class="welcome-text">Bem-vindo, <span id="userNameDisplay">Usuário</span></span>
+                <span class="dev-badge" id="devBadge" style="display: none;">DEV</span>
+            </div>
+            <div class="header-right">
+                <span id="datetimeDisplay">Carregando...</span>
+                <!-- Connection Status -->
+                <div class="connection-status offline" id="connectionStatus">
+                    <span id="connectionIcon">⚠️</span>
+                    <span id="connectionText">Offline</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-bar">
+            <button class="nav-btn active" onclick="showView('dashboard')">📊 Dashboard</button>
+            <button class="nav-btn" onclick="openCalculator()">🧮 Calculadora</button>
+            <button class="nav-btn" onclick="openCalendarModal()">📅 Calendário</button>
+            <button class="nav-btn" onclick="openHistoryModal()">📜 Histórico</button>
+            <button class="nav-btn" onclick="toggleNotes()">📝 Bloco de Notas</button>
+            <button class="nav-btn btn-backup-nav" onclick="openBackupModal()">💾 Backup</button>
+            <button class="nav-btn" onclick="openSettingsModal()">⚙️ Configurações</button>
+            <button class="nav-btn exit" onclick="logout()">🚪 Sair</button>
+            <div class="nav-notification" style="display: inline-block; position: relative; margin-left: 10px; cursor: pointer; vertical-align: middle;">
+                <span style="color: white; font-size: 1.1rem;">🔔</span>
+                <span id="alerta-erro" style="display: none; position: absolute; top: -5px; right: -5px; height: 10px; width: 10px; background-color: #ff4d4d; border-radius: 50%; border: 2px solid #1a1a1a; animation: pulse-red 1.5s infinite;"></span>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- View: Dashboard -->
+            <div class="view-section active" id="dashboardView">
+                <!-- Title -->
+                <div class="title-section">
+                    <div class="title-wrapper">
+                        <span class="title-fleur">⚜️</span>
+                        <h1 class="main-title">Finanças Família Pedrosa de Lima</h1>
+                    </div>
+                </div>
+
+                <!-- Month Selector -->
+                <div class="month-selector">
+                    <button class="month-btn" onclick="changeMonth(-1)">◀</button>
+                    <div class="month-text" id="currentMonth">FEVEREIRO 2025</div>
+                    <button class="month-btn" onclick="changeMonth(1)">▶</button>
+                </div>
+
+                <!-- Cards Grid -->
+                <div class="cards-grid">
+                    <div class="card">
+                        <div class="card-label">💰 Total de Dívidas </div>
+                        <div class="card-value card-saldo" id="totalBalance">R$ 0,00</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">📥 Total de Receitas </div>
+                        <div class="card-value card-receitas" id="totalIncome">R$ 0,00</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">📤 Total de Despesas</div>
+                        <div class="card-value card-despesas" id="totalExpenses">R$ 0,00</div>
+                    </div>
+                    <div class="card" id="pendingCard" onclick="openPendingModal()">
+                        <div class="card-label">⏰ Pagamentos Pendentes</div>
+                        <div class="card-value card-pendencias" id="totalPending">R$ 0,00</div>
+                    </div>
+                </div>
+
+                <!-- Repartições -->
+                <div class="reparticao-section">
+                    <div class="reparticao-card" id="reparticaoCard1" onclick="togglePartition(1)">
+                        <div>
+                            <div class="reparticao-title">1ª Repartição</div>
+                            <div class="reparticao-subtitle">Vencimento no 5º dia útil</div>
+                        </div>
+                        <span class="dropdown-arrow" id="arrow1">▼</span>
+                    </div>
+                    <div class="reparticao-card" id="reparticaoCard2" onclick="togglePartition(2)">
+                        <div>
+                            <div class="reparticao-title">2ª Repartição</div>
+                            <div class="reparticao-subtitle">Vencimento no dia 20</div>
+                        </div>
+                        <span class="dropdown-arrow" id="arrow2">▼</span>
+                    </div>
+                </div>
+
+                <!-- Conteúdo das Repartições -->
+                <div class="partition-content" id="partitionContent1">
+                    <div class="partition-header-indicator">
+                        <h3>📂 1ª Repartição - Inserção de Dados</h3>
+                        <span class="partition-badge">Vencimento: 5º dia útil</span>
+                    </div>
+                    <div class="section-tabs" id="tabsPartition1">
+                        <button class="section-tab active" data-section="1" data-partition="1">Fixas</button>
+                        <button class="section-tab" data-section="2" data-partition="1">Variáveis</button>
+                        <button class="section-tab" data-section="3" data-partition="1">Parceladas</button>
+                        <button class="section-tab" data-section="4" data-partition="1">À Vista</button>
+                        <button class="section-tab" data-section="5" data-partition="1">Entradas</button>
+                    </div>
+                    <button class="btn-action" onclick="openAddModal(1)">+ Nova Transação</button>
+                    <div id="contentPartition1"></div>
+                    <!-- Totalizadores da 1ª Repartição -->
+                    <div class="partition-totals" id="partitionTotals1">
+                        <div class="partition-total-card receitas">
+                            <div class="partition-total-label">📥 Total Receitas</div>
+                            <div class="partition-total-value" id="totalReceitas1">R$ 0,00</div>
+                        </div>
+                        <div class="partition-total-card saldo" id="saldoCard1">
+                            <div class="partition-total-label">💰 Saldo Atual</div>
+                            <div class="partition-total-value" id="saldoAtual1">R$ 0,00</div>
+                            <div class="saldo-status" id="saldoStatus1">Disponível</div>
+                        </div>
+                        <div class="partition-total-card despesas">
+                            <div class="partition-total-label">📤 Total Despesas</div>
+                            <div class="partition-total-value" id="totalDespesas1">R$ 0,00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="partition-content" id="partitionContent2">
+                    <div class="partition-header-indicator">
+                        <h3>📂 2ª Repartição - Inserção de Dados</h3>
+                        <span class="partition-badge">Vencimento: Dia 20</span>
+                    </div>
+                    <div class="section-tabs" id="tabsPartition2">
+                        <button class="section-tab active" data-section="6" data-partition="2">Fixas</button>
+                        <button class="section-tab" data-section="7" data-partition="2">Variáveis</button>
+                        <button class="section-tab" data-section="8" data-partition="2">Parceladas</button>
+                        <button class="section-tab" data-section="9" data-partition="2">À Vista</button>
+                        <button class="section-tab" data-section="10" data-partition="2">Entradas</button>
+                    </div>
+                    <button class="btn-action" onclick="openAddModal(2)">+ Nova Transação</button>
+                    <div id="contentPartition2"></div>
+                    <!-- Totalizadores da 2ª Repartição -->
+                    <div class="partition-totals" id="partitionTotals2">
+                        <div class="partition-total-card receitas">
+                            <div class="partition-total-label">📥 Total Receitas</div>
+                            <div class="partition-total-value" id="totalReceitas2">R$ 0,00</div>
+                        </div>
+                        <div class="partition-total-card saldo" id="saldoCard2">
+                            <div class="partition-total-label">💰 Saldo Atual</div>
+                            <div class="partition-total-value" id="saldoAtual2">R$ 0,00</div>
+                            <div class="saldo-status" id="saldoStatus2">Disponível</div>
+                        </div>
+                        <div class="partition-total-card despesas">
+                            <div class="partition-total-label">📤 Total Despesas</div>
+                            <div class="partition-total-value" id="totalDespesas2">R$ 0,00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bloco de Notas Resumo -->
+                <div class="notas-section" onclick="toggleNotes()">
+                    <div class="notas-title">
+                        <span>📝</span>
+                        <span>Bloco de Notas</span>
+                    </div>
+                    <div class="notas-actions">
+                        <button class="notas-btn" onclick="event.stopPropagation(); createNotebook()">+ Caderno</button>
+                        <button class="notas-btn" onclick="event.stopPropagation(); createNote()">+ Nota</button>
+                    </div>
+                </div>
+
+                <!-- Bloco de Notas Expandido -->
+                <div class="notes-container" id="notesContainer">
+                    <div class="notes-header">
+                        <div class="notes-title" id="notesHeaderTitle">📝 Bloco de Notas</div>
+                        <button class="notas-btn" onclick="closeNotesStep()">✕ Fechar</button>
+                    </div>
+                    <div class="notes-layout">
+                        <div class="notebooks-sidebar">
+                            <div class="sidebar-title">📚 Cadernos</div>
+                            <div id="notebooksList"></div>
+                            <button class="btn-add-notebook" onclick="createNotebook()">+ Novo Caderno</button>
+                        </div>
+                        <div class="notes-content">
+                            <div id="notesListView">
+                                <div class="notes-toolbar">
+                                    <button class="btn-add-note" onclick="createNote()">+ Nova Nota</button>
+                                    <div class="sync-indicator" id="notesSyncStatus"></div>
+                                </div>
+                                <div id="notesList"></div>
+                            </div>
+                            <div id="noteEditorView" class="note-editor">
+                                <input type="text" class="note-input-title" id="noteTitle" placeholder="Título da Nota">
+                                <div class="notes-toolbar">
+                                    <button class="toolbar-btn" onclick="formatText('bold')"><b>B</b></button>
+                                    <button class="toolbar-btn" onclick="formatText('italic')"><i>I</i></button>
+                                    <button class="toolbar-btn" onclick="formatText('underline')"><u>U</u></button>
+                                    <button class="toolbar-btn" onclick="insertList()">• Lista</button>
+                                    <button class="toolbar-btn" onclick="document.getElementById('noteImageInput').click()">🖼️ Imagem</button>
+                                    <input type="file" id="noteImageInput" accept="image/*" style="display: none;" onchange="handleNoteImage(event)">
+                                    <button class="toolbar-btn" onclick="closeNoteEditor()">✕ Fechar</button>
+                                    <button class="toolbar-btn btn-success" onclick="saveNote()">💾 Salvar</button>
+                                    <button class="toolbar-btn btn-danger" onclick="deleteCurrentNote()">🗑️ Excluir</button>
+                                </div>
+                                <textarea class="note-textarea" id="noteContent" placeholder="Digite sua nota aqui..."></textarea>
+                                <div class="media-preview" id="noteMediaPreview"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Sino de Alerta -->
+    <div class="bell-icon" id="alertBell" onclick="openAlertsModal()">
+        🔔
+        <span class="alert-badge" id="alertBadge" style="display: none;">0</span>
+    </div>
+
+    <!-- Modal Adicionar/Editar -->
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Nova Transação</h3>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="transactionForm">
+                    <input type="hidden" id="transactionId">
+                    <input type="hidden" id="partitionId">
+                    <input type="hidden" id="sectionId">
+
+                    <div class="form-row">
+                        <label class="form-label-modal">Tipo</label>
+                        <select class="form-input-modal" id="transactionType">
+                            <option value="expense">Despesa</option>
+                            <option value="income">Receita</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label-modal">Descrição</label>
+                        <input type="text" class="form-input-modal" id="description" placeholder="Ex: Aluguel, Salário..." required>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label-modal">Valor (R$)</label>
+                        <input type="number" class="form-input-modal" id="amount" step="0.01" placeholder="0,00" required>
+                    </div>
+
+                    <div class="form-row" id="installmentFields" style="display:none;">
+                        <label class="form-label-modal">Número de Parcelas</label>
+                        <input type="number" class="form-input-modal" id="installments" min="1" max="50" value="1">
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label-modal">Data de Vencimento</label>
+                        <input type="date" class="form-input-modal" id="dueDate" required>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label-modal">Status</label>
+                        <select class="form-input-modal" id="status">
+                            <option value="pending">Pendente</option>
+                            <option value="paid">Pago</option>
+                            <option value="received">Recebido</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row" id="autoRenewField" style="display:none;">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="autoRenew">
+                            <label for="autoRenew">🔄 Renovação automática mensal (6 meses)</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
+                <button type="button" class="btn btn-save" id="btnSaveTransaction" onclick="saveTransaction()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Pagamento -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Registrar Pagamento</h3>
+                <button class="close-btn" onclick="closePaymentModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="paymentTransactionId">
+                <div class="form-row">
+                    <label class="form-label-modal">Data do Pagamento</label>
+                    <input type="date" class="form-input-modal" id="paymentDate" required>
+                </div>
+                <div class="form-row">
+                    <label class="form-label-modal">Valor Pago (R$)</label>
+                    <input type="number" class="form-input-modal" id="paymentAmount" step="0.01" placeholder="0,00">
+                </div>
+                <div class="form-row">
+                    <label class="form-label-modal">Observação (opcional)</label>
+                    <input type="text" class="form-input-modal" id="paymentObs" placeholder="Ex: PIX, Boleto, Cartão...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closePaymentModal()">Cancelar</button>
+                <button type="button" class="btn btn-save" onclick="confirmPayment()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Histórico de Pagamentos -->
+    <div class="modal" id="paymentHistoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">📜 Histórico de Pagamentos</h3>
+                <button class="close-btn" onclick="closePaymentHistoryModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="history-list" id="paymentHistoryList"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closePaymentHistoryModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Histórico -->
+    <div class="modal" id="historyModal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3 class="modal-title">📜 Histórico de Transações</h3>
+                <button class="close-btn" onclick="closeHistoryModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="history-filters">
+                    <div class="filter-group">
+                        <label class="filter-label">Repartição</label>
+                        <select class="filter-select" id="filterPartition" onchange="applyHistoryFilters()">
+                            <option value="">Todas</option>
+                            <option value="1">1ª Repartição</option>
+                            <option value="2">2ª Repartição</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Categoria</label>
+                        <select class="filter-select" id="filterCategory" onchange="applyHistoryFilters()">
+                            <option value="">Todas</option>
+                            <option value="fixed">Fixas</option>
+                            <option value="variable">Variáveis</option>
+                            <option value="installment">Parceladas</option>
+                            <option value="cash">À Vista</option>
+                            <option value="income">Entradas</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Tipo</label>
+                        <select class="filter-select" id="filterType" onchange="applyHistoryFilters()">
+                            <option value="">Todos</option>
+                            <option value="expense">Despesas</option>
+                            <option value="income">Receitas</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Status</label>
+                        <select class="filter-select" id="filterStatus" onchange="applyHistoryFilters()">
+                            <option value="">Todos</option>
+                            <option value="paid">Pagos</option>
+                            <option value="pending">Pendentes</option>
+                            <option value="received">Recebidos</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Data Inicial</label>
+                        <input type="date" class="filter-input" id="filterDateStart" onchange="applyHistoryFilters()">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Data Final</label>
+                        <input type="date" class="filter-input" id="filterDateEnd" onchange="applyHistoryFilters()">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Busca</label>
+                        <input type="text" class="filter-input" id="filterSearch" placeholder="Descrição..." oninput="applyHistoryFilters()">
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Descrição</th>
+                                <th>Categoria</th>
+                                <th>Repartição</th>
+                                <th>Tipo</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeHistoryModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Calendário -->
+    <div class="modal" id="calendarModal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3 class="modal-title">📅 Calendário</h3>
+                <button class="close-btn" onclick="closeCalendarModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <button class="calendar-nav" onclick="changeCalendarMonth(-1)">◀</button>
+                        <h3 id="calendarMonthYear" style="font-family: 'Cinzel', serif;"></h3>
+                        <button class="calendar-nav" onclick="changeCalendarMonth(1)">▶</button>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                    <div class="calendar-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #dbeafe;"></div>
+                            <span>Hoje</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #fef2f2; border-left: 3px solid var(--danger);"></div>
+                            <span>Feriado Nacional</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #fef3c7; border-left: 3px solid var(--warning);"></div>
+                            <span>Feriado Anápolis/GO</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: white; border-top: 3px solid var(--blue-royal);"></div>
+                            <span>Compromisso</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeCalendarModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Compromissos do Dia -->
+    <div class="modal" id="dayAppointmentsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="dayAppointmentsTitle">Compromissos</h3>
+                <button class="close-btn" onclick="closeDayAppointmentsModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="appointment-form">
+                    <h4 style="margin-bottom: 0.75rem; color: var(--blue-royal);">➕ Novo Compromisso</h4>
+                    <div class="form-row">
+                        <label class="form-label-modal">Descrição</label>
+                        <textarea class="form-textarea" id="appointmentDesc" placeholder="Descreva o compromisso..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <label class="form-label-modal">Horário (opcional)</label>
+                        <input type="time" class="form-input-modal" id="appointmentTime">
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="appointmentAlert">
+                        <label for="appointmentAlert">🔔 Ativar alerta para este compromisso</label>
+                    </div>
+                    <button class="btn btn-save" onclick="saveAppointment()" style="margin-top: 0.75rem; width: 100%;">
+                        💾 Salvar Compromisso
+                    </button>
+                </div>
+                
+                <h4 style="margin-bottom: 0.75rem; color: var(--blue-royal);">📋 Compromissos do Dia</h4>
+                <div class="appointments-list" id="dayAppointmentsList">
+                    <div class="empty-state">Nenhum compromisso para este dia</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeDayAppointmentsModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Alertas -->
+    <div class="modal" id="alertsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">🔔 Alertas e Compromissos</h3>
+                <button class="close-btn" onclick="closeAlertsModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="appointments-list" id="alertsList">
+                    <div class="empty-state">Nenhum alerta ativo</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeAlertsModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Contas Pendentes -->
+    <div class="modal" id="pendingModal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3 class="modal-title">⏰ Contas Pendentes</h3>
+                <button class="close-btn" onclick="closePendingModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="pending-list" id="pendingList"></div>
+                <div class="pending-total">
+                    <span class="pending-total-label">Total de Contas Pendentes:</span>
+                    <span class="pending-total-value" id="pendingTotalValue">R$ 0,00</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closePendingModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Backup -->
+    <div class="modal" id="backupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">💾 Backup e Restauração</h3>
+                <button class="close-btn" onclick="closeBackupModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 2rem;">
+                    <h4 style="margin-bottom: 1rem; color: var(--blue-royal);">Exportar Backup</h4>
+                    <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.9rem;">
+                        Baixe todos os seus dados em um arquivo JSON.
+                    </p>
+                    <button class="btn btn-save" onclick="exportBackup()" style="width: 100%;">
+                        📥 Download Backup
+                    </button>
+                </div>
+
+                <div style="border-top: 2px solid #e5e7eb; padding-top: 2rem;">
+                    <h4 style="margin-bottom: 1rem; color: var(--blue-royal);">Restaurar Backup</h4>
+                    <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.9rem;">
+                        Arraste um arquivo de backup abaixo ou clique para selecionar.
+                        <br><strong style="color: var(--danger);">Atenção:</strong> Isso substituirá todos os dados atuais!
+                    </p>
+
+                    <div class="backup-area" id="backupDropArea" onclick="document.getElementById('backupFileInput').click()">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📁</div>
+                        <p>Clique aqui ou arraste o arquivo de backup</p>
+                        <p style="font-size: 0.85rem; color: #9ca3af; margin-top: 0.5rem;">
+                            Apenas arquivos .json
+                        </p>
+                    </div>
+                    <input type="file" id="backupFileInput" class="file-input" accept=".json" onchange="handleBackupFileSelect(event)">
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeBackupModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Configurações -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">⚙️ Configurações</h3>
+                <button class="close-btn" onclick="closeSettingsModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Alterar Senha -->
+                <div class="settings-section">
+                    <h4 class="settings-section-title">🔐 Alterar Senha</h4>
+                    <form id="changePasswordForm">
+                        <div class="form-row">
+                            <label class="form-label-modal">Senha Atual</label>
+                            <input type="password" class="form-input-modal" id="currentPassword" placeholder="Digite sua senha atual" required>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label-modal">Nova Senha</label>
+                            <input type="password" class="form-input-modal" id="newPassword" placeholder="Digite a nova senha" required oninput="validatePassword()">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label-modal">Confirmar Nova Senha</label>
+                            <input type="password" class="form-input-modal" id="confirmPassword" placeholder="Confirme a nova senha" required oninput="validatePassword()">
+                        </div>
+                        <div class="password-requirements" id="passwordRequirements">
+                            <strong>Requisitos da senha:</strong>
+                            <ul>
+                                <li id="req-length">Mínimo 6 caracteres</li>
+                                <li id="req-number">Pelo menos 1 número</li>
+                                <li id="req-match">As senhas devem coincidir</li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+
+
+                <!-- Informações da Conta -->
+                <div class="settings-section">
+                    <h4 class="settings-section-title">👤 Informações da Conta</h4>
+                    <div class="form-row">
+                        <label class="form-label-modal">Email</label>
+                        <input type="text" class="form-input-modal" id="settingsEmail" readonly style="background: #f3f4f6;">
+                    </div>
+                    <div class="form-row">
+                        <label class="form-label-modal">Nome Completo</label>
+                        <input type="text" class="form-input-modal" id="settingsName" placeholder="Seu nome completo">
+                    </div>
+                </div>
+
+                <!-- Zona de Perigo - Resetar Dados -->
+                <div class="danger-zone">
+                    <div class="danger-title">
+                        <span>⚠️</span> ZONA DE PERIGO
+                    </div>
+                    <div class="danger-text">
+                        <strong>Resetar todos os dados</strong><br>
+                        Esta ação irá apagar permanentemente TODOS os seus dados financeiros, notas e compromissos. 
+                        Esta ação não pode ser desfeita!
+                    </div>
+                    <button class="btn-danger-full" onclick="resetAllData()">
+                        🗑️ RESETAR TODOS OS DADOS
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeSettingsModal()">Cancelar</button>
+                <button type="button" class="btn btn-save" onclick="saveSettings()">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Calculadora -->
+    <div class="modal" id="calculatorModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 class="modal-title">🧮 Calculadora</h3>
+                <button class="close-btn" onclick="closeCalculator()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="calculator-display" id="calcDisplay">0</div>
+                <div class="calculator-buttons">
+                    <button class="calc-btn clear" onclick="clearCalc()">C</button>
+                    <button class="calc-btn" onclick="appendCalc('/')">÷</button>
+                    <button class="calc-btn" onclick="appendCalc('*')">×</button>
+                    <button class="calc-btn" onclick="deleteCalc()">←</button>
+
+                    <button class="calc-btn" onclick="appendCalc('7')">7</button>
+                    <button class="calc-btn" onclick="appendCalc('8')">8</button>
+                    <button class="calc-btn" onclick="appendCalc('9')">9</button>
+                    <button class="calc-btn operator" onclick="appendCalc('-')">-</button>
+
+                    <button class="calc-btn" onclick="appendCalc('4')">4</button>
+                    <button class="calc-btn" onclick="appendCalc('5')">5</button>
+                    <button class="calc-btn" onclick="appendCalc('6')">6</button>
+                    <button class="calc-btn operator" onclick="appendCalc('+')">+</button>
+
+                    <button class="calc-btn" onclick="appendCalc('1')">1</button>
+                    <button class="calc-btn" onclick="appendCalc('2')">2</button>
+                    <button class="calc-btn" onclick="appendCalc('3')">3</button>
+                    <button class="calc-btn operator" onclick="calculatePercentage()">%</button>
+
+                    <button class="calc-btn" onclick="appendCalc('0')" style="grid-column: span 2;">0</button>
+                    <button class="calc-btn" onclick="appendCalc('.')">.</button>
+                    <button class="calc-btn equals" onclick="calculate()">=</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Cadastro -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">📝 Cadastro</h3>
+                <button class="close-btn" onclick="closeRegisterModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="registerForm">
+                    <div class="form-row">
+                        <label class="form-label-modal">Nome Completo</label>
+                        <input type="text" class="form-input-modal" id="regName" placeholder="Seu nome completo" required>
+                    </div>
+                    <div class="form-row">
+                        <label class="form-label-modal">Email</label>
+                        <input type="email" class="form-input-modal" id="regEmail" placeholder="seu@email.com" required>
+                    </div>
+                    <div class="form-row">
+                        <label class="form-label-modal">Senha</label>
+                        <input type="password" class="form-input-modal" id="regPassword" placeholder="Mínimo 6 caracteres" required>
+                    </div>
+                    <div class="form-row">
+                        <label class="form-label-modal">Confirmar Senha</label>
+                        <input type="password" class="form-input-modal" id="regConfirmPassword" placeholder="Confirme sua senha" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeRegisterModal()">Cancelar</button>
+                <button type="button" class="btn btn-save" onclick="registerUser()">Cadastrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <div class="notification-title" id="notificationTitle">Sucesso</div>
+        <div class="notification-text" id="notificationText">Operação realizada com sucesso!</div>
+    </div>
+
+   <script src="js/config.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/services.js"></script>
+    <script src="js/ui.js"></script>
+
+    <script>
+        // O comando que dá a partida no sistema
+        window.addEventListener('DOMContentLoaded', initSupabase);
+    </script>
+    
+</body>
+</html>

@@ -27,8 +27,9 @@ function closeModal() {
 // [FIM: CONTROLE_DE_MODAIS]
 
 // [INÍCIO: NOTIFICAÇÕES]
-function showNotification(msg, type = 'success') {
+//function showNotification(msg, type = 'success') 
+{
     // Código para criar o balão de alerta na tela
-    console.log(`[${type}] ${msg}`);
-}
+    console.log(`[${type}] ${msg}`);}
+
 // [FIM: NOTIFICAÇÕES]

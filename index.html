@@ -2323,8 +2323,15 @@
                 gap: 0.25rem;
             }
         }
+
+        /* Estilos para valores positivos e negativos */
+        .expense-amount.positive {
+            color: var(--success);
+        }
+        .expense-amount.negative {
+            color: var(--danger);
+        }
     </style>
-<base target="_blank">
 </head>
 <body>
     <!-- Loading Screen -->
@@ -3125,7 +3132,8 @@
             notebooks: [],
             notes: [],
             appointments: [],
-            paymentHistory: []
+            paymentHistory: [],
+            _pendingDeletions: []
         };
 
         // ==========================================
@@ -3481,9 +3489,10 @@
                 return;
             }
 
+            const registerBtn = document.querySelector('#registerModal .btn-save');
+            
             try {
                 // Feedback visual durante o cadastro
-                const registerBtn = event?.target;
                 if (registerBtn) {
                     registerBtn.disabled = true;
                     registerBtn.textContent = 'Cadastrando...';
@@ -3553,7 +3562,6 @@
                 showNotification('❌ ' + errorMessage, 'error');
             } finally {
                 // Restaura o botão
-                const registerBtn = event?.target;
                 if (registerBtn) {
                     registerBtn.disabled = false;
                     registerBtn.textContent = 'Cadastrar';
@@ -4104,35 +4112,47 @@
                         
                         if (eventType === 'INSERT' && newRecord) {
                             console.log('➕ Nova transação inserida:', newRecord.id);
-                            // Verifica se é do mês atual antes de adicionar
-                            const recordDate = new Date(newRecord.due_date);
-                            if (recordDate.getFullYear() === currentYear && 
-                                recordDate.getMonth() === currentMonthNum - 1) {
-                                
-                                // Verifica se já não existe (para evitar duplicatas)
-                                if (!localData.transactions.find(t => t.id === newRecord.id)) {
-                                    localData.transactions.push(newRecord);
-                                    renderData(); // Atualiza interface
-                                    showNotification('📡 Nova transação adicionada!', 'info');
+                            try {
+                                // Verifica se é do mês atual antes de adicionar
+                                const recordDate = new Date(newRecord.due_date);
+                                if (recordDate.getFullYear() === currentYear && 
+                                    recordDate.getMonth() === currentMonthNum - 1) {
+                                    
+                                    // Verifica se já não existe (para evitar duplicatas)
+                                    if (!localData.transactions.find(t => t.id === newRecord.id)) {
+                                        localData.transactions.push(newRecord);
+                                        renderData(); // Atualiza interface
+                                        showNotification('📡 Nova transação adicionada!', 'info');
+                                    }
                                 }
+                            } catch (e) {
+                                console.error('Erro ao processar INSERT Realtime:', e);
                             }
                         } 
                         else if (eventType === 'UPDATE' && newRecord) {
                             console.log('✏️ Transação atualizada:', newRecord.id);
-                            // Atualiza na memória local
-                            const index = localData.transactions.findIndex(t => t.id === newRecord.id);
-                            if (index !== -1) {
-                                localData.transactions[index] = newRecord;
-                                renderData(); // Atualiza interface
-                                showNotification('📡 Transação atualizada!', 'info');
+                            try {
+                                // Atualiza na memória local
+                                const index = localData.transactions.findIndex(t => t.id === newRecord.id);
+                                if (index !== -1) {
+                                    localData.transactions[index] = newRecord;
+                                    renderData(); // Atualiza interface
+                                    showNotification('📡 Transação atualizada!', 'info');
+                                }
+                            } catch (e) {
+                                console.error('Erro ao processar UPDATE Realtime:', e);
                             }
                         } 
                         else if (eventType === 'DELETE' && oldRecord) {
                             console.log('🗑️ Transação deletada:', oldRecord.id);
-                            // Remove da memória local
-                            localData.transactions = localData.transactions.filter(t => t.id !== oldRecord.id);
-                            renderData(); // Atualiza interface
-                            showNotification('📡 Transação removida!', 'info');
+                            try {
+                                // Remove da memória local
+                                localData.transactions = localData.transactions.filter(t => t.id !== oldRecord.id);
+                                renderData(); // Atualiza interface
+                                showNotification('📡 Transação removida!', 'info');
+                            } catch (e) {
+                                console.error('Erro ao processar DELETE Realtime:', e);
+                            }
                         }
                     }
                 )
@@ -4222,8 +4242,8 @@
             updateMonthDisplay();
             await loadAllData();
             setupTabs();
-            document.getElementById('dueDate').valueAsDate = new Date();
-            document.getElementById('paymentDate').valueAsDate = new Date();
+            document.getElementById('dueDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
             renderNotebooks();
             checkAlerts();
             setInterval(checkAlerts, 60000);
@@ -4621,6 +4641,17 @@
             `;
         }
 
+
+        // ==========================================
+        // FUNÇÃO renderData - CORREÇÃO CRÍTICA
+        // Atualiza toda a interface após mudanças nos dados
+        // ==========================================
+        function renderData() {
+            updateDashboard();
+            renderPartitions();
+            checkAlerts();
+        }
+
         async function updateDashboard() {
             const year = currentMonth.getFullYear();
             const month = currentMonth.getMonth() + 1;
@@ -5013,7 +5044,7 @@
             document.getElementById('description').value = '';
             document.getElementById('amount').value = '';
             document.getElementById('installments').value = '1';
-            document.getElementById('dueDate').valueAsDate = new Date();
+            document.getElementById('dueDate').value = new Date().toISOString().split('T')[0];
             document.getElementById('status').value = 'pending';
             document.getElementById('autoRenew').checked = false;
 
@@ -5275,7 +5306,7 @@
             }
             
             document.getElementById('paymentTransactionId').value = transactionId;
-            document.getElementById('paymentDate').valueAsDate = new Date();
+            document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
             document.getElementById('paymentAmount').value = t.amount;
             document.getElementById('paymentObs').value = '';
             document.getElementById('paymentModal').classList.add('active');

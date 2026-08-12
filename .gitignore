@@ -1,0 +1,21 @@
+# Logs
+*.log
+
+# Runtime data
+*.pid
+*.seed
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Dependencies
+node_modules/
+
+# Temp files
+*.tmp
+*.swp

@@ -2668,7 +2668,7 @@
                     <div class="form-row" id="autoRenewField" style="display:none;">
                         <div class="checkbox-group">
                             <input type="checkbox" id="autoRenew">
-                            <label for="autoRenew">🔄 Renovação automática mensal (6 meses)</label>
+                            <label for="autoRenew">🔄 Repetir nos próximos meses (renovação automática)</label>
                         </div>
                     </div>
                 </form>
@@ -3692,8 +3692,35 @@
                 if (error) throw error;
                 
                 // Substitui completamente os dados em memória com os do servidor
-                const serverData = data || [];
+                const rawServerData = data || [];
                 
+                // Deduplicação automática: garante que contas fixas pendentes apareçam apenas UMA vez no mês
+                const seenFixedKeys = new Set();
+                const duplicateIds = [];
+                const serverData = [];
+
+                rawServerData.forEach(t => {
+                    if ((t.category === 'fixed' || t.is_fixed) && t.status === 'pending') {
+                        const key = `${t.partition_id}_${(t.description || '').trim().toLowerCase()}`;
+                        if (seenFixedKeys.has(key)) {
+                            // Duplicata identificada - marcar para exclusão
+                            duplicateIds.push(t.id);
+                        } else {
+                            seenFixedKeys.add(key);
+                            serverData.push(t);
+                        }
+                    } else {
+                        serverData.push(t);
+                    }
+                });
+
+                if (duplicateIds.length > 0) {
+                    console.log(`🧹 Removendo ${duplicateIds.length} transação(ões) duplicada(s) do mês ${month}/${year}`);
+                    supabaseClient.from('transactions').delete().in('id', duplicateIds).then(() => {
+                        console.log(`✅ Duplicatas excedentes removidas do banco de dados com sucesso.`);
+                    }).catch(err => console.warn('Aviso ao remover duplicatas no banco:', err));
+                }
+
                 // Remove transações do mês atual e adiciona as do servidor
                 localData.transactions = localData.transactions.filter(t => {
                     const tDate = new Date(t.due_date);
@@ -4011,55 +4038,216 @@
         }
 
         // ==========================================
-        // RENOVAÇÃO AUTOMÁTICA - CORRIGIDA PARA 6 MESES
+        // RENOVAÇÃO AUTOMÁTICA MENSAL (ANTI-DUPLICAÇÃO)
         // ==========================================
 
-        async function createNextMonthFixed(currentTransaction) {
-            // Criar 6 meses à frente
-            for (let i = 1; i <= 6; i++) {
-                const currentDueDate = new Date(currentTransaction.due_date);
-                const nextDueDate = new Date(currentDueDate);
-                nextDueDate.setMonth(nextDueDate.getMonth() + i);
-
-                const exists = localData.transactions.some(t => 
-                    t.description === currentTransaction.description &&
-                    t.year === nextDueDate.getFullYear() &&
-                    t.month === nextDueDate.getMonth() + 1 &&
-                    t.partition_id === currentTransaction.partition_id
-                );
-
-                if (exists) {
-                    console.log(`Transação fixa já existe para ${nextDueDate.toLocaleDateString('pt-BR')}`);
-                    continue;
-                }
-
-                const newTransaction = {
-                    user_id: currentUser.id,
-                    type: currentTransaction.type,
-                    category: currentTransaction.category,
-                    partition_id: currentTransaction.partition_id,
-                    description: currentTransaction.description,
-                    amount: currentTransaction.amount,
-                    year: nextDueDate.getFullYear(),
-                    month: nextDueDate.getMonth() + 1,
-                    due_day: Math.min(currentTransaction.due_day, 28),
-                    due_date: nextDueDate.toISOString().split('T')[0],
-                    status: 'pending',
-                    total_installments: 1,
-                    installment_number: 1,
-                    auto_renew: true,
-                    is_fixed: true
-                };
-
-                try {
-                    const result = await insertTransaction(newTransaction);
-                    console.log(`🔄 Conta fixa renovada para ${nextDueDate.toLocaleDateString('pt-BR')}:`, result?.id || 'local');
-                } catch (error) {
-                    console.error('Erro ao renovar conta fixa:', error);
-                }
+        function getNextMonthDueDate(dueDateStr, preferredDay) {
+            if (!dueDateStr) return null;
+            const parts = dueDateStr.split('-');
+            let year = parseInt(parts[0], 10);
+            let month = parseInt(parts[1], 10);
+            let day = preferredDay || parseInt(parts[2], 10) || 1;
+            
+            month += 1;
+            if (month > 12) {
+                month = 1;
+                year += 1;
             }
             
-            showNotification('Conta fixa renovada para os próximos 6 meses!');
+            const maxDays = new Date(year, month, 0).getDate();
+            const targetDay = Math.min(day, maxDays);
+            const mm = String(month).padStart(2, '0');
+            const dd = String(targetDay).padStart(2, '0');
+            return {
+                year: year,
+                month: month,
+                day: targetDay,
+                dateStr: `${year}-${mm}-${dd}`
+            };
+        }
+
+        async function checkFixedExistsInMonth(description, partitionId, targetYear, targetMonth) {
+            const descNorm = (description || '').trim().toLowerCase();
+            
+            // 1. Verificar na memória local
+            const localMatch = localData.transactions.some(t => 
+                parseInt(t.partition_id) === parseInt(partitionId) &&
+                parseInt(t.year) === parseInt(targetYear) &&
+                parseInt(t.month) === parseInt(targetMonth) &&
+                (t.description || '').trim().toLowerCase() === descNorm
+            );
+            if (localMatch) return true;
+
+            // 2. Verificar no Supabase diretamente
+            if (supabaseClient && isOnline) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('transactions')
+                        .select('id, status')
+                        .eq('partition_id', partitionId)
+                        .eq('year', targetYear)
+                        .eq('month', targetMonth)
+                        .ilike('description', (description || '').trim());
+
+                    if (!error && data && data.length > 0) {
+                        return true;
+                    }
+                } catch (err) {
+                    console.warn('Aviso ao checar transação no Supabase:', err);
+                }
+            }
+            return false;
+        }
+
+        async function createNextMonthFixed(currentTransaction) {
+            if (!currentTransaction || !currentTransaction.auto_renew) return;
+            
+            const nextDate = getNextMonthDueDate(currentTransaction.due_date, currentTransaction.due_day);
+            if (!nextDate) return;
+
+            // Verifica se a conta já existe no próximo mês (local e banco)
+            const exists = await checkFixedExistsInMonth(
+                currentTransaction.description,
+                currentTransaction.partition_id,
+                nextDate.year,
+                nextDate.month
+            );
+
+            if (exists) {
+                console.log(`ℹ️ Conta fixa "${currentTransaction.description}" já existe em ${nextDate.month}/${nextDate.year}. Não duplicando.`);
+                return;
+            }
+
+            const newTransaction = {
+                user_id: currentUser?.id,
+                type: currentTransaction.type,
+                category: currentTransaction.category || 'fixed',
+                partition_id: currentTransaction.partition_id,
+                description: currentTransaction.description,
+                amount: currentTransaction.amount,
+                year: nextDate.year,
+                month: nextDate.month,
+                due_day: nextDate.day,
+                due_date: nextDate.dateStr,
+                status: 'pending',
+                total_installments: 1,
+                installment_number: 1,
+                auto_renew: true,
+                is_fixed: true
+            };
+
+            try {
+                const result = await insertTransaction(newTransaction);
+                console.log(`🔄 Conta fixa agendada para o próximo mês (${nextDate.dateStr}):`, result?.id || 'local');
+            } catch (error) {
+                console.error('Erro ao renovar conta fixa para o próximo mês:', error);
+            }
+        }
+
+        async function cancelNextMonthFixed(currentTransaction) {
+            if (!currentTransaction) return;
+            const nextDate = getNextMonthDueDate(currentTransaction.due_date, currentTransaction.due_day);
+            if (!nextDate) return;
+
+            const descNorm = (currentTransaction.description || '').trim().toLowerCase();
+
+            // 1. Remove da memória local se estiver no mês visualizado
+            localData.transactions = localData.transactions.filter(t => {
+                const isNextPending = parseInt(t.partition_id) === parseInt(currentTransaction.partition_id) &&
+                    parseInt(t.year) === parseInt(nextDate.year) &&
+                    parseInt(t.month) === parseInt(nextDate.month) &&
+                    t.status === 'pending' &&
+                    (t.description || '').trim().toLowerCase() === descNorm;
+                return !isNextPending;
+            });
+
+            // 2. Remove do Supabase se existir como pendente
+            if (supabaseClient && isOnline) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('transactions')
+                        .select('id')
+                        .eq('partition_id', currentTransaction.partition_id)
+                        .eq('year', nextDate.year)
+                        .eq('month', nextDate.month)
+                        .eq('status', 'pending')
+                        .ilike('description', (currentTransaction.description || '').trim());
+
+                    if (!error && data && data.length > 0) {
+                        const idsToDelete = data.map(d => d.id);
+                        await supabaseClient
+                            .from('transactions')
+                            .delete()
+                            .in('id', idsToDelete);
+                        console.log(`🗑️ Conta pendente futura "${currentTransaction.description}" removida de ${nextDate.month}/${nextDate.year} pois a renovação foi desmarcada.`);
+                    }
+                } catch (err) {
+                    console.warn('Aviso ao cancelar renovação futura no Supabase:', err);
+                }
+            }
+        }
+
+        async function syncFixedFromPreviousMonth(targetYear, targetMonth) {
+            if (!supabaseClient || !isOnline) return false;
+            
+            let prevMonth = targetMonth - 1;
+            let prevYear = targetYear;
+            if (prevMonth < 1) {
+                prevMonth = 12;
+                prevYear -= 1;
+            }
+
+            try {
+                const { data: prevFixed, error } = await supabaseClient
+                    .from('transactions')
+                    .select('*')
+                    .eq('year', prevYear)
+                    .eq('month', prevMonth)
+                    .eq('auto_renew', true)
+                    .or('is_fixed.eq.true,category.eq.fixed');
+
+                if (error || !prevFixed || prevFixed.length === 0) return false;
+
+                let insertedAny = false;
+                for (const item of prevFixed) {
+                    const exists = await checkFixedExistsInMonth(
+                        item.description,
+                        item.partition_id,
+                        targetYear,
+                        targetMonth
+                    );
+
+                    if (!exists) {
+                        const targetDay = Math.min(item.due_day || 1, new Date(targetYear, targetMonth, 0).getDate());
+                        const targetDueDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(targetDay).padStart(2, '0')}`;
+
+                        const newTx = {
+                            user_id: currentUser?.id || item.user_id,
+                            type: item.type,
+                            category: item.category || 'fixed',
+                            partition_id: item.partition_id,
+                            description: item.description,
+                            amount: item.amount,
+                            year: targetYear,
+                            month: targetMonth,
+                            due_day: targetDay,
+                            due_date: targetDueDate,
+                            status: 'pending',
+                            total_installments: 1,
+                            installment_number: 1,
+                            auto_renew: true,
+                            is_fixed: true
+                        };
+
+                        const inserted = await insertTransaction(newTx);
+                        if (inserted) insertedAny = true;
+                    }
+                }
+                return insertedAny;
+            } catch (e) {
+                console.warn('Aviso ao sincronizar contas do mês anterior:', e);
+                return false;
+            }
         }
 
         // ==========================================
@@ -4280,6 +4468,13 @@
             const month = currentMonth.getMonth() + 1;
             
             await fetchTransactions(year, month);
+            
+            // Sincroniza contas fixas ativas do mês anterior caso ainda não existam neste mês
+            const addedAny = await syncFixedFromPreviousMonth(year, month);
+            if (addedAny) {
+                await fetchTransactions(year, month);
+            }
+
             updateDashboard();
             renderPartitions();
         }
@@ -5210,9 +5405,21 @@
 
                 if (editingId) {
                     console.log('✏️ Editando transação:', editingId);
+                    const prevTx = localData.transactions.find(t => t.id === editingId);
+                    const wasAutoRenew = prevTx ? !!prevTx.auto_renew : false;
+
                     await monitorar('saveTransaction_update', async () => {
                         const result = await updateTransaction(editingId, baseTransaction);
                         if (!result) throw new Error('Falha ao atualizar transação');
+
+                        // Gestão de renovação automática para conta fixa
+                        if (mapping.category === 'fixed') {
+                            if (autoRenew) {
+                                await createNextMonthFixed(baseTransaction);
+                            } else if (wasAutoRenew && !autoRenew) {
+                                await cancelNextMonthFixed(baseTransaction);
+                            }
+                        }
                         return result;
                     });
                     
@@ -5256,9 +5463,9 @@
                                 throw new Error('Falha ao criar transação');
                             }
                             
-                            // Se for conta fixa com renovação automática, criar 6 meses à frente
+                            // Se for conta fixa com renovação automática, agendar apenas para o próximo mês
                             if (mapping.category === 'fixed' && autoRenew) {
-                                console.log('🔄 Criando renovações automáticas para 6 meses...');
+                                console.log('🔄 Agendando renovação automática para o próximo mês...');
                                 await createNextMonthFixed(result);
                             }
                         }

@@ -2,8 +2,21 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Finanças Família Pedrosa de Lima</title>
+    <meta name="description" content="Gestão financeira da Família Pedrosa de Lima: transações, parcelas, calendário de vencimentos e relatórios.">
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#1e3a8a">
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="/icons/favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Finanças PL">
+
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -2332,6 +2345,127 @@
         .expense-amount.negative {
             color: var(--danger);
         }
+
+        /* ===================== PWA ===================== */
+
+        /* Área segura em telas com notch (app instalado no iOS) */
+        .header {
+            padding-top: calc(12px + env(safe-area-inset-top));
+            padding-left: calc(24px + env(safe-area-inset-left));
+            padding-right: calc(24px + env(safe-area-inset-right));
+            /* Sem isto o header estoura a largura no celular e o botão de instalar fica fora da tela */
+            flex-wrap: wrap;
+            row-gap: 8px;
+        }
+
+        .login-screen {
+            padding: calc(1rem + env(safe-area-inset-top)) 1rem calc(1rem + env(safe-area-inset-bottom));
+        }
+
+        .app-container {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .btn-install-pwa {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-left: 1rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--gold-primary);
+            border-radius: 20px;
+            background: rgba(212, 175, 55, 0.15);
+            color: var(--gold-light);
+            font-family: inherit;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        /* Precisa vir depois do display: o atributo hidden perde para a regra do autor */
+        .btn-install-pwa[hidden] {
+            display: none;
+        }
+
+        .btn-install-pwa:hover {
+            background: var(--gold-primary);
+            color: var(--dark);
+        }
+
+        .btn-install-pwa:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        .pwa-toast,
+        .pwa-ios-hint {
+            position: fixed;
+            left: 50%;
+            bottom: calc(1.25rem + env(safe-area-inset-bottom));
+            transform: translateX(-50%);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            max-width: calc(100vw - 2rem);
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--gold-primary);
+            border-radius: 12px;
+            background: var(--dark);
+            color: var(--cream);
+            font-size: 0.85rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            animation: pwaSlideUp 0.3s ease-out;
+        }
+
+        .pwa-ios-hint {
+            width: calc(100vw - 2rem);
+            max-width: 420px;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .pwa-ios-hint strong {
+            color: var(--gold-primary);
+        }
+
+        @keyframes pwaSlideUp {
+            from { opacity: 0; transform: translate(-50%, 1rem); }
+            to   { opacity: 1; transform: translate(-50%, 0); }
+        }
+
+        .pwa-toast-btn {
+            padding: 0.4rem 0.9rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--gold-primary);
+            color: var(--dark);
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .pwa-toast-btn:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        .pwa-toast-close {
+            padding: 0 0.15rem;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .pwa-toast-close:hover {
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -2414,6 +2548,9 @@
                     <span id="connectionIcon">⚠️</span>
                     <span id="connectionText">Offline</span>
                 </div>
+                <button type="button" class="btn-install-pwa" id="btnInstalarApp" hidden>
+                    <span>📲</span><span>Instalar</span>
+                </button>
             </div>
         </header>
 
@@ -7030,5 +7167,8 @@ Isso substituirá os dados atuais!`)) {
         // Inicializar ao carregar
         window.addEventListener('DOMContentLoaded', initSupabase);
     </script>
+
+    <!-- PWA: registro do service worker, instalação e atalhos -->
+    <script src="/pwa.js" defer></script>
 </body>
 </html>

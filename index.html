@@ -3366,11 +3366,6 @@
                     await loadUserProfile();
                     showApp();
                     hideLoading();
-
-                    // Configura subscription Realtime para sincronização em tempo real (apenas se não for modo dev)
-                    if (!isDevMode) {
-                        setupRealtimeSubscription();
-                    }
                 } else {
                     console.log('👤 Nenhuma sessão ativa');
                     hideLoading();
@@ -3389,6 +3384,7 @@
             const statusEl = document.getElementById('connectionStatus');
             const iconEl = document.getElementById('connectionIcon');
             const textEl = document.getElementById('connectionText');
+            if (!statusEl || !iconEl || !textEl) return;
             
             statusEl.className = 'connection-status ' + status;
             
@@ -3398,7 +3394,7 @@
                     textEl.textContent = 'Online';
                     break;
                 case 'offline':
-                    iconEl.textContent = '⚠️';
+                    iconEl.textContent = '🔴';
                     textEl.textContent = 'Offline';
                     break;
                 case 'syncing':
@@ -4357,11 +4353,12 @@
                     console.log('📡 Status do Realtime:', status);
                     if (status === 'SUBSCRIBED') {
                         console.log('✅ Realtime conectado - sincronização automática ativa!');
-                        showNotification('✅ Sincronização em tempo real ativada!', 'success');
-                    } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+                        isOnline = true;
+                        updateConnectionStatus('online');
+                    } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
                         console.warn('⚠️ Realtime desconectado:', status);
-                        showNotification('⚠️ Sincronização automática desconectada', 'warning');
-                        // Tenta reconectar após 5 segundos
+                        updateConnectionStatus('offline');
+                        // Tenta reconectar suavemente após 5 segundos
                         setTimeout(() => {
                             if (isOnline && currentUser && !isDevMode) {
                                 setupRealtimeSubscription();
@@ -7013,6 +7010,22 @@ Isso substituirá os dados atuais!`)) {
 
         // Failsafe: nunca permite que o loading fique travado na tela por mais de 3 segundos
         setTimeout(hideLoading, 3000);
+
+        // Monitorar conectividade da rede em tempo real
+        window.addEventListener('online', () => {
+            console.log('🌐 Navegador detectou conexão restabelecida');
+            isOnline = true;
+            updateConnectionStatus('online');
+            if (currentUser && !isDevMode) {
+                setupRealtimeSubscription();
+            }
+        });
+
+        window.addEventListener('offline', () => {
+            console.warn('🌐 Navegador detectou perda de conexão');
+            isOnline = false;
+            updateConnectionStatus('offline');
+        });
 
         // Inicializar ao carregar
         window.addEventListener('DOMContentLoaded', initSupabase);

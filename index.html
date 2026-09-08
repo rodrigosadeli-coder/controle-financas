@@ -57,6 +57,7 @@
         .loading-screen.hidden {
             opacity: 0;
             pointer-events: none;
+            visibility: hidden;
         }
 
         .loading-spinner {
@@ -3364,6 +3365,7 @@
                     currentUser = session.user;
                     await loadUserProfile();
                     showApp();
+                    hideLoading();
 
                     // Configura subscription Realtime para sincronização em tempo real (apenas se não for modo dev)
                     if (!isDevMode) {
@@ -3407,7 +3409,13 @@
         }
 
         function hideLoading() {
-            document.getElementById('loadingScreen').classList.add('hidden');
+            const screen = document.getElementById('loadingScreen');
+            if (screen) {
+                screen.classList.add('hidden');
+                setTimeout(() => {
+                    screen.style.display = 'none';
+                }, 500);
+            }
         }
 
         // ==========================================
@@ -3642,6 +3650,7 @@
                     currentUser.user_metadata?.full_name || currentUser.email;
             }
 
+            hideLoading();
             initApp();
 
             // Configura Realtime se ainda não configurado e estiver online (e não for modo dev)
@@ -4424,19 +4433,24 @@
         };
 
         async function initApp() {
-            // localStorage removido - dados carregados apenas do Supabase
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
-            updateMonthDisplay();
-            await loadAllData();
-            setupTabs();
-            document.getElementById('dueDate').value = new Date().toISOString().split('T')[0];
-            document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
-            renderNotebooks();
-            checkAlerts();
-            setInterval(checkAlerts, 60000);
-            setupBackupDragAndDrop();
-            
+            try {
+                // localStorage removido - dados carregados apenas do Supabase
+                updateDateTime();
+                setInterval(updateDateTime, 1000);
+                updateMonthDisplay();
+                await loadAllData();
+                setupTabs();
+                document.getElementById('dueDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+                renderNotebooks();
+                checkAlerts();
+                setInterval(checkAlerts, 60000);
+                setupBackupDragAndDrop();
+            } catch (err) {
+                console.error('Erro ao inicializar app:', err);
+            } finally {
+                hideLoading();
+            }
         }
 
         function updateDateTime() {
@@ -6995,6 +7009,10 @@ Isso substituirá os dados atuais!`)) {
         // FUNÇÕES REALTIME EXPORTADAS
         window.setupRealtimeSubscription = setupRealtimeSubscription;
         window.closeRealtimeChannel = closeRealtimeChannel;
+        window.hideLoading = hideLoading;
+
+        // Failsafe: nunca permite que o loading fique travado na tela por mais de 3 segundos
+        setTimeout(hideLoading, 3000);
 
         // Inicializar ao carregar
         window.addEventListener('DOMContentLoaded', initSupabase);

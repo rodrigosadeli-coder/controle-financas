@@ -2454,7 +2454,7 @@
                 <!-- Cards Grid -->
                 <div class="cards-grid">
                     <div class="card">
-                        <div class="card-label">💰 Saldo Total</div>
+                        <div class="card-label">💰 Saldo Líquido</div>
                         <div class="card-value card-saldo" id="totalBalance">R$ 0,00</div>
                     </div>
                     <div class="card">
@@ -4661,17 +4661,23 @@
                 return tDate.getFullYear() === year && tDate.getMonth() === month - 1;
             });
 
-            let income = 0, expenses = 0, pending = 0;
+            let income = 0;          // Total de receitas do mês (informativo, nunca diminui)
+            let expenses = 0;        // Total de contas a pagar no mês (informativo, nunca diminui)
+            let paidExpenses = 0;    // Despesas já quitadas
+            let pending = 0;         // Despesas pendentes a pagar
 
             transactions.forEach(t => {
-                const amount = parseFloat(t.amount);
+                const amount = parseFloat(t.amount) || 0;
                 
                 if (t.type === 'income') {
-                    if (t.status === 'received') income += amount;
-                    else pending += amount;
+                    income += amount;
                 } else {
                     expenses += amount;
-                    if (t.status === 'pending') pending += amount;
+                    if (t.status === 'paid') {
+                        paidExpenses += amount;
+                    } else {
+                        pending += amount;
+                    }
                 }
             });
 
@@ -4679,10 +4685,11 @@
             document.getElementById('totalExpenses').textContent = formatCurrency(expenses);
             document.getElementById('totalPending').textContent = formatCurrency(pending);
             
-            const balance = income - expenses;
+            // Saldo Líquido: inicialmente igual a Receitas; diminui conforme contas são pagas
+            const netBalance = income - paidExpenses;
             const balanceEl = document.getElementById('totalBalance');
-            balanceEl.textContent = formatCurrency(balance);
-            balanceEl.style.color = balance >= 0 ? 'var(--success)' : 'var(--danger)';
+            balanceEl.textContent = formatCurrency(netBalance);
+            balanceEl.style.color = netBalance >= 0 ? 'var(--success)' : 'var(--danger)';
             
             // Atualiza os totalizadores das repartições abertas
             updatePartitionTotals(1);
@@ -4880,6 +4887,7 @@
                 const tDate = new Date(t.due_date);
                 return tDate.getFullYear() === year && 
                        tDate.getMonth() === month - 1 &&
+                       t.type !== 'income' &&
                        (t.status === 'pending' || t.status === null);
             });
 

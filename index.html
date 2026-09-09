@@ -3293,6 +3293,9 @@
                         cadernos, compromissos e histórico de pagamentos — em todos os aparelhos.
                         Esta ação não pode ser desfeita!
                     </div>
+                    <input type="text" class="form-input-modal" id="confirmResetGeral"
+                           placeholder='Digite RESETAR para liberar o botão abaixo'
+                           autocomplete="off" style="margin-bottom: 0.75rem;">
                     <button class="btn-danger-full" id="btnResetarGeral" onclick="resetAllData()">
                         🗑️ RESETAR GERAL (APAGAR TUDO)
                     </button>
@@ -5399,11 +5402,6 @@
             return null;
         }
 
-        async function checkFixedExistsInMonth(description, partitionId, targetYear, targetMonth) {
-            const encontrada = await findFixedInMonth(description, partitionId, targetYear, targetMonth);
-            return !!encontrada;
-        }
-
         // Trava de concorrência: impede que duas rotinas criem simultaneamente
         // a MESMA conta fixa no mesmo mês (origem clássica da duplicação).
         const renovacoesEmAndamento = new Set();
@@ -5464,7 +5462,7 @@
                             partition_id: currentTransaction.partition_id,
                             due_day: nextDate.day,
                             due_date: nextDate.dateStr,
-                            auto_renew: true,
+                            auto_renew: false,
                             is_fixed: true
                         });
                         console.log('🔁 Renovação futura de "' + descAntiga + '" renomeada para "' + currentTransaction.description + '" em vez de duplicar.');
@@ -5487,7 +5485,9 @@
                     status: 'pending',
                     total_installments: 1,
                     installment_number: 1,
-                    auto_renew: true,
+                    // Nasce DESMARCADA: a regra é avançar apenas um mês por vez.
+                    // No mês seguinte o usuário marca de novo para levar adiante.
+                    auto_renew: false,
                     is_fixed: true
                 };
 
@@ -5545,152 +5545,19 @@
             }
         }
 
-        // Trava por mês: evita que chamadas concorrentes (troca rápida de mês,
-        // foco + visibilitychange, heartbeat) repliquem as fixas várias vezes.
-        const sincronizacaoFixasEmAndamento = new Map();
-
-        function syncFixedFromPreviousMonth(targetYear, targetMonth) {
-            const chave = targetYear + '-' + targetMonth;
-            if (sincronizacaoFixasEmAndamento.has(chave)) {
-                return sincronizacaoFixasEmAndamento.get(chave);
-            }
-            const promessa = syncFixedFromPreviousMonthInterno(targetYear, targetMonth)
-                .finally(() => sincronizacaoFixasEmAndamento.delete(chave));
-            sincronizacaoFixasEmAndamento.set(chave, promessa);
-            return promessa;
-        }
-
-        /**
-         * O mês alvo já foi povoado alguma vez? (memória local + banco)
-         *
-         * É esta pergunta que torna a navegação entre meses SOMENTE LEITURA.
-         */
-        async function mesJaTemLancamentos(targetYear, targetMonth) {
-            const temLocal = localData.transactions.some(t =>
-                isTransactionInMonth(t, targetYear, targetMonth));
-            if (temLocal) return true;
-
-            if (!supabaseClient || !isOnline || isDevMode) return false;
-
-            try {
-                const { data, error } = await supabaseClient
-                    .from('transactions')
-                    .select('id')
-                    .eq('year', targetYear)
-                    .eq('month', targetMonth)
-                    .limit(1);
-
-                if (error) return true; // na dúvida, não escreve nada
-                return !!(data && data.length > 0);
-            } catch (e) {
-                console.warn('Aviso ao verificar se o mês já tem lançamentos:', e);
-                return true;
-            }
-        }
-
-        async function syncFixedFromPreviousMonthInterno(targetYear, targetMonth) {
-            if (!supabaseClient || !isOnline || isDevMode) return false;
-            if (restauracaoEmAndamento) return false;
-
-            // ------------------------------------------------------------------
-            // REGRA CENTRAL: só preenche um mês que NUNCA teve lançamento algum.
-            //
-            // Antes, esta rotina rodava a cada visita a um mês e recopiava as
-            // contas fixas do mês anterior. O efeito era cumulativo e destrutivo:
-            // ir para Agosto e voltar para Setembro reinjetava as contas de
-            // Agosto em Setembro, somando aos valores e desfazendo o backup.
-            //
-            // Com a guarda abaixo, navegar entre meses NUNCA grava no banco.
-            // O preenchimento automático acontece só na primeira vez que um mês
-            // ainda vazio é aberto — e a renovação normal continua sendo feita
-            // por createNextMonthFixed ao marcar/editar/pagar a conta.
-            // ------------------------------------------------------------------
-            if (await mesJaTemLancamentos(targetYear, targetMonth)) {
-                return false;
-            }
-
-            let prevMonth = targetMonth - 1;
-            let prevYear = targetYear;
-            if (prevMonth < 1) {
-                prevMonth = 12;
-                prevYear -= 1;
-            }
-
-            try {
-                const { data: prevFixed, error } = await supabaseClient
-                    .from('transactions')
-                    .select('*')
-                    .eq('year', prevYear)
-                    .eq('month', prevMonth)
-                    .eq('auto_renew', true)
-                    .or('is_fixed.eq.true,category.eq.fixed');
-
-                if (error || !prevFixed || prevFixed.length === 0) return false;
-
-                // Deduplica a própria origem: se o mês anterior tiver a mesma conta
-                // repetida, ela só pode gerar UMA ocorrência no mês alvo.
-                const origensUnicas = new Map();
-                prevFixed.forEach(item => {
-                    const k = chaveContaFixa(item.partition_id, item.description);
-                    if (!origensUnicas.has(k)) origensUnicas.set(k, item);
-                });
-
-                // Também considera o que já existe no mês alvo, para não recriar
-                const jaNoMesAlvo = new Set(
-                    localData.transactions
-                        .filter(t => parseInt(t.year) === parseInt(targetYear) && parseInt(t.month) === parseInt(targetMonth))
-                        .map(t => chaveContaFixa(t.partition_id, t.description))
-                );
-
-                let insertedAny = false;
-                for (const [k, item] of origensUnicas) {
-                    if (jaNoMesAlvo.has(k)) continue;
-
-                    const existente = await findFixedInMonth(
-                        item.description,
-                        item.partition_id,
-                        targetYear,
-                        targetMonth
-                    );
-
-                    if (existente) {
-                        jaNoMesAlvo.add(k);
-                        continue;
-                    }
-
-                    const targetDay = Math.min(item.due_day || 1, new Date(targetYear, targetMonth, 0).getDate());
-                    const targetDueDate = targetYear + '-' + String(targetMonth).padStart(2, '0') + '-' + String(targetDay).padStart(2, '0');
-
-                    const newTx = {
-                        user_id: currentUser?.id || item.user_id,
-                        type: item.type,
-                        category: item.category || 'fixed',
-                        partition_id: item.partition_id,
-                        description: item.description,
-                        amount: item.amount,
-                        year: targetYear,
-                        month: targetMonth,
-                        due_day: targetDay,
-                        due_date: targetDueDate,
-                        status: 'pending',
-                        total_installments: 1,
-                        installment_number: 1,
-                        auto_renew: true,
-                        is_fixed: true
-                    };
-
-                    const inserted = await insertTransaction(newTx);
-                    if (inserted) {
-                        insertedAny = true;
-                        jaNoMesAlvo.add(k);
-                    }
-                }
-                return insertedAny;
-            } catch (e) {
-                console.warn('Aviso ao sincronizar contas do mês anterior:', e);
-                return false;
-            }
-        }
+        // ------------------------------------------------------------------
+        // NOTA: a replicação automática a partir do mês anterior
+        // (syncFixedFromPreviousMonth) foi REMOVIDA.
+        //
+        // Ela rodava a cada visita a um mês e recopiava as contas fixas do mês
+        // anterior, o que alterava valores só por navegar entre os meses.
+        //
+        // Regra atual, simples e previsível: marcar "repetir no próximo mês"
+        // cria UMA ocorrência APENAS no mês seguinte (createNextMonthFixed).
+        // Essa ocorrência nasce desmarcada — no mês seguinte o usuário marca
+        // de novo se quiser levá-la adiante. Nenhuma rotina de leitura escreve
+        // no banco.
+        // ------------------------------------------------------------------
 
         // ==========================================
         // SINCRONIZAÇÃO - VERSÃO APRIMORADA (CORRIGIDA)
@@ -5869,7 +5736,7 @@
             if (el) el.classList.toggle('active', !!visivel);
         }
 
-        async function executarSincronizacao({ propagar, sincronizarFixas }) {
+        async function executarSincronizacao({ propagar }) {
             if (!supabaseClient || !currentUser || isDevMode || !isOnline) return false;
             if (restauracaoEmAndamento) return false;
 
@@ -5882,11 +5749,6 @@
                 const month = currentMonth.getMonth() + 1;
 
                 await fetchTransactions(year, month);
-
-                if (sincronizarFixas) {
-                    const inseriu = await syncFixedFromPreviousMonth(year, month);
-                    if (inseriu) await fetchTransactions(year, month);
-                }
 
                 renderData();
 
@@ -5903,14 +5765,14 @@
         }
 
         function sincronizacaoAutomatica(options = {}) {
-            const { propagar = false, sincronizarFixas = true } = options;
+            const { propagar = false } = options;
 
             // Coalesce: se já existe uma sincronização em andamento, reaproveita.
             // A limpeza usa .finally() (microtask) para nunca zerar a referência
             // antes de ela ter sido registrada.
             if (autoSyncInFlight) return autoSyncInFlight;
 
-            const promessa = executarSincronizacao({ propagar, sincronizarFixas })
+            const promessa = executarSincronizacao({ propagar })
                 .finally(() => { autoSyncInFlight = null; });
 
             autoSyncInFlight = promessa;
@@ -6029,14 +5891,9 @@
         async function loadAllDataInterno() {
             const year = currentMonth.getFullYear();
             const month = currentMonth.getMonth() + 1;
-            
+
+            // Somente leitura: abrir um mês nunca cria nem altera lançamentos.
             await fetchTransactions(year, month);
-            
-            // Sincroniza contas fixas ativas do mês anterior caso ainda não existam neste mês
-            const addedAny = await syncFixedFromPreviousMonth(year, month);
-            if (addedAny) {
-                await fetchTransactions(year, month);
-            }
 
             updateDashboard();
             renderPartitions();
@@ -6704,21 +6561,36 @@
         // RESETAR TODOS OS DADOS
         // ==========================================
 
+        // O PostgREST devolve no máximo 1000 linhas por consulta. Sem paginar,
+        // um banco com mais lançamentos deixava sobras — e o reset "não funcionava".
+        const PAGINA_IDS = 1000;
+
         /**
-         * Coleta os ids das transações a apagar.
-         * Sem filtro de mês, devolve TODAS — inclusive as criadas por outros
-         * integrantes da família. Era justamente o filtro por user_id que fazia
-         * o "RESETAR" parecer não funcionar: as linhas dos outros aparelhos
-         * sobreviviam e voltavam na primeira sincronização.
+         * Coleta TODOS os ids de uma tabela, paginando.
+         * Sem filtro de mês devolve o banco inteiro — inclusive linhas criadas
+         * por outros integrantes da família. Era o filtro por user_id que fazia
+         * o RESETAR falhar: as linhas dos outros aparelhos sobreviviam e
+         * voltavam na primeira sincronização.
          */
-        async function coletarIdsTransacoes(escopo = {}) {
-            let consulta = supabaseClient.from('transactions').select('id');
-            if (escopo.year && escopo.month) {
-                consulta = consulta.eq('year', escopo.year).eq('month', escopo.month);
+        async function coletarTodosOsIds(tabela, escopo = {}) {
+            const ids = [];
+            let inicio = 0;
+
+            while (true) {
+                let consulta = supabaseClient.from(tabela).select('id');
+                if (escopo.year && escopo.month) {
+                    consulta = consulta.eq('year', escopo.year).eq('month', escopo.month);
+                }
+                const { data, error } = await consulta.range(inicio, inicio + PAGINA_IDS - 1);
+
+                if (error) throw new Error('Falha ao listar ' + tabela + ': ' + error.message);
+                if (!data || data.length === 0) break;
+
+                ids.push(...data.map(r => r.id));
+                if (data.length < PAGINA_IDS) break;
+                inicio += PAGINA_IDS;
             }
-            const { data, error } = await consulta;
-            if (error) throw new Error('Falha ao listar transações: ' + error.message);
-            return (data || []).map(r => r.id);
+            return ids;
         }
 
         async function apagarEmLotes(tabela, coluna, valores) {
@@ -6731,14 +6603,29 @@
             return total;
         }
 
-        async function contarTransacoes(escopo = {}) {
-            let consulta = supabaseClient.from('transactions').select('id');
-            if (escopo.year && escopo.month) {
-                consulta = consulta.eq('year', escopo.year).eq('month', escopo.month);
+        /**
+         * Apaga sem deixar que a falha de uma tabela secundária derrube o
+         * reset principal. O histórico de pagamentos, por exemplo, pode ter
+         * política de acesso mais restrita — e antes isso abortava tudo
+         * ANTES de as transações serem apagadas.
+         */
+        async function apagarEmLotesTolerante(tabela, coluna, valores) {
+            try {
+                return await apagarEmLotes(tabela, coluna, valores);
+            } catch (e) {
+                console.warn('Aviso: não foi possível limpar ' + tabela + ':', e.message);
+                return 0;
             }
-            const { data, error } = await consulta;
-            if (error) return -1;
-            return (data || []).length;
+        }
+
+        async function contarTransacoes(escopo = {}) {
+            try {
+                const ids = await coletarTodosOsIds('transactions', escopo);
+                return ids.length;
+            } catch (e) {
+                console.warn('Aviso ao conferir o resultado do reset:', e.message);
+                return -1;
+            }
         }
 
         function definirBotoesResetOcupados(ocupado) {
@@ -6748,18 +6635,46 @@
             });
         }
 
+        function bancoIndisponivelParaReset() {
+            if (isDevMode) {
+                showNotification('⚠️ Modo desenvolvimento: reset no banco desabilitado.', 'error');
+                return true;
+            }
+            if (!supabaseClient || !currentUser) {
+                showNotification('⚠️ Sessão não iniciada. Entre novamente e repita a operação.', 'error');
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Fecha a operação de reset: religa a sincronização, avisa os outros
+         * aparelhos e recarrega da fonte da verdade (o banco), para que a tela
+         * mostre exatamente o que ficou gravado.
+         */
+        async function finalizarReset() {
+            restauracaoEmAndamento = false;
+            definirBotoesResetOcupados(false);
+            try {
+                if (currentUser && !isDevMode) {
+                    setupRealtimeSubscription();
+                    await broadcastForceReload();
+                    await loadAllData();
+                }
+            } catch (e) {
+                console.warn('Aviso ao retomar a sincronização após o reset:', e);
+            }
+        }
+
         /**
          * RESETAR MÊS ATUAL — apaga apenas os lançamentos do mês exibido.
          */
         async function resetCurrentMonth() {
+            if (bancoIndisponivelParaReset()) return;
+
             const year = currentMonth.getFullYear();
             const month = currentMonth.getMonth() + 1;
             const nomeMes = MONTH_NAMES_FULL[month - 1] + ' de ' + year;
-
-            if (isDevMode || !isOnline || !supabaseClient || !currentUser) {
-                showNotification('⚠️ Sem conexão com o banco. Reset indisponível offline.', 'error');
-                return;
-            }
 
             const doMes = localData.transactions.filter(t => isTransactionInMonth(t, year, month));
 
@@ -6779,20 +6694,23 @@
                 updateConnectionStatus('syncing');
                 showNotification('⏳ Apagando os lançamentos de ' + nomeMes + '...', 'info');
 
-                const ids = await coletarIdsTransacoes({ year, month });
+                const ids = await coletarTodosOsIds('transactions', { year, month });
+                console.log('🗑️ Reset de ' + nomeMes + ': ' + ids.length + ' lançamento(s) encontrados.');
 
                 if (ids.length > 0) {
-                    await apagarEmLotes('payment_history', 'transaction_id', ids);
+                    await apagarEmLotesTolerante('payment_history', 'transaction_id', ids);
                     await apagarEmLotes('transactions', 'id', ids);
                 }
 
                 // Confere no banco: nunca declarar sucesso sem verificar
                 const restantes = await contarTransacoes({ year, month });
                 if (restantes > 0) {
-                    throw new Error(restantes + ' lançamento(s) não puderam ser apagados (permissão do banco).');
+                    throw new Error(
+                        restantes + ' lançamento(s) resistiram à exclusão. ' +
+                        'A política de acesso (RLS) da tabela transactions provavelmente não permite DELETE.'
+                    );
                 }
 
-                // Limpa o espelho local do mês
                 localData.transactions = localData.transactions.filter(
                     t => !isTransactionInMonth(t, year, month));
                 localData.paymentHistory = (localData.paymentHistory || []).filter(
@@ -6807,14 +6725,9 @@
             } catch (error) {
                 console.error('❌ Erro ao resetar o mês:', error);
                 updateConnectionStatus('offline');
-                showNotification('❌ Erro ao resetar o mês: ' + error.message, 'error');
+                showNotification('❌ Não foi possível resetar: ' + error.message, 'error');
             } finally {
-                restauracaoEmAndamento = false;
-                definirBotoesResetOcupados(false);
-                if (isOnline && currentUser && !isDevMode) {
-                    setupRealtimeSubscription();
-                    await broadcastForceReload();
-                }
+                await finalizarReset();
             }
         }
 
@@ -6822,12 +6735,20 @@
          * RESETAR GERAL — devolve a aplicação ao estado zero.
          */
         async function resetAllData() {
-            if (isDevMode || !isOnline || !supabaseClient || !currentUser) {
-                showNotification('⚠️ Sem conexão com o banco. Reset indisponível offline.', 'error');
+            if (bancoIndisponivelParaReset()) return;
+
+            // Confirmação digitada dentro do próprio modal: prompt() é bloqueado
+            // em parte dos navegadores quando o app roda instalado (PWA).
+            const campo = document.getElementById('confirmResetGeral');
+            const digitado = (campo?.value || '').trim().toUpperCase();
+
+            if (digitado !== 'RESETAR') {
+                showNotification('Digite RESETAR no campo acima para liberar esta ação.', 'error');
+                campo?.focus();
                 return;
             }
 
-            const confirmation = confirm(
+            if (!confirm(
                 '⚠️ ATENÇÃO!\n\n' +
                 'Você está prestes a APAGAR TODOS os dados permanentemente, em todos os aparelhos.\n\n' +
                 'Esta ação irá remover:\n' +
@@ -6837,17 +6758,7 @@
                 '- Todo o histórico de pagamentos\n\n' +
                 'Esta ação NÃO PODE ser desfeita!\n\n' +
                 'Deseja continuar?'
-            );
-            if (!confirmation) return;
-
-            const secondConfirmation = prompt(
-                'Para confirmar a exclusão de TODOS os dados, digite "RESETAR" no campo abaixo:'
-            );
-
-            if (secondConfirmation !== 'RESETAR') {
-                showNotification('Operação cancelada. Os dados não foram alterados.', 'warning');
-                return;
-            }
+            )) return;
 
             definirBotoesResetOcupados(true);
             restauracaoEmAndamento = true;
@@ -6858,9 +6769,11 @@
                 showNotification('⏳ Apagando todos os dados...', 'info');
 
                 // 1. Transações e histórico de pagamentos
-                const ids = await coletarIdsTransacoes();
+                const ids = await coletarTodosOsIds('transactions');
+                console.log('🗑️ Reset geral: ' + ids.length + ' lançamento(s) encontrados.');
+
                 if (ids.length > 0) {
-                    await apagarEmLotes('payment_history', 'transaction_id', ids);
+                    await apagarEmLotesTolerante('payment_history', 'transaction_id', ids);
                     await apagarEmLotes('transactions', 'id', ids);
                 }
 
@@ -6868,25 +6781,25 @@
                 let notasApagadas = 0;
                 let cadernosApagados = 0;
                 try {
-                    const { data: notas } = await supabaseClient.from('notes').select('id');
-                    const idsNotas = (notas || []).map(n => n.id);
+                    const idsNotas = await coletarTodosOsIds('notes');
                     if (idsNotas.length > 0) {
-                        notasApagadas = await apagarEmLotes('notes', 'id', idsNotas);
+                        notasApagadas = await apagarEmLotesTolerante('notes', 'id', idsNotas);
                     }
-
-                    const { data: cadernos } = await supabaseClient.from('notebooks').select('id');
-                    const idsCadernos = (cadernos || []).map(n => n.id);
+                    const idsCadernos = await coletarTodosOsIds('notebooks');
                     if (idsCadernos.length > 0) {
-                        cadernosApagados = await apagarEmLotes('notebooks', 'id', idsCadernos);
+                        cadernosApagados = await apagarEmLotesTolerante('notebooks', 'id', idsCadernos);
                     }
                 } catch (e) {
-                    console.warn('Aviso ao apagar cadernos/notas:', e);
+                    console.warn('Aviso ao apagar cadernos/notas:', e.message);
                 }
 
                 // 3. Confere no banco antes de declarar sucesso
                 const restantes = await contarTransacoes();
                 if (restantes > 0) {
-                    throw new Error(restantes + ' lançamento(s) não puderam ser apagados (permissão do banco).');
+                    throw new Error(
+                        restantes + ' lançamento(s) resistiram à exclusão. ' +
+                        'A política de acesso (RLS) da tabela transactions provavelmente não permite DELETE.'
+                    );
                 }
 
                 // 4. Estado zero em memória
@@ -6901,6 +6814,7 @@
 
                 currentNotebookId = null;
                 currentNoteId = null;
+                if (campo) campo.value = '';
 
                 updateDashboard();
                 renderPartitions();
@@ -6917,14 +6831,9 @@
             } catch (error) {
                 console.error('❌ Erro ao resetar dados:', error);
                 updateConnectionStatus('offline');
-                showNotification('❌ Erro ao resetar dados: ' + error.message, 'error');
+                showNotification('❌ Não foi possível resetar: ' + error.message, 'error');
             } finally {
-                restauracaoEmAndamento = false;
-                definirBotoesResetOcupados(false);
-                if (isOnline && currentUser && !isDevMode) {
-                    setupRealtimeSubscription();
-                    await broadcastForceReload();
-                }
+                await finalizarReset();
             }
         }
 
@@ -8984,7 +8893,7 @@
         // estiver visível. Substitui o antigo botão manual "Atualizar Banco".
         setInterval(() => {
             if (document.visibilityState === 'visible') {
-                sincronizacaoAutomatica({ sincronizarFixas: false });
+                sincronizacaoAutomatica();
             }
         }, 60000);
 

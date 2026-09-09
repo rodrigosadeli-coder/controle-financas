@@ -1192,6 +1192,28 @@
             background: #b91c1c;
         }
 
+        .btn-danger-outline {
+            background: white;
+            color: var(--danger);
+            width: 100%;
+            padding: 0.75rem;
+            font-weight: 600;
+            border: 2px solid var(--danger);
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 0.75rem;
+        }
+
+        .btn-danger-outline:hover {
+            background: #fee2e2;
+        }
+
+        .btn-danger-full:disabled,
+        .btn-danger-outline:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .password-requirements {
             font-size: 0.85rem;
             color: #6b7280;
@@ -3257,12 +3279,22 @@
                         <span>⚠️</span> ZONA DE PERIGO
                     </div>
                     <div class="danger-text">
-                        <strong>Resetar todos os dados</strong><br>
-                        Esta ação irá apagar permanentemente TODOS os seus dados financeiros, notas e compromissos. 
+                        <strong>Resetar o mês exibido</strong><br>
+                        Apaga somente os lançamentos do mês que está aberto no painel, em todos os aparelhos.
+                        Os demais meses, as notas e os compromissos permanecem intactos.
+                    </div>
+                    <button class="btn-danger-outline" id="btnResetarMes" onclick="resetCurrentMonth()">
+                        🧹 RESETAR MÊS ATUAL
+                    </button>
+
+                    <div class="danger-text" style="margin-top: 1.25rem;">
+                        <strong>Resetar geral (estado zero)</strong><br>
+                        Apaga permanentemente TODOS os lançamentos de TODOS os meses, além das notas,
+                        cadernos, compromissos e histórico de pagamentos — em todos os aparelhos.
                         Esta ação não pode ser desfeita!
                     </div>
-                    <button class="btn-danger-full" onclick="resetAllData()">
-                        🗑️ RESETAR TODOS OS DADOS
+                    <button class="btn-danger-full" id="btnResetarGeral" onclick="resetAllData()">
+                        🗑️ RESETAR GERAL (APAGAR TUDO)
                     </button>
                 </div>
             </div>
@@ -5528,9 +5560,54 @@
             return promessa;
         }
 
+        /**
+         * O mês alvo já foi povoado alguma vez? (memória local + banco)
+         *
+         * É esta pergunta que torna a navegação entre meses SOMENTE LEITURA.
+         */
+        async function mesJaTemLancamentos(targetYear, targetMonth) {
+            const temLocal = localData.transactions.some(t =>
+                isTransactionInMonth(t, targetYear, targetMonth));
+            if (temLocal) return true;
+
+            if (!supabaseClient || !isOnline || isDevMode) return false;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('transactions')
+                    .select('id')
+                    .eq('year', targetYear)
+                    .eq('month', targetMonth)
+                    .limit(1);
+
+                if (error) return true; // na dúvida, não escreve nada
+                return !!(data && data.length > 0);
+            } catch (e) {
+                console.warn('Aviso ao verificar se o mês já tem lançamentos:', e);
+                return true;
+            }
+        }
+
         async function syncFixedFromPreviousMonthInterno(targetYear, targetMonth) {
             if (!supabaseClient || !isOnline || isDevMode) return false;
             if (restauracaoEmAndamento) return false;
+
+            // ------------------------------------------------------------------
+            // REGRA CENTRAL: só preenche um mês que NUNCA teve lançamento algum.
+            //
+            // Antes, esta rotina rodava a cada visita a um mês e recopiava as
+            // contas fixas do mês anterior. O efeito era cumulativo e destrutivo:
+            // ir para Agosto e voltar para Setembro reinjetava as contas de
+            // Agosto em Setembro, somando aos valores e desfazendo o backup.
+            //
+            // Com a guarda abaixo, navegar entre meses NUNCA grava no banco.
+            // O preenchimento automático acontece só na primeira vez que um mês
+            // ainda vazio é aberto — e a renovação normal continua sendo feita
+            // por createNextMonthFixed ao marcar/editar/pagar a conta.
+            // ------------------------------------------------------------------
+            if (await mesJaTemLancamentos(targetYear, targetMonth)) {
+                return false;
+            }
 
             let prevMonth = targetMonth - 1;
             let prevYear = targetYear;
@@ -6627,19 +6704,140 @@
         // RESETAR TODOS OS DADOS
         // ==========================================
 
+        /**
+         * Coleta os ids das transações a apagar.
+         * Sem filtro de mês, devolve TODAS — inclusive as criadas por outros
+         * integrantes da família. Era justamente o filtro por user_id que fazia
+         * o "RESETAR" parecer não funcionar: as linhas dos outros aparelhos
+         * sobreviviam e voltavam na primeira sincronização.
+         */
+        async function coletarIdsTransacoes(escopo = {}) {
+            let consulta = supabaseClient.from('transactions').select('id');
+            if (escopo.year && escopo.month) {
+                consulta = consulta.eq('year', escopo.year).eq('month', escopo.month);
+            }
+            const { data, error } = await consulta;
+            if (error) throw new Error('Falha ao listar transações: ' + error.message);
+            return (data || []).map(r => r.id);
+        }
+
+        async function apagarEmLotes(tabela, coluna, valores) {
+            let total = 0;
+            for (const lote of emLotes(valores, 100)) {
+                const { error } = await supabaseClient.from(tabela).delete().in(coluna, lote);
+                if (error) throw new Error('Falha ao apagar em ' + tabela + ': ' + error.message);
+                total += lote.length;
+            }
+            return total;
+        }
+
+        async function contarTransacoes(escopo = {}) {
+            let consulta = supabaseClient.from('transactions').select('id');
+            if (escopo.year && escopo.month) {
+                consulta = consulta.eq('year', escopo.year).eq('month', escopo.month);
+            }
+            const { data, error } = await consulta;
+            if (error) return -1;
+            return (data || []).length;
+        }
+
+        function definirBotoesResetOcupados(ocupado) {
+            ['btnResetarMes', 'btnResetarGeral'].forEach(id => {
+                const b = document.getElementById(id);
+                if (b) b.disabled = ocupado;
+            });
+        }
+
+        /**
+         * RESETAR MÊS ATUAL — apaga apenas os lançamentos do mês exibido.
+         */
+        async function resetCurrentMonth() {
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth() + 1;
+            const nomeMes = MONTH_NAMES_FULL[month - 1] + ' de ' + year;
+
+            if (isDevMode || !isOnline || !supabaseClient || !currentUser) {
+                showNotification('⚠️ Sem conexão com o banco. Reset indisponível offline.', 'error');
+                return;
+            }
+
+            const doMes = localData.transactions.filter(t => isTransactionInMonth(t, year, month));
+
+            if (!confirm(
+                '⚠️ Resetar ' + nomeMes + '?\n\n' +
+                doMes.length + ' lançamento(s) serão apagados permanentemente deste mês, ' +
+                'em todos os aparelhos.\n\n' +
+                'Os outros meses, as notas e os compromissos não serão tocados.\n\n' +
+                'Esta ação não pode ser desfeita. Deseja continuar?'
+            )) return;
+
+            definirBotoesResetOcupados(true);
+            restauracaoEmAndamento = true;
+            closeRealtimeChannel();
+
+            try {
+                updateConnectionStatus('syncing');
+                showNotification('⏳ Apagando os lançamentos de ' + nomeMes + '...', 'info');
+
+                const ids = await coletarIdsTransacoes({ year, month });
+
+                if (ids.length > 0) {
+                    await apagarEmLotes('payment_history', 'transaction_id', ids);
+                    await apagarEmLotes('transactions', 'id', ids);
+                }
+
+                // Confere no banco: nunca declarar sucesso sem verificar
+                const restantes = await contarTransacoes({ year, month });
+                if (restantes > 0) {
+                    throw new Error(restantes + ' lançamento(s) não puderam ser apagados (permissão do banco).');
+                }
+
+                // Limpa o espelho local do mês
+                localData.transactions = localData.transactions.filter(
+                    t => !isTransactionInMonth(t, year, month));
+                localData.paymentHistory = (localData.paymentHistory || []).filter(
+                    h => !ids.includes(h.transaction_id));
+
+                updateDashboard();
+                renderPartitions();
+                checkAlerts();
+                updateConnectionStatus('online');
+                showNotification('✅ ' + nomeMes + ' resetado (' + ids.length + ' lançamento(s) apagados).', 'success');
+                closeSettingsModal();
+            } catch (error) {
+                console.error('❌ Erro ao resetar o mês:', error);
+                updateConnectionStatus('offline');
+                showNotification('❌ Erro ao resetar o mês: ' + error.message, 'error');
+            } finally {
+                restauracaoEmAndamento = false;
+                definirBotoesResetOcupados(false);
+                if (isOnline && currentUser && !isDevMode) {
+                    setupRealtimeSubscription();
+                    await broadcastForceReload();
+                }
+            }
+        }
+
+        /**
+         * RESETAR GERAL — devolve a aplicação ao estado zero.
+         */
         async function resetAllData() {
+            if (isDevMode || !isOnline || !supabaseClient || !currentUser) {
+                showNotification('⚠️ Sem conexão com o banco. Reset indisponível offline.', 'error');
+                return;
+            }
+
             const confirmation = confirm(
                 '⚠️ ATENÇÃO!\n\n' +
-                'Você está prestes a APAGAR TODOS os seus dados permanentemente.\n\n' +
+                'Você está prestes a APAGAR TODOS os dados permanentemente, em todos os aparelhos.\n\n' +
                 'Esta ação irá remover:\n' +
-                '- Todas as transações financeiras\n' +
-                '- Todas as notas e cadernos\n' +
+                '- Todas as transações financeiras, de TODOS os meses\n' +
+                '- Todos os cadernos e notas\n' +
                 '- Todos os compromissos\n' +
                 '- Todo o histórico de pagamentos\n\n' +
                 'Esta ação NÃO PODE ser desfeita!\n\n' +
                 'Deseja continuar?'
             );
-
             if (!confirmation) return;
 
             const secondConfirmation = prompt(
@@ -6651,53 +6849,82 @@
                 return;
             }
 
+            definirBotoesResetOcupados(true);
+            restauracaoEmAndamento = true;
+            closeRealtimeChannel();
+
             try {
                 updateConnectionStatus('syncing');
-                
-                // Limpa dados locais
+                showNotification('⏳ Apagando todos os dados...', 'info');
+
+                // 1. Transações e histórico de pagamentos
+                const ids = await coletarIdsTransacoes();
+                if (ids.length > 0) {
+                    await apagarEmLotes('payment_history', 'transaction_id', ids);
+                    await apagarEmLotes('transactions', 'id', ids);
+                }
+
+                // 2. Notas antes dos cadernos (notes referencia notebooks)
+                let notasApagadas = 0;
+                let cadernosApagados = 0;
+                try {
+                    const { data: notas } = await supabaseClient.from('notes').select('id');
+                    const idsNotas = (notas || []).map(n => n.id);
+                    if (idsNotas.length > 0) {
+                        notasApagadas = await apagarEmLotes('notes', 'id', idsNotas);
+                    }
+
+                    const { data: cadernos } = await supabaseClient.from('notebooks').select('id');
+                    const idsCadernos = (cadernos || []).map(n => n.id);
+                    if (idsCadernos.length > 0) {
+                        cadernosApagados = await apagarEmLotes('notebooks', 'id', idsCadernos);
+                    }
+                } catch (e) {
+                    console.warn('Aviso ao apagar cadernos/notas:', e);
+                }
+
+                // 3. Confere no banco antes de declarar sucesso
+                const restantes = await contarTransacoes();
+                if (restantes > 0) {
+                    throw new Error(restantes + ' lançamento(s) não puderam ser apagados (permissão do banco).');
+                }
+
+                // 4. Estado zero em memória
                 localData = {
                     transactions: [],
                     notebooks: [],
                     notes: [],
                     appointments: [],
-                    paymentHistory: []
+                    paymentHistory: [],
+                    _pendingDeletions: []
                 };
-                
-                
 
-                // Se estiver online, tenta limpar no Supabase também
-                if (isOnline && supabaseClient && !isDevMode) {
-                    try {
-                        // Deleta transações
-                        await supabaseClient
-                            .from('transactions')
-                            .delete()
-                            .eq('user_id', currentUser.id);
-                        
-                        // Deleta histórico de pagamentos
-                        await supabaseClient
-                            .from('payment_history')
-                            .delete()
-                            .eq('user_id', currentUser.id);
-                            
-                    } catch (error) {
-                        console.error('Erro ao limpar dados no Supabase:', error);
-                    }
-                }
+                currentNotebookId = null;
+                currentNoteId = null;
 
-                // Não chama loadAllData() aqui pois re-buscaria do Supabase e poderia
-                // repopular com dados antigos caso o delete ainda não tenha propagado.
-                // Renderiza diretamente com localData já vazia.
                 updateDashboard();
                 renderPartitions();
+                renderNotebooks();
+                checkAlerts();
                 updateConnectionStatus('online');
-                showNotification('✅ Todos os dados foram resetados com sucesso!', 'success');
+                showNotification(
+                    '✅ Estado zero restabelecido: ' + ids.length + ' lançamento(s), ' +
+                    notasApagadas + ' nota(s) e ' + cadernosApagados + ' caderno(s) apagados.',
+                    'success'
+                );
                 closeSettingsModal();
-                
+
             } catch (error) {
-                console.error('Erro ao resetar dados:', error);
+                console.error('❌ Erro ao resetar dados:', error);
                 updateConnectionStatus('offline');
                 showNotification('❌ Erro ao resetar dados: ' + error.message, 'error');
+            } finally {
+                restauracaoEmAndamento = false;
+                definirBotoesResetOcupados(false);
+                if (isOnline && currentUser && !isDevMode) {
+                    setupRealtimeSubscription();
+                    await broadcastForceReload();
+                }
             }
         }
 
@@ -8727,6 +8954,7 @@
         window.openEditModalFromPending = openEditModalFromPending;
         window.deleteTransactionFromPending = deleteTransactionFromPending;
         window.resetAllData = resetAllData;
+        window.resetCurrentMonth = resetCurrentMonth;
 
         // FUNÇÕES REALTIME E ATUALIZAÇÃO EXPORTADAS
         window.setupRealtimeSubscription = setupRealtimeSubscription;

@@ -2466,6 +2466,66 @@
         .pwa-toast-close:hover {
             color: #fff;
         }
+
+        /* Estilos do Módulo de Relatório Financeiro */
+        .btn-report-quick {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--blue-royal) 0%, #1e40af 100%);
+            color: white;
+            border: 1px solid var(--gold-primary);
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+            transition: all 0.3s ease;
+        }
+
+        .btn-report-quick:hover {
+            background: linear-gradient(135deg, #1e40af 0%, var(--blue-royal) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(30, 58, 138, 0.35);
+        }
+
+        .report-btn-whatsapp {
+            background: #25D366 !important;
+            color: white !important;
+            border: none !important;
+            font-weight: 600 !important;
+        }
+
+        .report-btn-whatsapp:hover {
+            background: #20ba59 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4) !important;
+        }
+
+        .report-btn-preview {
+            background: #f8fafc !important;
+            color: #334155 !important;
+            border: 1px solid #cbd5e1 !important;
+            font-weight: 600 !important;
+        }
+
+        .report-btn-preview:hover {
+            background: #e2e8f0 !important;
+            transform: translateY(-1px);
+        }
+
+        .report-kpi-card {
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            transition: transform 0.2s ease;
+        }
+
+        .report-kpi-card:hover {
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -2557,6 +2617,7 @@
         <!-- Navigation -->
         <nav class="nav-bar">
             <button class="nav-btn active" onclick="showView('dashboard')">📊 Dashboard</button>
+            <button class="nav-btn" onclick="openReportModal()" style="background-color: rgba(212, 175, 55, 0.22); border: 1px solid var(--gold-primary);">📑 Relatório</button>
             <button class="nav-btn" onclick="openCalculator()">🧮 Calculadora</button>
             <button class="nav-btn" onclick="openCalendarModal()">📅 Calendário</button>
             <button class="nav-btn" onclick="openHistoryModal()">📜 Histórico</button>
@@ -2587,6 +2648,14 @@
                     <button class="month-btn" onclick="changeMonth(-1)">◀</button>
                     <div class="month-text" id="currentMonth">FEVEREIRO 2025</div>
                     <button class="month-btn" onclick="changeMonth(1)">▶</button>
+                </div>
+
+                <!-- Botão de Ação Rápida de Relatório -->
+                <div style="display: flex; justify-content: center; margin-top: -18px; margin-bottom: 24px;">
+                    <button type="button" class="btn-report-quick" onclick="openReportModal()" title="Exportar Relatório em PDF ou WhatsApp">
+                        <span>📑</span>
+                        <span>Exportar Relatório (PDF / WhatsApp)</span>
+                    </button>
                 </div>
 
                 <!-- Cards Grid -->
@@ -3243,6 +3312,141 @@
                 <button type="button" class="btn btn-cancel" onclick="closeRegisterModal()">Cancelar</button>
                 <button type="button" class="btn btn-save" onclick="registerUser()">Cadastrar</button>
             </div>
+    <!-- Modal Relatório Financeiro -->
+    <div class="modal" id="reportModal">
+        <div class="modal-content large" style="max-width: 820px;">
+            <div class="modal-header">
+                <h3 class="modal-title">📑 Relatório da Atividade Financeira</h3>
+                <button class="close-btn" onclick="closeReportModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Seletor de Período e Nível de Detalhe -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.1rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+                        <span style="font-weight: 700; color: var(--blue-royal); font-size: 0.95rem;">📅 Período:</span>
+                        <select id="reportMonthSelector" class="form-input-modal" style="width: auto; padding: 0.45rem 0.8rem; margin: 0; font-weight: 600;" onchange="updateReportPreview()">
+                        </select>
+                        <select id="reportYearSelector" class="form-input-modal" style="width: auto; padding: 0.45rem 0.8rem; margin: 0; font-weight: 600;" onchange="updateReportPreview()">
+                        </select>
+                        <button type="button" class="btn-small btn-secondary-small" onclick="syncReportToCurrentMonth()" title="Usar mês selecionado no dashboard" style="padding: 0.45rem 0.75rem;">
+                            ↺ Mês do Dashboard
+                        </button>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <label for="reportDetailLevel" style="font-weight: 600; color: #475569; font-size: 0.88rem;">Extrato:</label>
+                        <select id="reportDetailLevel" class="form-input-modal" style="width: auto; padding: 0.45rem 0.8rem; margin: 0; font-size: 0.88rem;">
+                            <option value="completo">Completo (Diagnóstico + Repartições + Pendências + Extrato)</option>
+                            <option value="sintetico">Sintético (Diagnóstico + Repartições + Pendências)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Painel Diagnóstico do Momento Financeiro Atual -->
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <h4 style="color: var(--blue-royal); margin: 0; display: flex; align-items: center; gap: 0.5rem; font-family: 'Cinzel', serif; font-size: 1.05rem;">
+                            <span>⚜️</span> Diagnóstico do Momento Financeiro Atual
+                        </h4>
+                        <span id="repPeriodBadge" style="background: #e0e7ff; color: #3730a3; font-size: 0.78rem; font-weight: 600; padding: 3px 10px; border-radius: 12px;"></span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(115px, 1fr)); gap: 10px; margin-bottom: 1rem;">
+                        <div class="report-kpi-card" style="background: #f0fdf4; border: 1px solid #bbf7d0;">
+                            <div style="font-size: 0.72rem; color: #166534; font-weight: 700;">💰 Saldo Atual</div>
+                            <div id="repPreviewSaldo" style="font-size: 1.15rem; font-weight: 800; color: #15803d; margin: 4px 0;">R$ 0,00</div>
+                            <div style="font-size: 0.68rem; color: #15803d; font-weight: 500;">Disponível Agora</div>
+                        </div>
+
+                        <div class="report-kpi-card" style="background: #eff6ff; border: 1px solid #bfdbfe;">
+                            <div style="font-size: 0.72rem; color: #1e40af; font-weight: 700;">📥 Receitas</div>
+                            <div id="repPreviewReceitas" style="font-size: 1.15rem; font-weight: 800; color: #2563eb; margin: 4px 0;">R$ 0,00</div>
+                            <div style="font-size: 0.68rem; color: #64748b;">Entradas do Mês</div>
+                        </div>
+
+                        <div class="report-kpi-card" style="background: #fef2f2; border: 1px solid #fecaca;">
+                            <div style="font-size: 0.72rem; color: #991b1b; font-weight: 700;">📤 Despesas Totais</div>
+                            <div id="repPreviewDespesas" style="font-size: 1.15rem; font-weight: 800; color: #dc2626; margin: 4px 0;">R$ 0,00</div>
+                            <div style="font-size: 0.68rem; color: #64748b;">Programadas</div>
+                        </div>
+
+                        <div class="report-kpi-card" style="background: #faf5ff; border: 1px solid #e9d5ff;">
+                            <div style="font-size: 0.72rem; color: #6b21a8; font-weight: 700;">✅ Total Pago</div>
+                            <div id="repPreviewPago" style="font-size: 1.15rem; font-weight: 800; color: #7e22ce; margin: 4px 0;">R$ 0,00</div>
+                            <div id="repPreviewPagoPct" style="font-size: 0.68rem; color: #9333ea; font-weight: 600;">0% quitado</div>
+                        </div>
+
+                        <div class="report-kpi-card" style="background: #fffbeb; border: 1px solid #fde68a;">
+                            <div style="font-size: 0.72rem; color: #92400e; font-weight: 700;">⏳ Total Pendente</div>
+                            <div id="repPreviewPendente" style="font-size: 1.15rem; font-weight: 800; color: #d97706; margin: 4px 0;">R$ 0,00</div>
+                            <div id="repPreviewPendentePct" style="font-size: 0.68rem; color: #b45309; font-weight: 600;">0% a pagar</div>
+                        </div>
+
+                        <div class="report-kpi-card" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                            <div style="font-size: 0.72rem; color: #334155; font-weight: 700;">🎯 Saldo Projetado</div>
+                            <div id="repPreviewProjetado" style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 4px 0;">R$ 0,00</div>
+                            <div style="font-size: 0.68rem; color: #64748b;">Final do Mês</div>
+                        </div>
+                    </div>
+
+                    <!-- Mini cards das Repartições -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;">
+                        <div style="background: #f1f5f9; padding: 0.75rem 1rem; border-radius: 8px; border-left: 4px solid var(--blue-royal);">
+                            <div style="font-weight: 700; color: var(--blue-royal); font-size: 0.88rem; display: flex; justify-content: space-between;">
+                                <span>📂 1ª Repartição</span>
+                                <span style="font-size: 0.75rem; font-weight: 500; color: #64748b;">5º dia útil</span>
+                            </div>
+                            <div id="repPreviewPart1" style="font-size: 0.82rem; color: #334155; margin-top: 4px;">
+                                Saldo Disponível: <b>R$ 0,00</b> | Pendente: <b>R$ 0,00</b>
+                            </div>
+                        </div>
+
+                        <div style="background: #f1f5f9; padding: 0.75rem 1rem; border-radius: 8px; border-left: 4px solid var(--gold-dark);">
+                            <div style="font-weight: 700; color: var(--gold-dark); font-size: 0.88rem; display: flex; justify-content: space-between;">
+                                <span>📂 2ª Repartição</span>
+                                <span style="font-size: 0.75rem; font-weight: 500; color: #64748b;">Dia 20</span>
+                            </div>
+                            <div id="repPreviewPart2" style="font-size: 0.82rem; color: #334155; margin-top: 4px;">
+                                Saldo Disponível: <b>R$ 0,00</b> | Pendente: <b>R$ 0,00</b>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões de Ação de Exportação -->
+                <div style="border-top: 1px solid #e5e7eb; padding-top: 1.4rem;">
+                    <div style="font-weight: 700; color: #334155; margin-bottom: 0.85rem; font-size: 0.95rem;">
+                        Exportar Relatório da Atividade Financeira:
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                        <!-- Baixar PDF -->
+                        <button type="button" class="btn btn-save" onclick="executarExportacao('download')" style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.92rem; padding: 0.85rem 1rem; background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);">
+                            <span style="font-size: 1.1rem;">📥</span>
+                            <span>Baixar Relatório PDF</span>
+                        </button>
+
+                        <!-- Enviar WhatsApp -->
+                        <button type="button" class="btn report-btn-whatsapp" onclick="executarExportacao('whatsapp')" style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.92rem; padding: 0.85rem 1rem;">
+                            <span style="font-size: 1.1rem;">💬</span>
+                            <span>Enviar via WhatsApp</span>
+                        </button>
+
+                        <!-- Visualizar / Imprimir -->
+                        <button type="button" class="btn report-btn-preview" onclick="executarExportacao('preview')" style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.92rem; padding: 0.85rem 1rem;">
+                            <span style="font-size: 1.1rem;">👁️</span>
+                            <span>Visualizar / Imprimir</span>
+                        </button>
+                    </div>
+
+                    <div style="margin-top: 1rem; background: #fffbeb; border: 1px solid #fef08a; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.8rem; color: #854d0e; line-height: 1.45;">
+                        💡 <b>Opções de Envio:</b> No celular, ao clicar em <b>WhatsApp</b>, o arquivo PDF gerado e o resumo são compartilhados diretamente na conversa. No computador, o resumo formatado é aberto no WhatsApp Web e o arquivo PDF é baixado simultaneamente para anexar se desejar.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeReportModal()">Fechar</button>
+            </div>
         </div>
     </div>
 
@@ -3358,83 +3562,817 @@
         }
 
         // ==========================================
-        // FUNÇÃO DE GERAÇÃO DE RELATÓRIO PDF (CORRIGIDA)
+        // MÓDULO DE RELATÓRIO DA ATIVIDADE FINANCEIRA (PDF / WHATSAPP / DOWNLOAD)
         // ==========================================
 
-        async function gerarRelatorioPDF() {
-            if (!LOGS_QUALIDADE_HABILITADOS) {
-                showNotification('Logs de qualidade desabilitados. Crie a tabela logs_qualidade primeiro.', 'warning');
-                return;
-            }
-            if (!supabaseClient || typeof supabaseClient.from !== 'function') {
-                showNotification('Erro: Cliente não inicializado', 'error');
-                return;
+        const MONTH_NAMES_FULL = [
+            'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        ];
+
+        /**
+         * Normaliza valor monetário para formato seguro no jsPDF (sem espaços não-separáveis)
+         */
+        function formatCurrencyPDF(value) {
+            return formatCurrency(value).replace(/\u00a0/g, ' ');
+        }
+
+        /**
+         * Coleta e consolida as métricas financeiras do período especificado
+         */
+        async function coletarDadosRelatorio(year, month) {
+            // Se estiver online e as transações do mês ainda não estiverem no localData, busca no Supabase
+            if (isOnline && supabaseClient && currentUser) {
+                const hasMonthData = localData.transactions.some(t => {
+                    const d = new Date(t.due_date);
+                    return d.getFullYear() === year && d.getMonth() === month - 1;
+                });
+                if (!hasMonthData) {
+                    try {
+                        await fetchTransactions(year, month);
+                    } catch (err) {
+                        console.warn('Aviso ao sincronizar transações para o relatório:', err);
+                    }
+                }
             }
 
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+            const transactions = localData.transactions.filter(t => {
+                const d = new Date(t.due_date);
+                return d.getFullYear() === year && d.getMonth() === month - 1;
+            });
 
-            try {
-                const logs = await monitorar('gerarRelatorioPDF_fetch', async () => {
-                    const { data, error } = await supabaseClient
-                        .from('logs_qualidade')
-                        .select('*')
-                        .order('data_hora', { ascending: false })
-                        .limit(20);
-                    
-                    if (error) throw error;
-                    return data || [];
+            let totalReceitas = 0;
+            let totalDespesas = 0;
+            let despesasPagas = 0;
+            let despesasPendentes = 0;
+            let gastosAVista = 0;
+
+            // Repartição 1
+            let rec1 = 0, pag1 = 0, pend1 = 0, cash1 = 0;
+            // Repartição 2
+            let rec2 = 0, pag2 = 0, pend2 = 0, cash2 = 0;
+
+            // Categorias
+            const catTotals = {
+                fixed: { label: 'Contas Fixas', count: 0, total: 0, pago: 0, pendente: 0 },
+                variable: { label: 'Contas Variáveis', count: 0, total: 0, pago: 0, pendente: 0 },
+                installment: { label: 'Contas Parceladas', count: 0, total: 0, pago: 0, pendente: 0 },
+                cash: { label: 'Gastos à Vista', count: 0, total: 0, pago: 0, pendente: 0 },
+                income: { label: 'Entradas / Receitas', count: 0, total: 0, pago: 0, pendente: 0 }
+            };
+
+            const pendentesList = [];
+
+            transactions.forEach(t => {
+                const amt = parseFloat(t.amount) || 0;
+                const isIncome = t.type === 'income' || t.category === 'income';
+                const isPaid = t.status === 'paid' || t.status === 'received';
+                const part = parseInt(t.partition_id) || 1;
+                const catKey = catTotals[t.category] ? t.category : (isIncome ? 'income' : 'variable');
+
+                catTotals[catKey].count++;
+                catTotals[catKey].total += amt;
+                if (isPaid) {
+                    catTotals[catKey].pago += amt;
+                } else {
+                    catTotals[catKey].pendente += amt;
+                }
+
+                if (isIncome) {
+                    totalReceitas += amt;
+                    if (part === 1) rec1 += amt; else rec2 += amt;
+                } else {
+                    totalDespesas += amt;
+                    if (t.type === 'cash' || t.category === 'cash') {
+                        if (isPaid) {
+                            gastosAVista += amt;
+                            if (part === 1) cash1 += amt; else cash2 += amt;
+                        }
+                    } else {
+                        if (isPaid) {
+                            despesasPagas += amt;
+                            if (part === 1) pag1 += amt; else pag2 += amt;
+                        } else {
+                            despesasPendentes += amt;
+                            if (part === 1) pend1 += amt; else pend2 += amt;
+                            pendentesList.push(t);
+                        }
+                    }
+                }
+            });
+
+            // Ordenar pendentes por data de vencimento
+            pendentesList.sort((a, b) => (a.due_date || '').localeCompare(b.due_date || ''));
+
+            // Ordenar todas as transações para extrato
+            const transactionsOrdenadas = [...transactions].sort((a, b) => (a.due_date || '').localeCompare(b.due_date || ''));
+
+            const totalLiquidadoGeral = despesasPagas + gastosAVista;
+            const saldoLiquidoAtual = Math.max(0, totalReceitas - totalLiquidadoGeral);
+            const saldoProjetadoFinal = totalReceitas - totalDespesas;
+
+            const saldoPart1 = Math.max(0, rec1 - pag1 - cash1);
+            const saldoPart2 = Math.max(0, rec2 - pag2 - cash2);
+
+            const pctPago = totalDespesas > 0 ? (totalLiquidadoGeral / totalDespesas * 100) : 0;
+            const pctPendente = totalDespesas > 0 ? (despesasPendentes / totalDespesas * 100) : 0;
+
+            const mesNome = MONTH_NAMES_FULL[month - 1];
+            const agora = new Date();
+            const emissaoStr = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+            let usuarioNome = 'Família Pedrosa de Lima';
+            if (currentUser && currentUser.email) {
+                usuarioNome = currentUser.user_metadata?.full_name || currentUser.email;
+            } else if (isDevMode) {
+                usuarioNome = 'Modo Administrador (Dev)';
+            }
+
+            return {
+                year,
+                month,
+                mesNome,
+                emissaoStr,
+                usuarioNome,
+                transactions: transactionsOrdenadas,
+                pendentesList,
+                totalReceitas,
+                totalDespesas,
+                totalLiquidadoGeral,
+                despesasPagas,
+                despesasPendentes,
+                gastosAVista,
+                saldoLiquidoAtual,
+                saldoProjetadoFinal,
+                pctPago,
+                pctPendente,
+                rec1, pag1, cash1, pend1, saldoPart1,
+                rec2, pag2, cash2, pend2, saldoPart2,
+                catTotals
+            };
+        }
+
+        /**
+         * Gera o documento visual em PDF através do jsPDF e jsPDF-AutoTable
+         */
+        function gerarPDFRelatorio(dados, nivelDetalhe = 'completo') {
+            const { jsPDF } = window.jspdf || {};
+            if (!jsPDF) {
+                throw new Error('Biblioteca jsPDF não encontrada no navegador.');
+            }
+
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const primaryBlue = [30, 58, 138];
+            const goldColor = [212, 175, 55];
+            const dangerRed = [185, 28, 28];
+
+            // 1. CABEÇALHO DO RELATÓRIO
+            doc.setFillColor(...primaryBlue);
+            doc.rect(0, 0, 210, 26, 'F');
+
+            doc.setFillColor(...goldColor);
+            doc.rect(0, 26, 210, 2.2, 'F');
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(13);
+            doc.setTextColor(255, 255, 255);
+            doc.text('FINANCAS FAMILIA PEDROSA DE LIMA', 14, 11);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8.5);
+            doc.setTextColor(244, 232, 193);
+            doc.text('RELATORIO EXECUTIVO DA ATIVIDADE FINANCEIRA', 14, 18);
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(255, 255, 255);
+            const mesCompetencia = (dados.mesNome || '').toUpperCase();
+            doc.text(`COMPETENCIA: ${mesCompetencia} / ${dados.year}`, 196, 11, { align: 'right' });
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7.5);
+            doc.setTextColor(220, 230, 245);
+            doc.text(`Emissao: ${dados.emissaoStr}`, 196, 17, { align: 'right' });
+            doc.text(`Usuario: ${dados.usuarioNome}`, 196, 22, { align: 'right' });
+
+            // 2. DIAGNÓSTICO DO MOMENTO ATUAL (CARDS KPI)
+            let yPos = 34;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(...primaryBlue);
+            doc.text('SITUACAO CONSOLIDADA DO MOMENTO ATUAL', 14, yPos);
+
+            yPos += 4;
+            const cardWidth = 58;
+            const cardHeight = 17;
+            const startX = 14;
+            const gapX = 4;
+
+            function drawKpiCard(x, y, w, h, bgRgb, borderRgb, title, value, valRgb, subtitle) {
+                doc.setFillColor(...bgRgb);
+                doc.setDrawColor(...borderRgb);
+                doc.setLineWidth(0.3);
+                doc.roundedRect(x, y, w, h, 2, 2, 'FD');
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(6.8);
+                doc.setTextColor(100, 116, 139);
+                doc.text(title.toUpperCase(), x + w / 2, y + 4.5, { align: 'center' });
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(10.5);
+                doc.setTextColor(...valRgb);
+                doc.text(value, x + w / 2, y + 10.5, { align: 'center' });
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(6.5);
+                doc.setTextColor(100, 116, 139);
+                doc.text(subtitle, x + w / 2, y + 14.8, { align: 'center' });
+            }
+
+            // Linha 1 de Cards
+            drawKpiCard(
+                startX, yPos, cardWidth, cardHeight,
+                [240, 253, 244], [187, 247, 208],
+                'Saldo Atual Disponivel',
+                formatCurrencyPDF(dados.saldoLiquidoAtual),
+                [21, 128, 61],
+                'Receitas (-) Despesas Pagas'
+            );
+
+            drawKpiCard(
+                startX + cardWidth + gapX, yPos, cardWidth, cardHeight,
+                [239, 246, 255], [191, 219, 254],
+                'Receitas Totais',
+                formatCurrencyPDF(dados.totalReceitas),
+                [29, 78, 216],
+                'Total de Entradas no Mes'
+            );
+
+            drawKpiCard(
+                startX + (cardWidth + gapX) * 2, yPos, cardWidth, cardHeight,
+                [254, 242, 242], [254, 202, 202],
+                'Despesas Totais Programadas',
+                formatCurrencyPDF(dados.totalDespesas),
+                [185, 28, 28],
+                'Todas Categorias do Mes'
+            );
+
+            // Linha 2 de Cards
+            yPos += cardHeight + 3.5;
+
+            drawKpiCard(
+                startX, yPos, cardWidth, cardHeight,
+                [250, 245, 255], [233, 213, 255],
+                'Total Ja Liquidado',
+                formatCurrencyPDF(dados.totalLiquidadoGeral),
+                [126, 34, 206],
+                `${dados.pctPago.toFixed(1)}% das contas quitadas`
+            );
+
+            drawKpiCard(
+                startX + cardWidth + gapX, yPos, cardWidth, cardHeight,
+                [255, 251, 235], [253, 230, 138],
+                'Total Pendente a Pagar',
+                formatCurrencyPDF(dados.despesasPendentes),
+                [180, 83, 9],
+                `${dados.pctPendente.toFixed(1)}% a pagar no mes`
+            );
+
+            drawKpiCard(
+                startX + (cardWidth + gapX) * 2, yPos, cardWidth, cardHeight,
+                dados.saldoProjetadoFinal >= 0 ? [240, 253, 244] : [254, 242, 242],
+                dados.saldoProjetadoFinal >= 0 ? [187, 247, 208] : [254, 202, 202],
+                'Saldo Projetado Final',
+                formatCurrencyPDF(dados.saldoProjetadoFinal),
+                dados.saldoProjetadoFinal >= 0 ? [21, 128, 61] : [220, 38, 38],
+                'Receitas (-) Despesas Totais'
+            );
+
+            yPos += cardHeight + 8;
+
+            // 3. TABELA: DEMONSTRATIVO DAS REPARTIÇÕES
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(...primaryBlue);
+            doc.text('1. DEMONSTRATIVO POR REPARTICAO (FLUXO DE CAIXA)', 14, yPos);
+
+            const situacaoPart1 = dados.saldoPart1 > 0 ? 'Disponivel' : (dados.rec1 > 0 ? 'Totalmente Consumido' : 'Sem Receitas');
+            const situacaoPart2 = dados.saldoPart2 > 0 ? 'Disponivel' : (dados.rec2 > 0 ? 'Totalmente Consumido' : 'Sem Receitas');
+
+            doc.autoTable({
+                startY: yPos + 3,
+                head: [['Reparticao', 'Regra de Vencimento', 'Receitas', 'Desp. Pagas / Debitos', 'Contas Pendentes', 'Saldo Atual', 'Situacao']],
+                body: [
+                    [
+                        '1a Reparticao',
+                        '5o dia util',
+                        formatCurrencyPDF(dados.rec1),
+                        formatCurrencyPDF(dados.pag1 + dados.cash1),
+                        formatCurrencyPDF(dados.pend1),
+                        formatCurrencyPDF(dados.saldoPart1),
+                        situacaoPart1
+                    ],
+                    [
+                        '2a Reparticao',
+                        'Dia 20',
+                        formatCurrencyPDF(dados.rec2),
+                        formatCurrencyPDF(dados.pag2 + dados.cash2),
+                        formatCurrencyPDF(dados.pend2),
+                        formatCurrencyPDF(dados.saldoPart2),
+                        situacaoPart2
+                    ],
+                    [
+                        'TOTAL GERAL',
+                        'Consolidado Mensal',
+                        formatCurrencyPDF(dados.totalReceitas),
+                        formatCurrencyPDF(dados.totalLiquidadoGeral),
+                        formatCurrencyPDF(dados.despesasPendentes),
+                        formatCurrencyPDF(dados.saldoLiquidoAtual),
+                        dados.saldoLiquidoAtual > 0 ? 'Saldo Positivo' : 'Equilibrado / Alerta'
+                    ]
+                ],
+                theme: 'grid',
+                headStyles: {
+                    fillColor: primaryBlue,
+                    textColor: [255, 255, 255],
+                    fontSize: 7.5,
+                    fontStyle: 'bold',
+                    halign: 'center'
+                },
+                styles: {
+                    fontSize: 7.5,
+                    cellPadding: 2.5
+                },
+                columnStyles: {
+                    0: { fontStyle: 'bold', halign: 'left', cellWidth: 28 },
+                    1: { halign: 'center', cellWidth: 26 },
+                    2: { halign: 'right', cellWidth: 24 },
+                    3: { halign: 'right', cellWidth: 28 },
+                    4: { halign: 'right', cellWidth: 26 },
+                    5: { halign: 'right', fontStyle: 'bold', cellWidth: 25 },
+                    6: { halign: 'center', cellWidth: 25 }
+                },
+                alternateRowStyles: {
+                    fillColor: [248, 250, 252]
+                }
+            });
+
+            yPos = doc.lastAutoTable.finalY + 7;
+
+            // 4. TABELA: RESUMO POR CATEGORIA
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(...primaryBlue);
+            doc.text('2. DISTRIBUICAO POR CATEGORIA', 14, yPos);
+
+            const catRows = Object.keys(dados.catTotals).map(key => {
+                const c = dados.catTotals[key];
+                const pct = c.total > 0 ? ((c.pago / c.total) * 100).toFixed(0) + '%' : '100%';
+                return [
+                    c.label,
+                    c.count.toString(),
+                    formatCurrencyPDF(c.total),
+                    formatCurrencyPDF(c.pago),
+                    formatCurrencyPDF(c.pendente),
+                    pct
+                ];
+            });
+
+            doc.autoTable({
+                startY: yPos + 3,
+                head: [['Categoria', 'Qtd.', 'Total Previsto', 'Valor Pago / Realizado', 'Valor Pendente', '% Liquidado']],
+                body: catRows,
+                theme: 'striped',
+                headStyles: {
+                    fillColor: [40, 70, 150],
+                    textColor: [255, 255, 255],
+                    fontSize: 7.5,
+                    fontStyle: 'bold',
+                    halign: 'center'
+                },
+                styles: {
+                    fontSize: 7.5,
+                    cellPadding: 2.2
+                },
+                columnStyles: {
+                    0: { fontStyle: 'bold', halign: 'left', cellWidth: 42 },
+                    1: { halign: 'center', cellWidth: 16 },
+                    2: { halign: 'right', cellWidth: 32 },
+                    3: { halign: 'right', cellWidth: 34 },
+                    4: { halign: 'right', cellWidth: 32 },
+                    5: { halign: 'center', cellWidth: 26 }
+                }
+            });
+
+            yPos = doc.lastAutoTable.finalY + 7;
+
+            // 5. TABELA: CONTAS PENDENTES (ATENÇÃO IMEDIATA)
+            if (yPos > 230) {
+                doc.addPage();
+                yPos = 20;
+            }
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(...dangerRed);
+            doc.text('3. CONTAS PENDENTES DE PAGAMENTO (ATENCAO IMEDIATA)', 14, yPos);
+
+            if (dados.pendentesList.length === 0) {
+                yPos += 5;
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8.5);
+                doc.setTextColor(21, 128, 61);
+                doc.text('Todas as contas deste periodo estao quitadas. Nao ha pendencias registradas.', 14, yPos);
+                yPos += 7;
+            } else {
+                const pendentesRows = dados.pendentesList.map(p => {
+                    const dataFmt = p.due_date ? p.due_date.split('-').reverse().join('/') : '-';
+                    const catName = sectionNames[getSectionIdFromType(p.type, p.partition_id)] || p.category;
+                    const partStr = p.partition_id === 1 ? '1a Reparticao' : '2a Reparticao';
+                    const parcStr = p.total_installments > 1 ? `${p.installment_number}/${p.total_installments}` : 'Unica';
+
+                    return [
+                        dataFmt,
+                        p.description,
+                        catName,
+                        partStr,
+                        parcStr,
+                        formatCurrencyPDF(p.amount)
+                    ];
                 });
 
-                doc.setFontSize(16);
-                doc.text("Relatório de Saúde do Sistema - Central de Qualidade", 14, 20);
-                doc.setFontSize(10);
-                doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')} | Usuário: ${currentUser?.email || 'N/A'}`, 14, 28);
-
-                const colunas = ["Hora", "Função", "Status", "Latência", "Mensagem"];
-                const linhas = logs.map(l => [
-                    l.data_hora ? new Date(l.data_hora).toLocaleTimeString('pt-BR') : '-',
-                    l.funcao_nome || '-',
-                    (l.status || '-').toUpperCase(),
-                    l.latencia_ms ? `${l.latencia_ms}ms` : '-',
-                    l.mensagem_erro ? l.mensagem_erro.substring(0, 50) + '...' : 'Operação Nominal'
-                ]);
-
                 doc.autoTable({
-                    startY: 35,
-                    head: [colunas],
-                    body: linhas,
-                    theme: 'striped',
-                    headStyles: { fillColor: [231, 76, 60] },
-                    styles: { fontSize: 8, cellPadding: 2 },
+                    startY: yPos + 3,
+                    head: [['Vencimento', 'Descricao da Conta', 'Categoria', 'Reparticao', 'Parcela', 'Valor a Pagar']],
+                    body: pendentesRows,
+                    theme: 'grid',
+                    headStyles: {
+                        fillColor: [185, 28, 28],
+                        textColor: [255, 255, 255],
+                        fontSize: 7.5,
+                        fontStyle: 'bold',
+                        halign: 'center'
+                    },
+                    styles: {
+                        fontSize: 7.2,
+                        cellPadding: 2
+                    },
                     columnStyles: {
-                        0: { cellWidth: 20 },
-                        1: { cellWidth: 40 },
-                        2: { cellWidth: 20 },
-                        3: { cellWidth: 25 },
-                        4: { cellWidth: 'auto' }
+                        0: { halign: 'center', cellWidth: 22 },
+                        1: { halign: 'left', fontStyle: 'bold', cellWidth: 60 },
+                        2: { halign: 'left', cellWidth: 32 },
+                        3: { halign: 'center', cellWidth: 26 },
+                        4: { halign: 'center', cellWidth: 18 },
+                        5: { halign: 'right', fontStyle: 'bold', cellWidth: 24 }
+                    },
+                    alternateRowStyles: {
+                        fillColor: [254, 242, 242]
                     }
                 });
 
-                const positivos = logs.filter(l => l.status === 'positivo').length;
-                const negativos = logs.filter(l => l.status === 'negativo').length;
-                const tempoMedio = logs.reduce((acc, l) => acc + (l.latencia_ms || 0), 0) / logs.length;
-
-                const finalY = doc.lastAutoTable.finalY + 10;
-                doc.setFontSize(12);
-                doc.text("Resumo Estatístico:", 14, finalY);
-                doc.setFontSize(10);
-                doc.text(`✅ Operações bem-sucedidas: ${positivos}`, 14, finalY + 7);
-                doc.text(`❌ Falhas detectadas: ${negativos}`, 14, finalY + 14);
-                doc.text(`⏱️ Latência média: ${tempoMedio.toFixed(2)}ms`, 14, finalY + 21);
-
-                doc.save(`diagnostico_ia_${Date.now()}.pdf`);
-                showNotification('Relatório PDF gerado com sucesso!');
-                
-            } catch (err) {
-                console.error("Erro ao gerar PDF:", err);
-                showNotification('Erro ao gerar relatório. Verifique o console.', 'error');
+                yPos = doc.lastAutoTable.finalY + 7;
             }
+
+            // 6. EXTRATO ANALÍTICO COMPLETO DE TODAS AS TRANSAÇÕES (SE MODO COMPLETO)
+            if (nivelDetalhe === 'completo' && dados.transactions.length > 0) {
+                if (yPos > 210) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(10);
+                doc.setTextColor(...primaryBlue);
+                doc.text('4. EXTRATO ANALITICO COMPLETO DE TRANSACOES', 14, yPos);
+
+                const extratoRows = dados.transactions.map(t => {
+                    const dataFmt = t.due_date ? t.due_date.split('-').reverse().join('/') : '-';
+                    const catName = sectionNames[getSectionIdFromType(t.type, t.partition_id)] || t.category;
+                    const partStr = t.partition_id === 1 ? '1a Rep.' : '2a Rep.';
+                    const isInc = t.type === 'income' || t.category === 'income';
+                    const isPaid = t.status === 'paid' || t.status === 'received';
+                    const tipoStr = isInc ? 'Receita' : 'Despesa';
+                    const statusStr = isPaid ? 'PAGO' : 'PENDENTE';
+
+                    return [
+                        dataFmt,
+                        t.description,
+                        catName,
+                        partStr,
+                        tipoStr,
+                        formatCurrencyPDF(t.amount),
+                        statusStr
+                    ];
+                });
+
+                doc.autoTable({
+                    startY: yPos + 3,
+                    head: [['Vencimento', 'Descricao', 'Categoria', 'Repart.', 'Tipo', 'Valor', 'Status']],
+                    body: extratoRows,
+                    theme: 'striped',
+                    headStyles: {
+                        fillColor: primaryBlue,
+                        textColor: [255, 255, 255],
+                        fontSize: 7.2,
+                        fontStyle: 'bold',
+                        halign: 'center'
+                    },
+                    styles: {
+                        fontSize: 7.0,
+                        cellPadding: 1.8
+                    },
+                    columnStyles: {
+                        0: { halign: 'center', cellWidth: 20 },
+                        1: { halign: 'left', cellWidth: 58 },
+                        2: { halign: 'left', cellWidth: 32 },
+                        3: { halign: 'center', cellWidth: 18 },
+                        4: { halign: 'center', cellWidth: 16 },
+                        5: { halign: 'right', fontStyle: 'bold', cellWidth: 22 },
+                        6: { halign: 'center', cellWidth: 16 }
+                    },
+                    didParseCell: function(data) {
+                        if (data.section === 'body' && data.column.index === 6) {
+                            if (data.cell.raw === 'PAGO') {
+                                data.cell.styles.textColor = [21, 128, 61];
+                                data.cell.styles.fontStyle = 'bold';
+                            } else if (data.cell.raw === 'PENDENTE') {
+                                data.cell.styles.textColor = [220, 38, 38];
+                                data.cell.styles.fontStyle = 'bold';
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 7. RODAPÉ EM TODAS AS PÁGINAS COM NUMERAÇÃO
+            const totalPages = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                doc.setPage(i);
+                doc.setDrawColor(...goldColor);
+                doc.setLineWidth(0.4);
+                doc.line(14, 287, 196, 287);
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(7.2);
+                doc.setTextColor(100, 116, 139);
+                doc.text('Financas Familia Pedrosa de Lima - Gestao Financeira', 14, 292);
+                doc.text(`Pagina ${i} de ${totalPages}`, 196, 292, { align: 'right' });
+                doc.text(`Emitido em ${dados.emissaoStr}`, 105, 292, { align: 'center' });
+            }
+
+            return doc;
+        }
+
+        /**
+         * Monta o resumo executivo formatado com emojis e estrutura para envio no WhatsApp
+         */
+        function gerarTextoWhatsapp(dados) {
+            const {
+                year, mesNome, emissaoStr,
+                saldoLiquidoAtual, saldoProjetadoFinal,
+                totalReceitas, totalDespesas, totalLiquidadoGeral, despesasPendentes,
+                pctPago, pctPendente,
+                saldoPart1, pend1,
+                saldoPart2, pend2,
+                pendentesList
+            } = dados;
+
+            let txt = `⚜️ *FINANÇAS FAMÍLIA PEDROSA DE LIMA*\n`;
+            txt += `📊 *RELATÓRIO DA ATIVIDADE FINANCEIRA*\n`;
+            txt += `📅 *Competência:* ${mesNome}/${year}\n`;
+            txt += `⏱️ *Emitido em:* ${emissaoStr}\n\n`;
+
+            txt += `━━━━━━━━━━━━━━━━━━━━\n`;
+            txt += `💰 *MOMENTO FINANCEIRO ATUAL*\n`;
+            txt += `━━━━━━━━━━━━━━━━━━━━\n`;
+            txt += `• *Saldo Atual Disponível:* ${formatCurrency(saldoLiquidoAtual)}\n`;
+            txt += `• *Receitas Totais:* ${formatCurrency(totalReceitas)}\n`;
+            txt += `• *Despesas Totais:* ${formatCurrency(totalDespesas)}\n`;
+            txt += `• *Total Já Quitado:* ${formatCurrency(totalLiquidadoGeral)} (${pctPago.toFixed(1)}%)\n`;
+            txt += `• *Total Pendente a Pagar:* ${formatCurrency(despesasPendentes)} (${pctPendente.toFixed(1)}%)\n`;
+            txt += `• *Saldo Projetado (Final):* ${formatCurrency(saldoProjetadoFinal)}\n\n`;
+
+            txt += `━━━━━━━━━━━━━━━━━━━━\n`;
+            txt += `📂 *SITUAÇÃO DAS REPARTIÇÕES*\n`;
+            txt += `━━━━━━━━━━━━━━━━━━━━\n`;
+            txt += `🔹 *1ª Repartição (5º dia útil):*\n`;
+            txt += `   Saldo Disponível: ${formatCurrency(saldoPart1)}\n`;
+            txt += `   Contas Pendentes: ${formatCurrency(pend1)}\n\n`;
+            txt += `🔹 *2ª Repartição (Dia 20):*\n`;
+            txt += `   Saldo Disponível: ${formatCurrency(saldoPart2)}\n`;
+            txt += `   Contas Pendentes: ${formatCurrency(pend2)}\n\n`;
+
+            if (pendentesList && pendentesList.length > 0) {
+                txt += `━━━━━━━━━━━━━━━━━━━━\n`;
+                txt += `⚠️ *PRÓXIMOS VENCIMENTOS PENDENTES:*\n`;
+                txt += `━━━━━━━━━━━━━━━━━━━━\n`;
+                const maxExibir = Math.min(pendentesList.length, 8);
+                for (let i = 0; i < maxExibir; i++) {
+                    const p = pendentesList[i];
+                    const dataFmt = p.due_date ? p.due_date.split('-').reverse().join('/') : '-';
+                    txt += `• ${dataFmt} | *${p.description}* - ${formatCurrency(p.amount)}\n`;
+                }
+                if (pendentesList.length > maxExibir) {
+                    txt += `_... e mais ${pendentesList.length - maxExibir} conta(s) pendente(s)._\n`;
+                }
+                txt += `\n`;
+            } else {
+                txt += `✅ *Excelente! Todas as contas do período encontram-se quitadas.*\n\n`;
+            }
+
+            txt += `📄 _O relatório detalhado em PDF foi gerado pelo sistema de gestão familiar._`;
+            return txt;
+        }
+
+        /**
+         * Executa a exportação no modo selecionado: 'download', 'whatsapp' ou 'preview'
+         */
+        async function exportarRelatorioFinanceiro(modo = 'download') {
+            try {
+                const monthSelect = document.getElementById('reportMonthSelector');
+                const yearSelect = document.getElementById('reportYearSelector');
+                const detailSelect = document.getElementById('reportDetailLevel');
+
+                const year = yearSelect ? parseInt(yearSelect.value) : currentMonth.getFullYear();
+                const month = monthSelect ? parseInt(monthSelect.value) : (currentMonth.getMonth() + 1);
+                const detailLevel = detailSelect ? detailSelect.value : 'completo';
+
+                showNotification('Gerando relatório financeiro...', 'success');
+
+                const dados = await coletarDadosRelatorio(year, month);
+                const doc = gerarPDFRelatorio(dados, detailLevel);
+
+                const nomeMesLimpo = (dados.mesNome || 'Mes').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                const nomeArquivo = `Relatorio_Financeiro_${nomeMesLimpo}_${year}.pdf`;
+
+                if (modo === 'download') {
+                    doc.save(nomeArquivo);
+                    showNotification('Relatório em PDF baixado com sucesso!');
+                } else if (modo === 'preview') {
+                    const blobUrl = doc.output('bloburl');
+                    window.open(blobUrl, '_blank');
+                    showNotification('Relatório aberto para visualização!');
+                } else if (modo === 'whatsapp') {
+                    const textoWhats = gerarTextoWhatsapp(dados);
+                    const pdfBlob = doc.output('blob');
+                    const pdfFile = new File([pdfBlob], nomeArquivo, { type: 'application/pdf' });
+
+                    // Compartilhamento direto no Mobile com Web Share API se suportar arquivos
+                    if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                        try {
+                            await navigator.share({
+                                title: `Relatório Financeiro ${dados.mesNome}/${year}`,
+                                text: textoWhats,
+                                files: [pdfFile]
+                            });
+                            showNotification('Relatório compartilhado com sucesso!');
+                            return;
+                        } catch (err) {
+                            if (err.name !== 'AbortError') {
+                                console.warn('Erro ao compartilhar via Web Share, acionando fallback WhatsApp:', err);
+                            } else {
+                                return; // Usuário cancelou
+                            }
+                        }
+                    }
+
+                    // Fallback Desktop / Navegador Web:
+                    // 1. Baixa o PDF automaticamente
+                    doc.save(nomeArquivo);
+                    // 2. Abre a conversa no WhatsApp com texto estruturado
+                    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(textoWhats)}`;
+                    window.open(waUrl, '_blank');
+                    showNotification('Resumo aberto no WhatsApp e PDF baixado para anexar!', 'success');
+                }
+            } catch (err) {
+                console.error('Erro ao exportar relatório financeiro:', err);
+                showNotification('Erro ao gerar relatório: ' + (err.message || 'Verifique o console'), 'error');
+            }
+        }
+
+        /**
+         * Interface do Modal de Relatório
+         */
+        function openReportModal() {
+            const monthSelect = document.getElementById('reportMonthSelector');
+            const yearSelect = document.getElementById('reportYearSelector');
+            
+            if (monthSelect && yearSelect) {
+                if (yearSelect.options.length === 0) {
+                    const curY = new Date().getFullYear();
+                    for (let y = curY - 2; y <= curY + 3; y++) {
+                        const opt = document.createElement('option');
+                        opt.value = y;
+                        opt.textContent = y;
+                        yearSelect.appendChild(opt);
+                    }
+                }
+                
+                if (monthSelect.options.length === 0) {
+                    MONTH_NAMES_FULL.forEach((m, idx) => {
+                        const opt = document.createElement('option');
+                        opt.value = idx + 1;
+                        opt.textContent = m;
+                        monthSelect.appendChild(opt);
+                    });
+                }
+
+                // Sincroniza inicialmente com o mês ativo no dashboard
+                yearSelect.value = currentMonth.getFullYear();
+                monthSelect.value = currentMonth.getMonth() + 1;
+            }
+
+            updateReportPreview();
+            const modalEl = document.getElementById('reportModal');
+            if (modalEl) modalEl.classList.add('active');
+        }
+
+        function closeReportModal() {
+            const modalEl = document.getElementById('reportModal');
+            if (modalEl) modalEl.classList.remove('active');
+        }
+
+        function syncReportToCurrentMonth() {
+            const monthSelect = document.getElementById('reportMonthSelector');
+            const yearSelect = document.getElementById('reportYearSelector');
+            if (monthSelect && yearSelect) {
+                yearSelect.value = currentMonth.getFullYear();
+                monthSelect.value = currentMonth.getMonth() + 1;
+                updateReportPreview();
+                showNotification('Sincronizado com o mês do Dashboard!');
+            }
+        }
+
+        async function updateReportPreview() {
+            const monthSelect = document.getElementById('reportMonthSelector');
+            const yearSelect = document.getElementById('reportYearSelector');
+            if (!monthSelect || !yearSelect) return;
+
+            const month = parseInt(monthSelect.value) || (currentMonth.getMonth() + 1);
+            const year = parseInt(yearSelect.value) || currentMonth.getFullYear();
+
+            const badgeEl = document.getElementById('repPeriodBadge');
+            if (badgeEl) {
+                badgeEl.textContent = `${MONTH_NAMES_FULL[month - 1].toUpperCase()} / ${year}`;
+            }
+
+            try {
+                const dados = await coletarDadosRelatorio(year, month);
+
+                const saldoEl = document.getElementById('repPreviewSaldo');
+                if (saldoEl) saldoEl.textContent = formatCurrency(dados.saldoLiquidoAtual);
+
+                const recEl = document.getElementById('repPreviewReceitas');
+                if (recEl) recEl.textContent = formatCurrency(dados.totalReceitas);
+
+                const despEl = document.getElementById('repPreviewDespesas');
+                if (despEl) despEl.textContent = formatCurrency(dados.totalDespesas);
+
+                const pagoEl = document.getElementById('repPreviewPago');
+                if (pagoEl) pagoEl.textContent = formatCurrency(dados.totalLiquidadoGeral);
+
+                const pagoPctEl = document.getElementById('repPreviewPagoPct');
+                if (pagoPctEl) pagoPctEl.textContent = `${dados.pctPago.toFixed(0)}% quitado`;
+
+                const pendEl = document.getElementById('repPreviewPendente');
+                if (pendEl) pendEl.textContent = formatCurrency(dados.despesasPendentes);
+
+                const pendPctEl = document.getElementById('repPreviewPendentePct');
+                if (pendPctEl) pendPctEl.textContent = `${dados.pctPendente.toFixed(0)}% a pagar`;
+
+                const projEl = document.getElementById('repPreviewProjetado');
+                if (projEl) {
+                    projEl.textContent = formatCurrency(dados.saldoProjetadoFinal);
+                    projEl.style.color = dados.saldoProjetadoFinal >= 0 ? '#15803d' : '#dc2626';
+                }
+
+                const part1El = document.getElementById('repPreviewPart1');
+                if (part1El) {
+                    part1El.innerHTML = `Saldo Disponível: <b style="color: ${dados.saldoPart1 > 0 ? '#15803d' : '#dc2626'}">${formatCurrency(dados.saldoPart1)}</b> | Pendente: <b>${formatCurrency(dados.pend1)}</b>`;
+                }
+
+                const part2El = document.getElementById('repPreviewPart2');
+                if (part2El) {
+                    part2El.innerHTML = `Saldo Disponível: <b style="color: ${dados.saldoPart2 > 0 ? '#15803d' : '#dc2626'}">${formatCurrency(dados.saldoPart2)}</b> | Pendente: <b>${formatCurrency(dados.pend2)}</b>`;
+                }
+            } catch (err) {
+                console.warn('Erro ao atualizar prévia do relatório:', err);
+            }
+        }
+
+        function executarExportacao(modo) {
+            return exportarRelatorioFinanceiro(modo);
+        }
+
+        // Mantém compatibilidade com chamadas antigas de gerarRelatorioPDF
+        async function gerarRelatorioPDF(modo = 'download') {
+            return exportarRelatorioFinanceiro(modo);
         }
 
         // ==========================================
@@ -7132,6 +8070,12 @@ Isso substituirá os dados atuais!`)) {
         window.closeModal = closeModal;
         window.saveTransaction = saveTransaction;
         window.gerarRelatorioPDF = gerarRelatorioPDF;
+        window.exportarRelatorioFinanceiro = exportarRelatorioFinanceiro;
+        window.openReportModal = openReportModal;
+        window.closeReportModal = closeReportModal;
+        window.syncReportToCurrentMonth = syncReportToCurrentMonth;
+        window.updateReportPreview = updateReportPreview;
+        window.executarExportacao = executarExportacao;
         window.monitorar = monitorar;
         window.openPendingModal = openPendingModal;
         window.closePendingModal = closePendingModal;

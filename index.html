@@ -2527,44 +2527,22 @@
             transform: translateY(-2px);
         }
 
-        /* Botão de Atualização Forçada do Banco */
-        .btn-sync-header {
-            display: inline-flex;
+        /* Indicador discreto de sincronizacao automatica no cabecalho */
+        .auto-sync-indicator {
+            display: none;
             align-items: center;
-            gap: 6px;
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.76rem;
+            gap: 5px;
+            font-size: 0.72rem;
             font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
-            transition: all 0.25s ease;
+            color: #93c5fd;
+            letter-spacing: 0.02em;
         }
 
-        .btn-sync-header:hover {
-            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+        .auto-sync-indicator.active {
+            display: inline-flex;
         }
 
-        .btn-sync-header:disabled {
-            opacity: 0.65;
-            cursor: not-allowed;
-        }
-
-        .btn-sync-nav {
-            background-color: rgba(59, 130, 246, 0.2) !important;
-            border: 1px solid #60a5fa !important;
-        }
-
-        .btn-sync-nav:hover {
-            background-color: rgba(59, 130, 246, 0.35) !important;
-        }
-
-        .sync-icon.spinning {
+        .auto-sync-indicator .sync-icon {
             display: inline-block;
             animation: spinSyncAnim 0.8s linear infinite;
         }
@@ -2655,11 +2633,11 @@
                     <span id="connectionIcon">⚠️</span>
                     <span id="connectionText">Offline</span>
                 </div>
-                <!-- Botão Forçar Atualização no Banco (Desktop, Celular e Navegador) -->
-                <button type="button" class="btn-sync-header" id="btnForcarSincronizacao" onclick="forcarAtualizacaoBanco()" title="Forçar atualização e sincronizar dados com o banco para todos os dispositivos">
+                <!-- Indicador de sincronização automática (substitui o antigo botão "Atualizar Banco") -->
+                <span class="auto-sync-indicator" id="autoSyncIndicator" title="Sincronizando automaticamente com o banco de dados">
                     <span class="sync-icon">🔄</span>
-                    <span class="sync-text">Atualizar Banco</span>
-                </button>
+                    <span>Sincronizando...</span>
+                </span>
                 <button type="button" class="btn-install-pwa" id="btnInstalarApp" hidden>
                     <span>📲</span><span>Instalar</span>
                 </button>
@@ -2669,10 +2647,6 @@
         <!-- Navigation -->
         <nav class="nav-bar">
             <button class="nav-btn active" onclick="showView('dashboard')">📊 Dashboard</button>
-            <button class="nav-btn btn-sync-nav" onclick="forcarAtualizacaoBanco()" title="Forçar atualização no banco de dados para todos os aparelhos">
-                <span class="sync-icon">🔄</span>
-                <span>Atualizar Banco</span>
-            </button>
             <button class="nav-btn" onclick="openReportModal()" style="background-color: rgba(212, 175, 55, 0.22); border: 1px solid var(--gold-primary);">📑 Relatório</button>
             <button class="nav-btn" onclick="openCalculator()">🧮 Calculadora</button>
             <button class="nav-btn" onclick="openCalendarModal()">📅 Calendário</button>
@@ -3536,6 +3510,10 @@
             paymentHistory: [],
             _pendingDeletions: []
         };
+
+        // Enquanto true, toda sincronização automática (Realtime, foco, heartbeat)
+        // fica suspensa para não sobrescrever um backup em processo de restauração.
+        let restauracaoEmAndamento = false;
 
         // ==========================================
         // CAMPOS PERMITIDOS PARA OPERAÇÕES COM SUPABASE
@@ -4841,9 +4819,34 @@
          * Carrega transações DIRETAMENTE do Supabase (sem localStorage)
          * Todos os usuários veem TODAS as transações
          */
-        async function fetchTransactions(year, month) {
+        /**
+         * Coalescedor de buscas: duas chamadas simultâneas para o mesmo mês
+         * (ex.: 'visibilitychange' + 'focus' disparando juntos) compartilham a
+         * MESMA promessa. Sem isso, a segunda chamada limpava o mês antes de a
+         * primeira inserir os resultados, duplicando as transações em memória.
+         */
+        const fetchTransactionsInFlight = new Map();
+
+        function fetchTransactions(year, month) {
+            const chave = `${year}-${month}`;
+            if (fetchTransactionsInFlight.has(chave)) {
+                return fetchTransactionsInFlight.get(chave);
+            }
+            const promessa = fetchTransactionsInterno(year, month)
+                .finally(() => fetchTransactionsInFlight.delete(chave));
+            fetchTransactionsInFlight.set(chave, promessa);
+            return promessa;
+        }
+
+        async function fetchTransactionsInterno(year, month) {
             if (!currentUser) return [];
-            
+
+            // Durante a restauração de um backup os dados locais são a fonte da
+            // verdade: não recarrega do servidor para não desfazer a restauração.
+            if (restauracaoEmAndamento) {
+                return localData.transactions.filter(t => isTransactionInMonth(t, year, month));
+            }
+
             if (!isOnline || !supabaseClient) {
                 console.warn('📴 Modo offline: sem conexão com Supabase');
                 return localData.transactions.filter(t => isTransactionInMonth(t, year, month));
@@ -4893,6 +4896,24 @@
                     console.warn('Aviso na verificação de datas:', e);
                 }
                 
+                // Deduplicação por id (o mesmo registro pode vir da consulta por
+                // year/month E da consulta por intervalo de due_date)
+                const vistosPorId = new Set();
+                rawServerData = rawServerData.filter(t => {
+                    if (vistosPorId.has(t.id)) return false;
+                    vistosPorId.add(t.id);
+                    return true;
+                });
+
+                // Ordena por criação para que a dedup abaixo seja determinística em
+                // todos os aparelhos: mantém sempre a ocorrência mais antiga.
+                rawServerData.sort((a, b) => {
+                    const ta = new Date(a.created_at || 0).getTime();
+                    const tb = new Date(b.created_at || 0).getTime();
+                    if (ta !== tb) return ta - tb;
+                    return String(a.id).localeCompare(String(b.id));
+                });
+
                 // Deduplicação automática: garante que contas fixas pendentes apareçam apenas UMA vez no mês
                 const seenFixedKeys = new Set();
                 const duplicateIds = [];
@@ -4900,7 +4921,7 @@
 
                 rawServerData.forEach(t => {
                     if ((t.category === 'fixed' || t.is_fixed) && t.status === 'pending') {
-                        const key = `${t.partition_id}_${(t.description || '').trim().toLowerCase()}`;
+                        const key = chaveContaFixa(t.partition_id, t.description);
                         if (seenFixedKeys.has(key)) {
                             // Duplicata identificada - marcar para exclusão
                             duplicateIds.push(t.id);
@@ -4922,9 +4943,15 @@
 
                 // Remove transações do mês atual e adiciona as do servidor
                 localData.transactions = localData.transactions.filter(t => !isTransactionInMonth(t, year, month));
-                
-                // Adiciona todas as transações do servidor
-                localData.transactions.push(...serverData);
+
+                // Adiciona todas as transações do servidor, garantindo unicidade por id
+                const idsExistentes = new Set(localData.transactions.map(t => t.id));
+                serverData.forEach(t => {
+                    if (!idsExistentes.has(t.id)) {
+                        idsExistentes.add(t.id);
+                        localData.transactions.push(t);
+                    }
+                });
                 
                 updateConnectionStatus('online');
                 console.log(`✅ ${serverData.length} transações carregadas do Supabase`);
@@ -5269,81 +5296,177 @@
             };
         }
 
-        async function checkFixedExistsInMonth(description, partitionId, targetYear, targetMonth) {
-            const descNorm = (description || '').trim().toLowerCase();
-            
-            // 1. Verificar na memória local
-            const localMatch = localData.transactions.some(t => 
+        /**
+         * Chave canônica de uma conta fixa dentro de um mês.
+         * Repartição + descrição normalizada identificam unicamente a conta,
+         * e é essa chave que impede que a mesma conta apareça mais de uma vez.
+         */
+        function descricaoNormalizada(description) {
+            return (description || '').trim().toLowerCase().replace(/\s+/g, ' ');
+        }
+
+        function chaveContaFixa(partitionId, description) {
+            return parseInt(partitionId) + '_' + descricaoNormalizada(description);
+        }
+
+        /**
+         * Procura uma conta fixa já existente no mês alvo (memória local + banco).
+         * Retorna o registro encontrado ou null — permite ao chamador ATUALIZAR
+         * a ocorrência existente em vez de criar uma nova (evita acúmulo).
+         */
+        async function findFixedInMonth(description, partitionId, targetYear, targetMonth, options = {}) {
+            const { apenasPendente = false } = options;
+            const descNorm = descricaoNormalizada(description);
+
+            // 1. Memória local
+            const localMatch = localData.transactions.find(t =>
                 parseInt(t.partition_id) === parseInt(partitionId) &&
                 parseInt(t.year) === parseInt(targetYear) &&
                 parseInt(t.month) === parseInt(targetMonth) &&
-                (t.description || '').trim().toLowerCase() === descNorm
+                (!apenasPendente || t.status === 'pending') &&
+                descricaoNormalizada(t.description) === descNorm
             );
-            if (localMatch) return true;
+            if (localMatch) return localMatch;
 
-            // 2. Verificar no Supabase diretamente
-            if (supabaseClient && isOnline) {
+            // 2. Banco de dados
+            if (supabaseClient && isOnline && !isDevMode) {
                 try {
-                    const { data, error } = await supabaseClient
+                    let consulta = supabaseClient
                         .from('transactions')
-                        .select('id, status')
+                        .select('*')
                         .eq('partition_id', partitionId)
                         .eq('year', targetYear)
                         .eq('month', targetMonth)
-                        .ilike('description', (description || '').trim());
+                        .ilike('description', (description || '').trim())
+                        .order('created_at', { ascending: true });
 
+                    if (apenasPendente) consulta = consulta.eq('status', 'pending');
+
+                    const { data, error } = await consulta;
                     if (!error && data && data.length > 0) {
-                        return true;
+                        // Limpeza de duplicatas: restrita a contas FIXAS PENDENTES —
+                        // é a única classe em que a repetição é sempre indevida.
+                        // Uma despesa avulsa homônima nunca é apagada aqui.
+                        const fixasPendentes = data.filter(d =>
+                            (d.category === 'fixed' || d.is_fixed) && d.status === 'pending');
+
+                        if (fixasPendentes.length > 1) {
+                            const excedentes = fixasPendentes.slice(1).map(d => d.id);
+                            supabaseClient.from('transactions').delete().in('id', excedentes)
+                                .then(() => console.log('🧹 ' + excedentes.length + ' duplicata(s) de "' + description + '" removida(s) de ' + targetMonth + '/' + targetYear))
+                                .catch(() => {});
+                            return fixasPendentes[0];
+                        }
+
+                        return fixasPendentes[0] || data[0];
                     }
                 } catch (err) {
                     console.warn('Aviso ao checar transação no Supabase:', err);
                 }
             }
-            return false;
+            return null;
         }
 
-        async function createNextMonthFixed(currentTransaction) {
-            if (!currentTransaction || !currentTransaction.auto_renew) return;
-            
+        async function checkFixedExistsInMonth(description, partitionId, targetYear, targetMonth) {
+            const encontrada = await findFixedInMonth(description, partitionId, targetYear, targetMonth);
+            return !!encontrada;
+        }
+
+        // Trava de concorrência: impede que duas rotinas criem simultaneamente
+        // a MESMA conta fixa no mesmo mês (origem clássica da duplicação).
+        const renovacoesEmAndamento = new Set();
+
+        /**
+         * Agenda a conta fixa para o PRÓXIMO MÊS, exatamente uma vez.
+         *
+         * @param {Object} currentTransaction - conta do mês corrente (com os dados atuais)
+         * @param {Object} [previousTransaction] - versão anterior, quando a conta acabou de ser editada.
+         *        Se a descrição mudou, a ocorrência futura antiga é ATUALIZADA em vez de
+         *        gerar uma segunda conta no próximo mês.
+         */
+        async function createNextMonthFixed(currentTransaction, previousTransaction = null) {
+            if (!currentTransaction || !currentTransaction.auto_renew) return null;
+            if (restauracaoEmAndamento) return null;
+
             const nextDate = getNextMonthDueDate(currentTransaction.due_date, currentTransaction.due_day);
-            if (!nextDate) return;
+            if (!nextDate) return null;
 
-            // Verifica se a conta já existe no próximo mês (local e banco)
-            const exists = await checkFixedExistsInMonth(
-                currentTransaction.description,
-                currentTransaction.partition_id,
-                nextDate.year,
-                nextDate.month
-            );
+            const trava = chaveContaFixa(currentTransaction.partition_id, currentTransaction.description) +
+                '@' + nextDate.year + '-' + nextDate.month;
 
-            if (exists) {
-                console.log(`ℹ️ Conta fixa "${currentTransaction.description}" já existe em ${nextDate.month}/${nextDate.year}. Não duplicando.`);
-                return;
+            if (renovacoesEmAndamento.has(trava)) {
+                console.log('⏳ Renovação de "' + currentTransaction.description + '" já em andamento para ' + nextDate.month + '/' + nextDate.year + '.');
+                return null;
             }
-
-            const newTransaction = {
-                user_id: currentUser?.id,
-                type: currentTransaction.type,
-                category: currentTransaction.category || 'fixed',
-                partition_id: currentTransaction.partition_id,
-                description: currentTransaction.description,
-                amount: currentTransaction.amount,
-                year: nextDate.year,
-                month: nextDate.month,
-                due_day: nextDate.day,
-                due_date: nextDate.dateStr,
-                status: 'pending',
-                total_installments: 1,
-                installment_number: 1,
-                auto_renew: true,
-                is_fixed: true
-            };
+            renovacoesEmAndamento.add(trava);
 
             try {
+                // 1. Já existe com a descrição atual? Então nada a fazer.
+                const jaExiste = await findFixedInMonth(
+                    currentTransaction.description,
+                    currentTransaction.partition_id,
+                    nextDate.year,
+                    nextDate.month
+                );
+
+                if (jaExiste) {
+                    console.log('ℹ️ Conta fixa "' + currentTransaction.description + '" já existe em ' + nextDate.month + '/' + nextDate.year + '. Não duplicando.');
+                    return jaExiste;
+                }
+
+                // 2. A conta foi renomeada/alterada? Reaproveita a ocorrência futura antiga.
+                const descAntiga = previousTransaction ? previousTransaction.description : null;
+                if (descAntiga && descricaoNormalizada(descAntiga) !== descricaoNormalizada(currentTransaction.description)) {
+                    const antigaNoProximoMes = await findFixedInMonth(
+                        descAntiga,
+                        previousTransaction.partition_id != null ? previousTransaction.partition_id : currentTransaction.partition_id,
+                        nextDate.year,
+                        nextDate.month,
+                        { apenasPendente: true }
+                    );
+
+                    if (antigaNoProximoMes && antigaNoProximoMes.id) {
+                        const atualizada = await updateTransaction(antigaNoProximoMes.id, {
+                            description: currentTransaction.description,
+                            amount: currentTransaction.amount,
+                            partition_id: currentTransaction.partition_id,
+                            due_day: nextDate.day,
+                            due_date: nextDate.dateStr,
+                            auto_renew: true,
+                            is_fixed: true
+                        });
+                        console.log('🔁 Renovação futura de "' + descAntiga + '" renomeada para "' + currentTransaction.description + '" em vez de duplicar.');
+                        return atualizada;
+                    }
+                }
+
+                // 3. Não existe nada: cria a ÚNICA ocorrência do próximo mês.
+                const newTransaction = {
+                    user_id: currentUser?.id,
+                    type: currentTransaction.type,
+                    category: currentTransaction.category || 'fixed',
+                    partition_id: currentTransaction.partition_id,
+                    description: currentTransaction.description,
+                    amount: currentTransaction.amount,
+                    year: nextDate.year,
+                    month: nextDate.month,
+                    due_day: nextDate.day,
+                    due_date: nextDate.dateStr,
+                    status: 'pending',
+                    total_installments: 1,
+                    installment_number: 1,
+                    auto_renew: true,
+                    is_fixed: true
+                };
+
                 const result = await insertTransaction(newTransaction);
-                console.log(`🔄 Conta fixa agendada para o próximo mês (${nextDate.dateStr}):`, result?.id || 'local');
+                console.log('🔄 Conta fixa agendada para o próximo mês (' + nextDate.dateStr + '):', result?.id || 'local');
+                return result;
             } catch (error) {
                 console.error('Erro ao renovar conta fixa para o próximo mês:', error);
+                return null;
+            } finally {
+                renovacoesEmAndamento.delete(trava);
             }
         }
 
@@ -5352,7 +5475,7 @@
             const nextDate = getNextMonthDueDate(currentTransaction.due_date, currentTransaction.due_day);
             if (!nextDate) return;
 
-            const descNorm = (currentTransaction.description || '').trim().toLowerCase();
+            const descNorm = descricaoNormalizada(currentTransaction.description);
 
             // 1. Remove da memória local se estiver no mês visualizado
             localData.transactions = localData.transactions.filter(t => {
@@ -5360,12 +5483,12 @@
                     parseInt(t.year) === parseInt(nextDate.year) &&
                     parseInt(t.month) === parseInt(nextDate.month) &&
                     t.status === 'pending' &&
-                    (t.description || '').trim().toLowerCase() === descNorm;
+                    descricaoNormalizada(t.description) === descNorm;
                 return !isNextPending;
             });
 
             // 2. Remove do Supabase se existir como pendente
-            if (supabaseClient && isOnline) {
+            if (supabaseClient && isOnline && !isDevMode) {
                 try {
                     const { data, error } = await supabaseClient
                         .from('transactions')
@@ -5382,7 +5505,7 @@
                             .from('transactions')
                             .delete()
                             .in('id', idsToDelete);
-                        console.log(`🗑️ Conta pendente futura "${currentTransaction.description}" removida de ${nextDate.month}/${nextDate.year} pois a renovação foi desmarcada.`);
+                        console.log('🗑️ Conta pendente futura "' + currentTransaction.description + '" removida de ' + nextDate.month + '/' + nextDate.year + ' pois a renovação foi desmarcada.');
                     }
                 } catch (err) {
                     console.warn('Aviso ao cancelar renovação futura no Supabase:', err);
@@ -5390,9 +5513,25 @@
             }
         }
 
-        async function syncFixedFromPreviousMonth(targetYear, targetMonth) {
-            if (!supabaseClient || !isOnline) return false;
-            
+        // Trava por mês: evita que chamadas concorrentes (troca rápida de mês,
+        // foco + visibilitychange, heartbeat) repliquem as fixas várias vezes.
+        const sincronizacaoFixasEmAndamento = new Map();
+
+        function syncFixedFromPreviousMonth(targetYear, targetMonth) {
+            const chave = targetYear + '-' + targetMonth;
+            if (sincronizacaoFixasEmAndamento.has(chave)) {
+                return sincronizacaoFixasEmAndamento.get(chave);
+            }
+            const promessa = syncFixedFromPreviousMonthInterno(targetYear, targetMonth)
+                .finally(() => sincronizacaoFixasEmAndamento.delete(chave));
+            sincronizacaoFixasEmAndamento.set(chave, promessa);
+            return promessa;
+        }
+
+        async function syncFixedFromPreviousMonthInterno(targetYear, targetMonth) {
+            if (!supabaseClient || !isOnline || isDevMode) return false;
+            if (restauracaoEmAndamento) return false;
+
             let prevMonth = targetMonth - 1;
             let prevYear = targetYear;
             if (prevMonth < 1) {
@@ -5411,39 +5550,62 @@
 
                 if (error || !prevFixed || prevFixed.length === 0) return false;
 
+                // Deduplica a própria origem: se o mês anterior tiver a mesma conta
+                // repetida, ela só pode gerar UMA ocorrência no mês alvo.
+                const origensUnicas = new Map();
+                prevFixed.forEach(item => {
+                    const k = chaveContaFixa(item.partition_id, item.description);
+                    if (!origensUnicas.has(k)) origensUnicas.set(k, item);
+                });
+
+                // Também considera o que já existe no mês alvo, para não recriar
+                const jaNoMesAlvo = new Set(
+                    localData.transactions
+                        .filter(t => parseInt(t.year) === parseInt(targetYear) && parseInt(t.month) === parseInt(targetMonth))
+                        .map(t => chaveContaFixa(t.partition_id, t.description))
+                );
+
                 let insertedAny = false;
-                for (const item of prevFixed) {
-                    const exists = await checkFixedExistsInMonth(
+                for (const [k, item] of origensUnicas) {
+                    if (jaNoMesAlvo.has(k)) continue;
+
+                    const existente = await findFixedInMonth(
                         item.description,
                         item.partition_id,
                         targetYear,
                         targetMonth
                     );
 
-                    if (!exists) {
-                        const targetDay = Math.min(item.due_day || 1, new Date(targetYear, targetMonth, 0).getDate());
-                        const targetDueDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(targetDay).padStart(2, '0')}`;
+                    if (existente) {
+                        jaNoMesAlvo.add(k);
+                        continue;
+                    }
 
-                        const newTx = {
-                            user_id: currentUser?.id || item.user_id,
-                            type: item.type,
-                            category: item.category || 'fixed',
-                            partition_id: item.partition_id,
-                            description: item.description,
-                            amount: item.amount,
-                            year: targetYear,
-                            month: targetMonth,
-                            due_day: targetDay,
-                            due_date: targetDueDate,
-                            status: 'pending',
-                            total_installments: 1,
-                            installment_number: 1,
-                            auto_renew: true,
-                            is_fixed: true
-                        };
+                    const targetDay = Math.min(item.due_day || 1, new Date(targetYear, targetMonth, 0).getDate());
+                    const targetDueDate = targetYear + '-' + String(targetMonth).padStart(2, '0') + '-' + String(targetDay).padStart(2, '0');
 
-                        const inserted = await insertTransaction(newTx);
-                        if (inserted) insertedAny = true;
+                    const newTx = {
+                        user_id: currentUser?.id || item.user_id,
+                        type: item.type,
+                        category: item.category || 'fixed',
+                        partition_id: item.partition_id,
+                        description: item.description,
+                        amount: item.amount,
+                        year: targetYear,
+                        month: targetMonth,
+                        due_day: targetDay,
+                        due_date: targetDueDate,
+                        status: 'pending',
+                        total_installments: 1,
+                        installment_number: 1,
+                        auto_renew: true,
+                        is_fixed: true
+                    };
+
+                    const inserted = await insertTransaction(newTx);
+                    if (inserted) {
+                        insertedAny = true;
+                        jaNoMesAlvo.add(k);
                     }
                 }
                 return insertedAny;
@@ -5609,54 +5771,73 @@
         }
 
         /**
-         * Força atualização imediata no banco de dados e sincroniza todos os apps
-         * Funciona no Desktop, Celular e Navegador
+         * SINCRONIZAÇÃO AUTOMÁTICA COM O BANCO
+         *
+         * Substitui o antigo botão "Atualizar Banco". A atualização passou a ser
+         * exclusivamente automática, disparada por:
+         *   - Supabase Realtime (INSERT/UPDATE/DELETE na tabela transactions)
+         *   - Broadcast entre aparelhos (force-reload)
+         *   - Retorno do app ao primeiro plano (visibilitychange / focus)
+         *   - Reconexão de rede (evento online)
+         *   - Heartbeat periódico enquanto a aba estiver visível
+         *
+         * A função é silenciosa (sem notificações) e coalescida: chamadas
+         * concorrentes reaproveitam a execução em andamento, o que evita
+         * duplicação de dados em memória.
          */
-        async function forcarAtualizacaoBanco() {
-            const syncButtons = document.querySelectorAll('.btn-sync-header, .btn-sync-nav');
-            const syncIcons = document.querySelectorAll('.sync-icon');
+        let autoSyncInFlight = null;
 
-            syncButtons.forEach(btn => btn.disabled = true);
-            syncIcons.forEach(icon => icon.classList.add('spinning'));
+        function setAutoSyncIndicator(visivel) {
+            const el = document.getElementById('autoSyncIndicator');
+            if (el) el.classList.toggle('active', !!visivel);
+        }
 
+        async function executarSincronizacao({ propagar, sincronizarFixas }) {
+            if (!supabaseClient || !currentUser || isDevMode || !isOnline) return false;
+            if (restauracaoEmAndamento) return false;
+
+            setAutoSyncIndicator(true);
             try {
-                showNotification('🔄 Sincronizando dados com o banco...', 'info');
-
-                if (!supabaseClient) {
-                    throw new Error('Cliente do banco de dados não inicializado');
-                }
-
                 // Reconecta Realtime se estiver desconectado
-                if (!realtimeChannel && currentUser && !isDevMode) {
-                    setupRealtimeSubscription();
-                }
+                if (!realtimeChannel) setupRealtimeSubscription();
 
                 const year = currentMonth.getFullYear();
                 const month = currentMonth.getMonth() + 1;
 
-                // 1. Recarrega as transações atualizadas direto do Supabase
                 await fetchTransactions(year, month);
 
-                // 2. Sincroniza contas fixas recorrentes caso aplicável
-                await syncFixedFromPreviousMonth(year, month);
+                if (sincronizarFixas) {
+                    const inseriu = await syncFixedFromPreviousMonth(year, month);
+                    if (inseriu) await fetchTransactions(year, month);
+                }
 
-                // 3. Atualiza todo o estado visual da aplicação
                 renderData();
 
-                // 4. Dispara broadcast para atualizar todos os outros dispositivos abertos em tempo real
-                await broadcastForceReload();
+                if (propagar) await broadcastForceReload();
 
                 updateConnectionStatus('online');
-                showNotification('✅ Banco atualizado! Sincronizado em todos os aparelhos.', 'success');
+                return true;
             } catch (err) {
-                console.error('Erro ao forçar atualização:', err);
-                showNotification('❌ Erro ao atualizar: ' + (err.message || 'Falha de conexão'), 'error');
+                console.warn('Aviso na sincronização automática:', err);
+                return false;
             } finally {
-                setTimeout(() => {
-                    syncIcons.forEach(icon => icon.classList.remove('spinning'));
-                    syncButtons.forEach(btn => btn.disabled = false);
-                }, 600);
+                setTimeout(() => setAutoSyncIndicator(false), 400);
             }
+        }
+
+        function sincronizacaoAutomatica(options = {}) {
+            const { propagar = false, sincronizarFixas = true } = options;
+
+            // Coalesce: se já existe uma sincronização em andamento, reaproveita.
+            // A limpeza usa .finally() (microtask) para nunca zerar a referência
+            // antes de ela ter sido registrada.
+            if (autoSyncInFlight) return autoSyncInFlight;
+
+            const promessa = executarSincronizacao({ propagar, sincronizarFixas })
+                .finally(() => { autoSyncInFlight = null; });
+
+            autoSyncInFlight = promessa;
+            return promessa;
         }
 
         /**
@@ -5757,7 +5938,18 @@
                 monthNames[currentMonth.getMonth()] + ' ' + currentMonth.getFullYear();
         }
 
-        async function loadAllData() {
+        // Serializa carregamentos: trocar de mês rapidamente disparava vários
+        // loadAllData() concorrentes, que replicavam as contas fixas.
+        let loadAllDataChain = Promise.resolve();
+
+        function loadAllData() {
+            loadAllDataChain = loadAllDataChain
+                .catch(() => {})
+                .then(() => loadAllDataInterno());
+            return loadAllDataChain;
+        }
+
+        async function loadAllDataInterno() {
             const year = currentMonth.getFullYear();
             const month = currentMonth.getMonth() + 1;
             
@@ -6692,12 +6884,17 @@
                         const result = await updateTransaction(editingId, baseTransaction);
                         if (!result) throw new Error('Falha ao atualizar transação');
 
-                        // Gestão de renovação automática para conta fixa
+                        // Gestão de renovação automática para conta fixa.
+                        // prevTx é repassado para que uma edição de descrição/repartição
+                        // ATUALIZE a ocorrência já agendada no próximo mês em vez de
+                        // criar uma segunda conta (acúmulo).
                         if (mapping.category === 'fixed') {
                             if (autoRenew) {
-                                await createNextMonthFixed(baseTransaction);
+                                await createNextMonthFixed(baseTransaction, prevTx);
                             } else if (wasAutoRenew && !autoRenew) {
-                                await cancelNextMonthFixed(baseTransaction);
+                                // Cancela usando a descrição anterior, que é a realmente
+                                // gravada na ocorrência futura pendente.
+                                await cancelNextMonthFixed(prevTx || baseTransaction);
                             }
                         }
                         return result;
@@ -6750,8 +6947,9 @@
                                 throw new Error('Falha ao criar transação');
                             }
                             
-                            // Se for conta fixa com renovação automática, agendar apenas para o próximo mês
-                            if (mapping.category === 'fixed' && autoRenew) {
+                            // Se for conta fixa com renovação marcada, agendar UMA ocorrência
+                            // no próximo mês (a função é idempotente: se já existir, não duplica)
+                            if (mapping.category === 'fixed' && autoRenew && result) {
                                 console.log('🔄 Agendando renovação automática para o próximo mês...');
                                 await createNextMonthFixed(result);
                             }
@@ -6904,7 +7102,10 @@
                     await createNextInstallment(transaction);
                 }
 
-                if (transaction.auto_renew && isLastInstallment && transaction.is_fixed) {
+                // Renovação da conta fixa marcada: gera exatamente UMA ocorrência
+                // no próximo mês (createNextMonthFixed é idempotente e travado).
+                if (transaction.auto_renew && isLastInstallment &&
+                    (transaction.is_fixed || transaction.category === 'fixed')) {
                     await createNextMonthFixed(transaction);
                 }
 
@@ -7927,12 +8128,45 @@
             document.getElementById('backupModal').classList.remove('active');
         }
 
-        function exportBackup() {
+        /**
+         * Exporta o estado completo.
+         *
+         * A memória local guarda apenas os meses já visitados; por isso o backup
+         * busca TODAS as transações no banco antes de gerar o arquivo. Sem isso o
+         * arquivo restaurava só uma fatia do histórico.
+         */
+        async function exportBackup() {
+            let transacoes = localData.transactions;
+            let escopo = 'memoria-local';
+
+            if (supabaseClient && isOnline && !isDevMode) {
+                try {
+                    showNotification('⏳ Coletando todos os dados para o backup...', 'info');
+                    const { data, error } = await supabaseClient
+                        .from('transactions')
+                        .select('*')
+                        .order('due_date', { ascending: true });
+
+                    if (error) throw error;
+                    if (data) {
+                        transacoes = data;
+                        escopo = 'banco-completo';
+                    }
+                } catch (err) {
+                    console.warn('Aviso ao coletar transações para o backup:', err);
+                    showNotification('⚠️ Backup gerado apenas com os dados já carregados neste aparelho.', 'error');
+                }
+            }
+
             const backupData = {
-                version: '2.1-offline-first',
+                version: '3.0-restauravel',
                 exportDate: new Date().toISOString(),
+                scope: escopo,
                 user_id: currentUser ? currentUser.id : 'dev-mode',
-                localData: localData
+                localData: {
+                    ...localData,
+                    transactions: transacoes
+                }
             };
 
             const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
@@ -7945,7 +8179,7 @@
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
 
-            showNotification('Backup exportado!');
+            showNotification(`✅ Backup exportado (${transacoes.length} transações).`);
         }
 
         function setupBackupDragAndDrop() {
@@ -7974,41 +8208,242 @@
             if (file) processBackupFile(file);
         }
 
+        // ==========================================
+        // RESTAURAÇÃO DE BACKUP COM PERSISTÊNCIA
+        // ==========================================
+
+        // Colunas realmente aceitas pela tabela transactions numa restauração
+        const RESTORE_TRANSACTION_FIELDS = [
+            'id', 'user_id', 'type', 'category', 'partition_id', 'description', 'amount',
+            'year', 'month', 'due_day', 'due_date', 'status', 'total_installments',
+            'installment_number', 'auto_renew', 'is_fixed', 'parent_transaction_id',
+            'payment_date', 'payment_amount', 'payment_observation', 'created_at'
+        ];
+        const RESTORE_NOTEBOOK_FIELDS = ['id', 'user_id', 'name', 'created_at'];
+        const RESTORE_NOTE_FIELDS = ['id', 'user_id', 'notebook_id', 'title', 'content', 'media', 'created_at', 'updated_at'];
+
+        function selecionarCampos(registro, campos) {
+            const saida = {};
+            campos.forEach(c => {
+                if (registro[c] !== undefined) saida[c] = registro[c];
+            });
+            return saida;
+        }
+
+        function emLotes(lista, tamanho) {
+            const lotes = [];
+            for (let i = 0; i < lista.length; i += tamanho) {
+                lotes.push(lista.slice(i, i + tamanho));
+            }
+            return lotes;
+        }
+
+        /**
+         * Grava o conteúdo do backup no Supabase.
+         *
+         * Sem esta etapa a restauração só existia em memória e era desfeita no
+         * primeiro refetch (Realtime, foco na aba ou recarregamento) — era esse o
+         * "valor de persistência" que impedia a volta do estado salvo.
+         *
+         * Escopo: apenas os meses presentes no backup são reescritos; meses fora
+         * do arquivo permanecem intactos.
+         */
+        async function persistirBackupNoBanco(dados) {
+            if (isDevMode) {
+                console.log('🧪 [DEV] Restauração aplicada apenas localmente.');
+                return { persistido: false, motivo: 'modo-dev' };
+            }
+            if (!supabaseClient || !isOnline || !currentUser) {
+                return { persistido: false, motivo: 'offline' };
+            }
+
+            const transacoes = Array.isArray(dados.transactions) ? dados.transactions : [];
+
+            // 1. Meses cobertos pelo backup
+            const mesesDoBackup = new Map();
+            transacoes.forEach(t => {
+                const ano = parseInt(t.year);
+                const mes = parseInt(t.month);
+                if (!ano || !mes) return;
+                const chave = ano + '-' + mes;
+                if (!mesesDoBackup.has(chave)) mesesDoBackup.set(chave, { ano, mes });
+            });
+
+            const idsDoBackup = new Set(transacoes.filter(t => t.id).map(t => String(t.id)));
+
+            // 2. Em cada mês do backup, apaga o que o backup não contém
+            for (const { ano, mes } of mesesDoBackup.values()) {
+                const { data: existentes, error } = await supabaseClient
+                    .from('transactions')
+                    .select('id')
+                    .eq('year', ano)
+                    .eq('month', mes);
+
+                if (error) throw new Error('Falha ao ler o mês ' + mes + '/' + ano + ': ' + error.message);
+
+                const paraRemover = (existentes || [])
+                    .map(r => String(r.id))
+                    .filter(id => !idsDoBackup.has(id));
+
+                for (const lote of emLotes(paraRemover, 100)) {
+                    const { error: erroDel } = await supabaseClient
+                        .from('transactions')
+                        .delete()
+                        .in('id', lote);
+                    if (erroDel) throw new Error('Falha ao limpar ' + mes + '/' + ano + ': ' + erroDel.message);
+                }
+            }
+
+            // 3. Regrava as transações do backup (upsert por id)
+            const linhas = transacoes.map(t => {
+                const linha = selecionarCampos(t, RESTORE_TRANSACTION_FIELDS);
+                if (!linha.user_id) linha.user_id = currentUser.id;
+                return linha;
+            });
+
+            const comId = linhas.filter(l => l.id);
+            const semId = linhas.filter(l => !l.id);
+
+            for (const lote of emLotes(comId, 100)) {
+                const { error } = await supabaseClient
+                    .from('transactions')
+                    .upsert(lote, { onConflict: 'id' });
+                if (error) throw new Error('Falha ao restaurar transações: ' + error.message);
+            }
+            for (const lote of emLotes(semId, 100)) {
+                const { error } = await supabaseClient.from('transactions').insert(lote);
+                if (error) throw new Error('Falha ao inserir transações do backup: ' + error.message);
+            }
+
+            // 4. Cadernos e notas (best-effort: não invalida a restauração financeira)
+            try {
+                const cadernos = Array.isArray(dados.notebooks) ? dados.notebooks : [];
+                const notas = Array.isArray(dados.notes) ? dados.notes : [];
+
+                if (cadernos.length > 0) {
+                    const linhasCadernos = cadernos
+                        .map(n => selecionarCampos(n, RESTORE_NOTEBOOK_FIELDS))
+                        .filter(n => n.id);
+                    for (const lote of emLotes(linhasCadernos, 100)) {
+                        await supabaseClient.from('notebooks').upsert(lote, { onConflict: 'id' });
+                    }
+                }
+
+                if (notas.length > 0) {
+                    const linhasNotas = notas
+                        .map(n => selecionarCampos(n, RESTORE_NOTE_FIELDS))
+                        .filter(n => n.id && n.notebook_id);
+                    for (const lote of emLotes(linhasNotas, 100)) {
+                        await supabaseClient.from('notes').upsert(lote, { onConflict: 'id' });
+                    }
+                }
+            } catch (e) {
+                console.warn('Aviso ao restaurar cadernos/notas:', e);
+            }
+
+            return { persistido: true, meses: mesesDoBackup.size, transacoes: linhas.length };
+        }
+
         function processBackupFile(file) {
-            if (!file.name.endsWith('.json')) {
+            if (!file || !file.name.toLowerCase().endsWith('.json')) {
                 showNotification('Selecione um arquivo JSON válido!', 'error');
                 return;
             }
 
             const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const backup = JSON.parse(e.target.result);
-                    if (confirm(`Restaurar backup de ${new Date(backup.exportDate).toLocaleString('pt-BR')}?
 
-Isso substituirá os dados atuais!`)) {
-                        localData = backup.localData || backup;
-                        // Garante que todas as propriedades existam
-                        if (!localData.transactions) localData.transactions = [];
-                        if (!localData.notebooks) localData.notebooks = [];
-                        if (!localData.notes) localData.notes = [];
-                        if (!localData.appointments) localData.appointments = [];
-                        if (!localData.paymentHistory) localData.paymentHistory = [];
-                        if (!localData._pendingDeletions) localData._pendingDeletions = [];
-                        
-                        // NÃO chama loadAllData() pois iria re-buscar do Supabase e
-                        // SOBRESCREVER os dados do backup com dados atuais do servidor.
-                        updateDashboard();
-                        updateMonthDisplay();
-                        renderPartitions();
-                        renderNotebooks();
-                        showNotification('✅ Backup restaurado com sucesso!');
-                        closeBackupModal();
+            reader.onerror = function () {
+                showNotification('❌ Não foi possível ler o arquivo de backup.', 'error');
+            };
+
+            reader.onload = async function (e) {
+                let backup;
+                try {
+                    backup = JSON.parse(e.target.result);
+                } catch (error) {
+                    showNotification('❌ Arquivo de backup inválido: ' + error.message, 'error');
+                    return;
+                }
+
+                // Aceita tanto o formato { localData: {...} } quanto o objeto puro
+                const dados = backup && backup.localData ? backup.localData : backup;
+
+                if (!dados || typeof dados !== 'object' || !Array.isArray(dados.transactions)) {
+                    showNotification('❌ Backup sem transações reconhecíveis. Restauração cancelada.', 'error');
+                    return;
+                }
+
+                const dataBackup = backup.exportDate
+                    ? new Date(backup.exportDate).toLocaleString('pt-BR')
+                    : 'data desconhecida';
+
+                const confirmacao = confirm(
+                    'Restaurar backup de ' + dataBackup + '?\n\n' +
+                    dados.transactions.length + ' transação(ões) serão gravadas no banco de dados.\n' +
+                    'Os meses contidos no backup voltarão exatamente ao estado salvo, ' +
+                    'em todos os aparelhos.'
+                );
+                if (!confirmacao) return;
+
+                // Suspende a sincronização automática para que o estado restaurado
+                // não seja sobrescrito no meio do processo.
+                restauracaoEmAndamento = true;
+                closeRealtimeChannel();
+
+                try {
+                    showNotification('⏳ Restaurando backup no banco de dados...', 'info');
+
+                    localData = dados;
+                    if (!localData.transactions) localData.transactions = [];
+                    if (!localData.notebooks) localData.notebooks = [];
+                    if (!localData.notes) localData.notes = [];
+                    if (!localData.appointments) localData.appointments = [];
+                    if (!localData.paymentHistory) localData.paymentHistory = [];
+                    localData._pendingDeletions = [];
+
+                    const resultado = await persistirBackupNoBanco(localData);
+
+                    updateDashboard();
+                    updateMonthDisplay();
+                    renderPartitions();
+                    renderNotebooks();
+                    checkAlerts();
+                    closeBackupModal();
+
+                    if (resultado.persistido) {
+                        showNotification(
+                            '✅ Backup restaurado e gravado no banco (' +
+                            resultado.transacoes + ' transações em ' + resultado.meses + ' mês(es)).',
+                            'success'
+                        );
+                    } else if (resultado.motivo === 'offline') {
+                        showNotification(
+                            '⚠️ Backup restaurado apenas neste aparelho. Sem conexão para gravar no banco — ' +
+                            'reconecte e restaure novamente para tornar a mudança permanente.',
+                            'error'
+                        );
+                    } else {
+                        showNotification('✅ Backup restaurado localmente (modo dev).', 'success');
                     }
                 } catch (error) {
-                    showNotification('Erro ao ler arquivo: ' + error.message, 'error');
+                    console.error('❌ Erro ao restaurar backup:', error);
+                    showNotification('❌ Erro ao restaurar backup: ' + error.message, 'error');
+                } finally {
+                    restauracaoEmAndamento = false;
+
+                    // Religa a sincronização e propaga o estado restaurado
+                    if (isOnline && currentUser && !isDevMode) {
+                        setupRealtimeSubscription();
+                        await broadcastForceReload();
+                        await loadAllData();
+                    }
                 }
+
+                // Permite reenviar o mesmo arquivo em seguida
+                const input = document.getElementById('backupFileInput');
+                if (input) input.value = '';
             };
+
             reader.readAsText(file);
         }
 
@@ -8296,7 +8731,7 @@ Isso substituirá os dados atuais!`)) {
         // FUNÇÕES REALTIME E ATUALIZAÇÃO EXPORTADAS
         window.setupRealtimeSubscription = setupRealtimeSubscription;
         window.closeRealtimeChannel = closeRealtimeChannel;
-        window.forcarAtualizacaoBanco = forcarAtualizacaoBanco;
+        window.sincronizacaoAutomatica = sincronizacaoAutomatica;
         window.broadcastForceReload = broadcastForceReload;
         window.parseDateParts = parseDateParts;
         window.isTransactionInMonth = isTransactionInMonth;
@@ -8307,21 +8742,23 @@ Isso substituirá os dados atuais!`)) {
 
         // Sincronização inteligente ao retornar para o app (celular desbloqueado ou aba reativada)
         document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && isOnline && currentUser && !isDevMode) {
+            if (document.visibilityState === 'visible') {
                 console.log('📱 App reativado: verificando atualizações recentes no banco...');
-                const year = currentMonth.getFullYear();
-                const month = currentMonth.getMonth() + 1;
-                fetchTransactions(year, month).then(() => renderData()).catch(() => {});
+                sincronizacaoAutomatica();
             }
         });
 
         window.addEventListener('focus', () => {
-            if (isOnline && currentUser && !isDevMode) {
-                const year = currentMonth.getFullYear();
-                const month = currentMonth.getMonth() + 1;
-                fetchTransactions(year, month).then(() => renderData()).catch(() => {});
-            }
+            sincronizacaoAutomatica();
         });
+
+        // Heartbeat: mantém os dados atualizados mesmo sem interação, enquanto a aba
+        // estiver visível. Substitui o antigo botão manual "Atualizar Banco".
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                sincronizacaoAutomatica({ sincronizarFixas: false });
+            }
+        }, 60000);
 
         // Monitorar conectividade da rede em tempo real
         window.addEventListener('online', () => {
@@ -8330,7 +8767,7 @@ Isso substituirá os dados atuais!`)) {
             updateConnectionStatus('online');
             if (currentUser && !isDevMode) {
                 setupRealtimeSubscription();
-                forcarAtualizacaoBanco();
+                sincronizacaoAutomatica({ propagar: true });
             }
         });
 

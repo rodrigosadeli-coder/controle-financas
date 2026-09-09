@@ -2526,6 +2526,53 @@
         .report-kpi-card:hover {
             transform: translateY(-2px);
         }
+
+        /* Botão de Atualização Forçada do Banco */
+        .btn-sync-header {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+            transition: all 0.25s ease;
+        }
+
+        .btn-sync-header:hover {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-sync-header:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .btn-sync-nav {
+            background-color: rgba(59, 130, 246, 0.2) !important;
+            border: 1px solid #60a5fa !important;
+        }
+
+        .btn-sync-nav:hover {
+            background-color: rgba(59, 130, 246, 0.35) !important;
+        }
+
+        .sync-icon.spinning {
+            display: inline-block;
+            animation: spinSyncAnim 0.8s linear infinite;
+        }
+
+        @keyframes spinSyncAnim {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -2608,6 +2655,11 @@
                     <span id="connectionIcon">⚠️</span>
                     <span id="connectionText">Offline</span>
                 </div>
+                <!-- Botão Forçar Atualização no Banco (Desktop, Celular e Navegador) -->
+                <button type="button" class="btn-sync-header" id="btnForcarSincronizacao" onclick="forcarAtualizacaoBanco()" title="Forçar atualização e sincronizar dados com o banco para todos os dispositivos">
+                    <span class="sync-icon">🔄</span>
+                    <span class="sync-text">Atualizar Banco</span>
+                </button>
                 <button type="button" class="btn-install-pwa" id="btnInstalarApp" hidden>
                     <span>📲</span><span>Instalar</span>
                 </button>
@@ -2617,6 +2669,10 @@
         <!-- Navigation -->
         <nav class="nav-bar">
             <button class="nav-btn active" onclick="showView('dashboard')">📊 Dashboard</button>
+            <button class="nav-btn btn-sync-nav" onclick="forcarAtualizacaoBanco()" title="Forçar atualização no banco de dados para todos os aparelhos">
+                <span class="sync-icon">🔄</span>
+                <span>Atualizar Banco</span>
+            </button>
             <button class="nav-btn" onclick="openReportModal()" style="background-color: rgba(212, 175, 55, 0.22); border: 1px solid var(--gold-primary);">📑 Relatório</button>
             <button class="nav-btn" onclick="openCalculator()">🧮 Calculadora</button>
             <button class="nav-btn" onclick="openCalendarModal()">📅 Calendário</button>
@@ -3312,6 +3368,9 @@
                 <button type="button" class="btn btn-cancel" onclick="closeRegisterModal()">Cancelar</button>
                 <button type="button" class="btn btn-save" onclick="registerUser()">Cadastrar</button>
             </div>
+        </div>
+    </div>
+
     <!-- Modal Relatório Financeiro -->
     <div class="modal" id="reportModal">
         <div class="modal-content large" style="max-width: 820px;">
@@ -3562,6 +3621,45 @@
         }
 
         // ==========================================
+        // UTILITÁRIOS DE DATA SEGUROS CONTRA FUSO HORÁRIO
+        // ==========================================
+
+        /**
+         * Decompõe data no formato YYYY-MM-DD sem sofrer efeito de fuso horário UTC-3
+         */
+        function parseDateParts(dateStr) {
+            if (!dateStr) return { year: 0, month: 0, day: 0 };
+            const clean = String(dateStr).split('T')[0].trim();
+            const parts = clean.split('-');
+            if (parts.length < 3) return { year: 0, month: 0, day: 0 };
+            return {
+                year: parseInt(parts[0], 10) || 0,
+                month: parseInt(parts[1], 10) || 0, // 1 a 12
+                day: parseInt(parts[2], 10) || 1
+            };
+        }
+
+        /**
+         * Verifica se uma transação pertence ao ano e mês desejados (1 a 12)
+         * Imune a qualquer deslocamento de fuso horário
+         */
+        function isTransactionInMonth(t, year, month) {
+            if (!t) return false;
+            const targetY = parseInt(year, 10);
+            const targetM = parseInt(month, 10);
+            if (t.year !== undefined && t.year !== null && t.month !== undefined && t.month !== null) {
+                if (parseInt(t.year, 10) === targetY && parseInt(t.month, 10) === targetM) {
+                    return true;
+                }
+            }
+            if (t.due_date) {
+                const parts = parseDateParts(t.due_date);
+                return parts.year === targetY && parts.month === targetM;
+            }
+            return false;
+        }
+
+        // ==========================================
         // MÓDULO DE RELATÓRIO DA ATIVIDADE FINANCEIRA (PDF / WHATSAPP / DOWNLOAD)
         // ==========================================
 
@@ -3583,10 +3681,7 @@
         async function coletarDadosRelatorio(year, month) {
             // Se estiver online e as transações do mês ainda não estiverem no localData, busca no Supabase
             if (isOnline && supabaseClient && currentUser) {
-                const hasMonthData = localData.transactions.some(t => {
-                    const d = new Date(t.due_date);
-                    return d.getFullYear() === year && d.getMonth() === month - 1;
-                });
+                const hasMonthData = localData.transactions.some(t => isTransactionInMonth(t, year, month));
                 if (!hasMonthData) {
                     try {
                         await fetchTransactions(year, month);
@@ -3596,10 +3691,7 @@
                 }
             }
 
-            const transactions = localData.transactions.filter(t => {
-                const d = new Date(t.due_date);
-                return d.getFullYear() === year && d.getMonth() === month - 1;
-            });
+            const transactions = localData.transactions.filter(t => isTransactionInMonth(t, year, month));
 
             let totalReceitas = 0;
             let totalDespesas = 0;
@@ -3716,12 +3808,15 @@
          * Gera o documento visual em PDF através do jsPDF e jsPDF-AutoTable
          */
         function gerarPDFRelatorio(dados, nivelDetalhe = 'completo') {
-            const { jsPDF } = window.jspdf || {};
-            if (!jsPDF) {
+            const jsPDFClass = window.jspdf?.jsPDF || window.jsPDF || (typeof jsPDF !== 'undefined' ? jsPDF : null);
+            if (!jsPDFClass) {
                 throw new Error('Biblioteca jsPDF não encontrada no navegador.');
             }
+            if (!window.jsPDF) {
+                window.jsPDF = jsPDFClass;
+            }
 
-            const doc = new jsPDF({
+            const doc = new jsPDFClass({
                 orientation: 'portrait',
                 unit: 'mm',
                 format: 'a4'
@@ -4751,10 +4846,7 @@
             
             if (!isOnline || !supabaseClient) {
                 console.warn('📴 Modo offline: sem conexão com Supabase');
-                return localData.transactions.filter(t => {
-                    const tDate = new Date(t.due_date);
-                    return tDate.getFullYear() === year && tDate.getMonth() === month - 1;
-                });
+                return localData.transactions.filter(t => isTransactionInMonth(t, year, month));
             }
 
             try {
@@ -4771,8 +4863,35 @@
 
                 if (error) throw error;
                 
-                // Substitui completamente os dados em memória com os do servidor
-                const rawServerData = data || [];
+                let rawServerData = data ? [...data] : [];
+
+                // Cura preventiva contra anomalia de timezone: busca transações cuja due_date caia neste mês
+                const monthStr = String(month).padStart(2, '0');
+                const startDate = `${year}-${monthStr}-01`;
+                const lastDay = new Date(year, month, 0).getDate();
+                const endDate = `${year}-${monthStr}-${String(lastDay).padStart(2, '0')}`;
+
+                try {
+                    const { data: dateRangeData } = await supabaseClient
+                        .from('transactions')
+                        .select('*')
+                        .gte('due_date', startDate)
+                        .lte('due_date', endDate);
+
+                    if (dateRangeData && dateRangeData.length > 0) {
+                        for (const dt of dateRangeData) {
+                            if (!rawServerData.some(r => r.id === dt.id)) {
+                                rawServerData.push(dt);
+                                // Corrige automaticamente year e month no banco para curar o registro
+                                supabaseClient.from('transactions').update({ year, month }).eq('id', dt.id).then(() => {
+                                    console.log(`🔧 Transação ${dt.id} (${dt.description}) curada para mês ${month}/${year}`);
+                                }).catch(() => {});
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Aviso na verificação de datas:', e);
+                }
                 
                 // Deduplicação automática: garante que contas fixas pendentes apareçam apenas UMA vez no mês
                 const seenFixedKeys = new Set();
@@ -4802,10 +4921,7 @@
                 }
 
                 // Remove transações do mês atual e adiciona as do servidor
-                localData.transactions = localData.transactions.filter(t => {
-                    const tDate = new Date(t.due_date);
-                    return !(tDate.getFullYear() === year && tDate.getMonth() === month - 1);
-                });
+                localData.transactions = localData.transactions.filter(t => !isTransactionInMonth(t, year, month));
                 
                 // Adiciona todas as transações do servidor
                 localData.transactions.push(...serverData);
@@ -5084,21 +5200,28 @@
             
             if (nextNumber > total) return;
 
-            const currentDueDate = new Date(currentTransaction.due_date);
-            const nextDueDate = new Date(currentDueDate);
-            nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+            const parts = parseDateParts(currentTransaction.due_date);
+            let nextMonth = parts.month + 1;
+            let nextYear = parts.year;
+            if (nextMonth > 12) {
+                nextMonth = 1;
+                nextYear += 1;
+            }
+            const maxDays = new Date(nextYear, nextMonth, 0).getDate();
+            const nextDay = Math.min(parts.day || 1, maxDays);
+            const nextDueDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(nextDay).padStart(2, '0')}`;
 
             const newTransaction = {
-                user_id: currentUser.id,
+                user_id: currentUser?.id || currentTransaction.user_id,
                 type: currentTransaction.type,
                 category: 'installment',
                 partition_id: currentTransaction.partition_id,
                 description: `${currentTransaction.description} (${nextNumber}/${total})`,
                 amount: currentTransaction.amount,
-                year: nextDueDate.getFullYear(),
-                month: nextDueDate.getMonth() + 1,
-                due_day: nextDueDate.getDate(),
-                due_date: nextDueDate.toISOString().split('T')[0],
+                year: nextYear,
+                month: nextMonth,
+                due_day: nextDay,
+                due_date: nextDueDate,
                 status: 'pending',
                 total_installments: total,
                 installment_number: nextNumber,
@@ -5355,11 +5478,12 @@
 
             if (realtimeChannel) {
                 realtimeChannel.unsubscribe();
+                realtimeChannel = null;
             }
 
             console.log('📡 Configurando Realtime para tabela transactions');
 
-            // Cria canal para escutar mudanças na tabela transactions
+            // Cria canal para escutar mudanças na tabela transactions e broadcasts
             realtimeChannel = supabaseClient
                 .channel('transactions-changes')
                 .on(
@@ -5373,54 +5497,74 @@
                         console.log('📡 Mudança detectada na tabela transactions:', payload);
                         
                         const { eventType, new: newRecord, old: oldRecord } = payload;
-                        
-                        // Recarrega dados do mês atual
                         const currentYear = currentMonth.getFullYear();
                         const currentMonthNum = currentMonth.getMonth() + 1;
                         
                         if (eventType === 'INSERT' && newRecord) {
-                            console.log('➕ Nova transação inserida:', newRecord.id);
+                            console.log('➕ Nova transação inserida via Realtime:', newRecord.id);
                             try {
-                                // Verifica se é do mês atual antes de adicionar
-                                const recordDate = new Date(newRecord.due_date);
-                                if (recordDate.getFullYear() === currentYear && 
-                                    recordDate.getMonth() === currentMonthNum - 1) {
-                                    
-                                    // Verifica se já não existe (para evitar duplicatas)
-                                    if (!localData.transactions.find(t => t.id === newRecord.id)) {
+                                if (isTransactionInMonth(newRecord, currentYear, currentMonthNum)) {
+                                    const index = localData.transactions.findIndex(t => t.id === newRecord.id);
+                                    if (index === -1) {
                                         localData.transactions.push(newRecord);
-                                        renderData(); // Atualiza interface
-                                        showNotification('📡 Nova transação adicionada!', 'info');
+                                    } else {
+                                        localData.transactions[index] = newRecord;
                                     }
+                                    renderData();
+                                    showNotification('📡 Nova transação adicionada!', 'info');
                                 }
                             } catch (e) {
                                 console.error('Erro ao processar INSERT Realtime:', e);
                             }
                         } 
                         else if (eventType === 'UPDATE' && newRecord) {
-                            console.log('✏️ Transação atualizada:', newRecord.id);
+                            console.log('✏️ Transação atualizada via Realtime:', newRecord.id);
                             try {
-                                // Atualiza na memória local
                                 const index = localData.transactions.findIndex(t => t.id === newRecord.id);
-                                if (index !== -1) {
-                                    localData.transactions[index] = newRecord;
-                                    renderData(); // Atualiza interface
+                                const belongsToCurrent = isTransactionInMonth(newRecord, currentYear, currentMonthNum);
+                                
+                                if (belongsToCurrent) {
+                                    if (index !== -1) {
+                                        localData.transactions[index] = newRecord;
+                                    } else {
+                                        localData.transactions.push(newRecord);
+                                    }
+                                    renderData();
                                     showNotification('📡 Transação atualizada!', 'info');
+                                } else if (index !== -1) {
+                                    // Se a transação mudou de mês, remove do mês atualmente exibido
+                                    localData.transactions.splice(index, 1);
+                                    renderData();
                                 }
                             } catch (e) {
                                 console.error('Erro ao processar UPDATE Realtime:', e);
                             }
                         } 
                         else if (eventType === 'DELETE' && oldRecord) {
-                            console.log('🗑️ Transação deletada:', oldRecord.id);
+                            console.log('🗑️ Transação deletada via Realtime:', oldRecord.id);
                             try {
-                                // Remove da memória local
                                 localData.transactions = localData.transactions.filter(t => t.id !== oldRecord.id);
-                                renderData(); // Atualiza interface
+                                renderData();
                                 showNotification('📡 Transação removida!', 'info');
                             } catch (e) {
                                 console.error('Erro ao processar DELETE Realtime:', e);
                             }
+                        }
+                    }
+                )
+                .on(
+                    'broadcast',
+                    { event: 'force-reload' },
+                    async (payload) => {
+                        console.log('📡 Broadcast de sincronização forçada recebido:', payload);
+                        try {
+                            const year = currentMonth.getFullYear();
+                            const month = currentMonth.getMonth() + 1;
+                            await fetchTransactions(year, month);
+                            renderData();
+                            showNotification('🔄 Sincronizado com outro aparelho!', 'info');
+                        } catch (err) {
+                            console.warn('Erro ao atualizar via broadcast:', err);
                         }
                     }
                 )
@@ -5444,12 +5588,76 @@
         }
 
         /**
-         * Publica evento de sincronização para outros usuários
+         * Envia mensagem de broadcast para forçar atualização em todos os outros aparelhos conectados
          */
-        // ==========================================
-        // NOTA: Funções de sincronização manual removidas
-        // Agora a sincronização é 100% automática via Realtime Database Changes
-        // ==========================================
+        async function broadcastForceReload() {
+            if (realtimeChannel && isOnline && !isDevMode) {
+                try {
+                    await realtimeChannel.send({
+                        type: 'broadcast',
+                        event: 'force-reload',
+                        payload: {
+                            timestamp: Date.now(),
+                            source: window.innerWidth < 768 ? 'mobile' : 'desktop'
+                        }
+                    });
+                    console.log('📡 Broadcast force-reload enviado com sucesso para outros aparelhos');
+                } catch (err) {
+                    console.warn('Aviso ao enviar broadcast de atualização:', err);
+                }
+            }
+        }
+
+        /**
+         * Força atualização imediata no banco de dados e sincroniza todos os apps
+         * Funciona no Desktop, Celular e Navegador
+         */
+        async function forcarAtualizacaoBanco() {
+            const syncButtons = document.querySelectorAll('.btn-sync-header, .btn-sync-nav');
+            const syncIcons = document.querySelectorAll('.sync-icon');
+
+            syncButtons.forEach(btn => btn.disabled = true);
+            syncIcons.forEach(icon => icon.classList.add('spinning'));
+
+            try {
+                showNotification('🔄 Sincronizando dados com o banco...', 'info');
+
+                if (!supabaseClient) {
+                    throw new Error('Cliente do banco de dados não inicializado');
+                }
+
+                // Reconecta Realtime se estiver desconectado
+                if (!realtimeChannel && currentUser && !isDevMode) {
+                    setupRealtimeSubscription();
+                }
+
+                const year = currentMonth.getFullYear();
+                const month = currentMonth.getMonth() + 1;
+
+                // 1. Recarrega as transações atualizadas direto do Supabase
+                await fetchTransactions(year, month);
+
+                // 2. Sincroniza contas fixas recorrentes caso aplicável
+                await syncFixedFromPreviousMonth(year, month);
+
+                // 3. Atualiza todo o estado visual da aplicação
+                renderData();
+
+                // 4. Dispara broadcast para atualizar todos os outros dispositivos abertos em tempo real
+                await broadcastForceReload();
+
+                updateConnectionStatus('online');
+                showNotification('✅ Banco atualizado! Sincronizado em todos os aparelhos.', 'success');
+            } catch (err) {
+                console.error('Erro ao forçar atualização:', err);
+                showNotification('❌ Erro ao atualizar: ' + (err.message || 'Falha de conexão'), 'error');
+            } finally {
+                setTimeout(() => {
+                    syncIcons.forEach(icon => icon.classList.remove('spinning'));
+                    syncButtons.forEach(btn => btn.disabled = false);
+                }, 600);
+            }
+        }
 
         /**
          * Fecha o canal Realtime
@@ -5642,11 +5850,8 @@
                 container.innerHTML = '<div class="empty-state">Carregando...</div>';
                 
                 const transactions = localData.transactions.filter(t => {
-                    const tDate = new Date(t.due_date);
-                    // Converte para número para evitar problema de tipo string vs number (retorno do Supabase)
                     const tPartition = parseInt(t.partition_id);
-                    return tDate.getFullYear() === year && 
-                           tDate.getMonth() === month - 1 &&
+                    return isTransactionInMonth(t, year, month) && 
                            tPartition === partition && 
                            t.category === mapping.category;
                 });
@@ -5937,10 +6142,7 @@
             const year = currentMonth.getFullYear();
             const month = currentMonth.getMonth() + 1;
             
-            const transactions = localData.transactions.filter(t => {
-                const tDate = new Date(t.due_date);
-                return tDate.getFullYear() === year && tDate.getMonth() === month - 1;
-            });
+            const transactions = localData.transactions.filter(t => isTransactionInMonth(t, year, month));
 
             let income = 0;          // Total de receitas do mês (informativo, nunca diminui)
             let expenses = 0;        // Total de contas a pagar no mês (informativo, nunca diminui)
@@ -5988,11 +6190,8 @@
                 
                 // Filtra todas as transações da repartição específica no mês atual
                 const transactions = localData.transactions.filter(t => {
-                    const tDate = new Date(t.due_date);
                     const tPartition = parseInt(t.partition_id);
-                    return tDate.getFullYear() === year && 
-                           tDate.getMonth() === month - 1 &&
-                           tPartition === partition;
+                    return isTransactionInMonth(t, year, month) && tPartition === partition;
                 });
 
                 let totalReceitas = 0;           // Acumulador de receitas (nunca diminui)
@@ -6096,15 +6295,12 @@
                 
                 // Filtra todas as transações da repartição específica no mês atual
                 const transactions = localData.transactions.filter(t => {
-                    const tDate = new Date(t.due_date);
                     const tPartition = parseInt(t.partition_id);
                     // Exclui a transação sendo editada para cálculo correto
                     if (excludeTransactionId && t.id === excludeTransactionId) {
                         return false;
                     }
-                    return tDate.getFullYear() === year && 
-                           tDate.getMonth() === month - 1 &&
-                           tPartition === partition;
+                    return isTransactionInMonth(t, year, month) && tPartition === partition;
                 });
 
                 let totalReceitas = 0;
@@ -6165,9 +6361,7 @@
             const month = currentMonth.getMonth() + 1;
             
             const pendingTransactions = localData.transactions.filter(t => {
-                const tDate = new Date(t.due_date);
-                return tDate.getFullYear() === year && 
-                       tDate.getMonth() === month - 1 &&
+                return isTransactionInMonth(t, year, month) && 
                        t.type !== 'income' &&
                        (t.status === 'pending' || t.status === null);
             });
@@ -6445,8 +6639,8 @@
                     throw new Error('Selecione uma data de vencimento');
                 }
 
-                const dateObj = new Date(dueDate);
-                if (isNaN(dateObj.getTime())) {
+                const dateParts = parseDateParts(dueDate);
+                if (!dateParts.year || !dateParts.month) {
                     throw new Error('Data de vencimento inválida');
                 }
 
@@ -6455,8 +6649,8 @@
                 // devem ser bloqueadas se tornarem o saldo da repartição negativo
                 if (mapping.type !== 'income' && status === 'paid') {
                     // Verifica se é o mesmo mês corrente
-                    if (dateObj.getFullYear() === currentMonth.getFullYear() && 
-                        dateObj.getMonth() === currentMonth.getMonth()) {
+                    if (dateParts.year === currentMonth.getFullYear() && 
+                        dateParts.month === (currentMonth.getMonth() + 1)) {
                         
                         const verificacao = verificarSaldoSuficiente(partitionId, amount, editingId);
                         
@@ -6478,9 +6672,9 @@
                     partition_id: partitionId,
                     description: description,
                     amount: amount,
-                    year: dateObj.getFullYear(),
-                    month: dateObj.getMonth() + 1,
-                    due_day: dateObj.getDate(),
+                    year: dateParts.year,
+                    month: dateParts.month,
+                    due_day: dateParts.day,
                     due_date: dueDate,
                     status: status,
                     total_installments: totalInstallments,
@@ -6518,16 +6712,23 @@
                             console.log(`📦 Criando ${totalInstallments} parcelas...`);
                             
                             for (let i = 1; i <= totalInstallments; i++) {
-                                const parcelDate = new Date(dateObj);
-                                parcelDate.setMonth(parcelDate.getMonth() + (i - 1));
+                                let pYear = dateParts.year;
+                                let pMonth = dateParts.month + (i - 1);
+                                while (pMonth > 12) {
+                                    pMonth -= 12;
+                                    pYear += 1;
+                                }
+                                const maxDays = new Date(pYear, pMonth, 0).getDate();
+                                const pDay = Math.min(dateParts.day, maxDays);
+                                const pDueDate = `${pYear}-${String(pMonth).padStart(2, '0')}-${String(pDay).padStart(2, '0')}`;
                                 
                                 const parcelTransaction = {
                                     ...baseTransaction,
                                     description: `${description} (${i}/${totalInstallments})`,
-                                    year: parcelDate.getFullYear(),
-                                    month: parcelDate.getMonth() + 1,
-                                    due_day: parcelDate.getDate(),
-                                    due_date: parcelDate.toISOString().split('T')[0],
+                                    year: pYear,
+                                    month: pMonth,
+                                    due_day: pDay,
+                                    due_date: pDueDate,
                                     installment_number: i,
                                     status: i === 1 ? status : 'pending'
                                 };
@@ -6562,10 +6763,7 @@
 
                 closeModal();
                 
-                // CORREÇÃO CRÍTICA: NÃO chamar loadAllData() aqui.
-                // loadAllData() → fetchTransactions() → Supabase SELECT pode sobrescrever
-                // localData.transactions e perder itens recém-inseridos (merge parcial).
-                // Renderizamos diretamente com localData já atualizado — ilimitado.
+                // Renderiza diretamente com localData já atualizado
                 updateDashboard();
                 
                 if (!openPartitions[partitionId]) {
@@ -6573,6 +6771,9 @@
                 } else {
                     await renderPartitionContent(partitionId);
                 }
+
+                // Dispara sincronização em tempo real para todos os outros aparelhos
+                await broadcastForceReload();
                 
             } catch (error) {
                 console.error('❌ Erro ao salvar transação:', error);
@@ -6592,6 +6793,7 @@
                     
                     updateDashboard();
                     renderPartitions();
+                    await broadcastForceReload();
                     showNotification('🗑️ Transação excluída!');
                 } catch (error) {
                     showNotification('❌ Erro ao excluir: ' + error.message, 'error');
@@ -6716,6 +6918,7 @@
                 closePaymentModal();
                 updateDashboard();
                 renderPartitions();
+                await broadcastForceReload();
                 
             } catch (error) {
                 console.error('Erro no pagamento:', error);
@@ -7967,7 +8170,13 @@ Isso substituirá os dados atuais!`)) {
         }
 
         function formatDate(dateString) {
-            return new Date(dateString).toLocaleDateString('pt-BR');
+            if (!dateString) return '-';
+            const clean = String(dateString).split('T')[0].trim();
+            const parts = clean.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateString;
         }
 
         function showNotification(message, type = 'success') {
@@ -8084,13 +8293,35 @@ Isso substituirá os dados atuais!`)) {
         window.deleteTransactionFromPending = deleteTransactionFromPending;
         window.resetAllData = resetAllData;
 
-        // FUNÇÕES REALTIME EXPORTADAS
+        // FUNÇÕES REALTIME E ATUALIZAÇÃO EXPORTADAS
         window.setupRealtimeSubscription = setupRealtimeSubscription;
         window.closeRealtimeChannel = closeRealtimeChannel;
+        window.forcarAtualizacaoBanco = forcarAtualizacaoBanco;
+        window.broadcastForceReload = broadcastForceReload;
+        window.parseDateParts = parseDateParts;
+        window.isTransactionInMonth = isTransactionInMonth;
         window.hideLoading = hideLoading;
 
         // Failsafe: nunca permite que o loading fique travado na tela por mais de 3 segundos
         setTimeout(hideLoading, 3000);
+
+        // Sincronização inteligente ao retornar para o app (celular desbloqueado ou aba reativada)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && isOnline && currentUser && !isDevMode) {
+                console.log('📱 App reativado: verificando atualizações recentes no banco...');
+                const year = currentMonth.getFullYear();
+                const month = currentMonth.getMonth() + 1;
+                fetchTransactions(year, month).then(() => renderData()).catch(() => {});
+            }
+        });
+
+        window.addEventListener('focus', () => {
+            if (isOnline && currentUser && !isDevMode) {
+                const year = currentMonth.getFullYear();
+                const month = currentMonth.getMonth() + 1;
+                fetchTransactions(year, month).then(() => renderData()).catch(() => {});
+            }
+        });
 
         // Monitorar conectividade da rede em tempo real
         window.addEventListener('online', () => {
@@ -8099,6 +8330,7 @@ Isso substituirá os dados atuais!`)) {
             updateConnectionStatus('online');
             if (currentUser && !isDevMode) {
                 setupRealtimeSubscription();
+                forcarAtualizacaoBanco();
             }
         });
 

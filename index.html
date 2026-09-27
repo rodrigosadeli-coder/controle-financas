@@ -2512,6 +2512,45 @@
             box-shadow: 0 6px 16px rgba(30, 58, 138, 0.35);
         }
 
+        .report-period-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .report-period-btn {
+            background: #ffffff;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .report-period-btn:hover {
+            border-color: var(--blue-royal);
+            color: var(--blue-royal);
+            background: #f1f5f9;
+        }
+
+        .report-period-btn.active {
+            background: linear-gradient(135deg, var(--blue-royal) 0%, #1e40af 100%);
+            color: #ffffff;
+            border-color: var(--gold-primary);
+            box-shadow: 0 2px 8px rgba(30, 58, 138, 0.25);
+        }
+
+        .report-export-bar {
+            background: linear-gradient(135deg, #f0f7ff 0%, #fffdf5 100%);
+            border: 1px solid rgba(212, 175, 55, 0.45);
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
         .report-btn-whatsapp {
             background: #25D366 !important;
             color: white !important;
@@ -2557,6 +2596,7 @@
             font-size: 0.72rem;
             font-weight: 600;
             color: #93c5fd;
+        }
         /* ==========================================
            MÓDULO: DÍVIDAS EM ABERTO (CONTROLE GERENCIAL)
            ========================================== */
@@ -3356,14 +3396,6 @@
                     <button class="month-btn" onclick="changeMonth(1)">▶</button>
                 </div>
 
-                <!-- Botão de Ação Rápida de Relatório -->
-                <div style="display: flex; justify-content: center; margin-top: -18px; margin-bottom: 24px;">
-                    <button type="button" class="btn-report-quick" onclick="openReportModal()" title="Exportar Relatório em PDF ou WhatsApp">
-                        <span>📑</span>
-                        <span>Exportar Relatório (PDF / WhatsApp)</span>
-                    </button>
-                </div>
-
                 <!-- Cards Grid -->
                 <div class="cards-grid">
                     <div class="card">
@@ -4138,43 +4170,140 @@
 
     <!-- Modal Relatório Financeiro -->
     <div class="modal" id="reportModal">
-        <div class="modal-content large" style="max-width: 820px;">
-            <div class="modal-header">
-                <h3 class="modal-title">📑 Relatório da Atividade Financeira</h3>
+        <div class="modal-content large" style="max-width: 880px;">
+            <div class="modal-header" style="border-bottom: 2px solid var(--gold-primary);">
+                <div>
+                    <h3 class="modal-title" style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span>📑</span> Relatório da Atividade Financeira & Exportação
+                    </h3>
+                    <div style="font-size: 0.8rem; color: #64748b; margin-top: 3px;">
+                        Consulte, pesquise e exporte relatórios consolidados em PDF e WhatsApp
+                    </div>
+                </div>
                 <button class="close-btn" onclick="closeReportModal()">×</button>
             </div>
-            <div class="modal-body">
-                <!-- Seletor de Período e Nível de Detalhe -->
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.1rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
-                        <span style="font-weight: 700; color: var(--blue-royal); font-size: 0.95rem;">📅 Período:</span>
-                        <select id="reportMonthSelector" class="form-input-modal" style="width: auto; padding: 0.45rem 0.8rem; margin: 0; font-weight: 600;" onchange="updateReportPreview()">
-                        </select>
-                        <select id="reportYearSelector" class="form-input-modal" style="width: auto; padding: 0.45rem 0.8rem; margin: 0; font-weight: 600;" onchange="updateReportPreview()">
-                        </select>
-                        <button type="button" class="btn-small btn-secondary-small" onclick="syncReportToCurrentMonth()" title="Usar mês selecionado no dashboard" style="padding: 0.45rem 0.75rem;">
-                            ↺ Mês do Dashboard
-                        </button>
+            <div class="modal-body" style="padding-top: 1.2rem;">
+                <!-- 1. Seletor de Tipo de Período (Abas / Botões) -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.1rem; margin-bottom: 1.3rem;">
+                    <div style="font-size: 0.88rem; font-weight: 700; color: var(--blue-royal); margin-bottom: 0.65rem; display: flex; align-items: center; gap: 6px;">
+                        <span>🗓️</span> Selecione o Período do Relatório:
+                    </div>
+                    
+                    <div class="report-period-tabs" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 0.9rem;">
+                        <button type="button" class="report-period-btn active" id="btnPeriodMensal" onclick="setReportPeriodType('mensal')">📅 Mensal</button>
+                        <button type="button" class="report-period-btn" id="btnPeriodAnual" onclick="setReportPeriodType('anual')">📆 Anual</button>
+                        <button type="button" class="report-period-btn" id="btnPeriodSemanal" onclick="setReportPeriodType('semanal')">🗓️ Semanal</button>
+                        <button type="button" class="report-period-btn" id="btnPeriodDiario" onclick="setReportPeriodType('diario')">📍 Diário</button>
+                        <button type="button" class="report-period-btn" id="btnPeriodGeral" onclick="setReportPeriodType('geral')">🌐 Geral (Todos os Períodos)</button>
                     </div>
 
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <label for="reportDetailLevel" style="font-weight: 600; color: #475569; font-size: 0.88rem;">Extrato:</label>
-                        <select id="reportDetailLevel" class="form-input-modal" style="width: auto; padding: 0.45rem 0.8rem; margin: 0; font-size: 0.88rem;">
-                            <option value="completo">Completo (Diagnóstico + Repartições + Pendências + Extrato)</option>
-                            <option value="sintetico">Sintético (Diagnóstico + Repartições + Pendências)</option>
-                        </select>
+                    <!-- Controles dinâmicos de data de acordo com o período selecionado -->
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; padding-top: 0.75rem; border-top: 1px solid #e2e8f0;">
+                        <!-- Controle Mensal -->
+                        <div id="reportControlsMensal" class="report-dynamic-control" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <span style="font-weight: 600; color: #475569; font-size: 0.88rem;">Mês/Ano:</span>
+                            <select id="reportMonthSelector" class="form-input-modal" style="width: auto; padding: 0.45rem 0.8rem; margin: 0; font-weight: 600;" onchange="updateReportPreview()">
+                            </select>
+                            <select id="reportYearSelector" class="form-input-modal" style="width: auto; padding: 0.45rem 0.8rem; margin: 0; font-weight: 600;" onchange="updateReportPreview()">
+                            </select>
+                            <button type="button" class="btn-small btn-secondary-small" onclick="syncReportToCurrentMonth()" title="Usar mês selecionado no dashboard" style="padding: 0.45rem 0.75rem;">
+                                ↺ Mês do Dashboard
+                            </button>
+                        </div>
+
+                        <!-- Controle Anual -->
+                        <div id="reportControlsAnual" class="report-dynamic-control" style="display: none; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <span style="font-weight: 600; color: #475569; font-size: 0.88rem;">Ano de Exercício:</span>
+                            <select id="reportYearSelectorAnual" class="form-input-modal" style="width: auto; padding: 0.45rem 0.8rem; margin: 0; font-weight: 600;" onchange="updateReportPreview()">
+                            </select>
+                        </div>
+
+                        <!-- Controle Semanal -->
+                        <div id="reportControlsSemanal" class="report-dynamic-control" style="display: none; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <span style="font-weight: 600; color: #475569; font-size: 0.88rem;">Data de Referência:</span>
+                            <input type="date" id="reportWeekDate" class="form-input-modal" style="width: auto; padding: 0.4rem 0.7rem; margin: 0;" onchange="updateReportPreview()">
+                            <span id="reportWeekInfo" style="font-size: 0.85rem; font-weight: 700; color: var(--blue-royal); background: #e0e7ff; padding: 4px 10px; border-radius: 6px;"></span>
+                        </div>
+
+                        <!-- Controle Diário -->
+                        <div id="reportControlsDiario" class="report-dynamic-control" style="display: none; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <span style="font-weight: 600; color: #475569; font-size: 0.88rem;">Dia:</span>
+                            <input type="date" id="reportDayDate" class="form-input-modal" style="width: auto; padding: 0.4rem 0.7rem; margin: 0;" onchange="updateReportPreview()">
+                        </div>
+
+                        <!-- Controle Geral -->
+                        <div id="reportControlsGeral" class="report-dynamic-control" style="display: none; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <span style="font-size: 0.85rem; color: #1e3a8a; background: #dbeafe; padding: 4px 12px; border-radius: 6px; font-weight: 600;">
+                                🌐 Todo o histórico consolidado de transações (todos os períodos)
+                            </span>
+                        </div>
+
+                        <!-- Extrato Sintético / Completo -->
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <label for="reportDetailLevel" style="font-weight: 600; color: #475569; font-size: 0.88rem;">Extrato:</label>
+                            <select id="reportDetailLevel" class="form-input-modal" style="width: auto; padding: 0.45rem 0.8rem; margin: 0; font-size: 0.88rem;" onchange="updateReportPreview()">
+                                <option value="completo">Completo (Diagnóstico + Repartições + Pendências + Extrato)</option>
+                                <option value="sintetico">Sintético (Diagnóstico + Repartições + Pendências)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Barra de Pesquisa de Texto e Botão Emitir -->
+                    <div style="display: flex; gap: 8px; align-items: center; margin-top: 0.85rem; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 220px; position: relative;">
+                            <input type="text" id="reportSearchInput" class="form-input-modal" placeholder="🔍 Pesquisar por descrição, conta, categoria ou valor..." style="width: 100%; margin: 0; padding: 0.5rem 0.8rem;" oninput="debounceReportUpdate()" onkeydown="if(event.key === 'Enter'){ updateReportPreview(true); }">
+                        </div>
+                        <button type="button" class="btn" onclick="updateReportPreview(true)" style="background: linear-gradient(135deg, var(--blue-royal) 0%, #1e40af 100%); color: white; border: 1px solid var(--gold-primary); padding: 0.5rem 1.1rem; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                            <span>🔍</span><span>Emitir Pesquisa</span>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Painel Diagnóstico do Momento Financeiro Atual -->
-                <div style="margin-bottom: 1.5rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                        <h4 style="color: var(--blue-royal); margin: 0; display: flex; align-items: center; gap: 0.5rem; font-family: 'Cinzel', serif; font-size: 1.05rem;">
-                            <span>⚜️</span> Diagnóstico do Momento Financeiro Atual
-                        </h4>
-                        <span id="repPeriodBadge" style="background: #e0e7ff; color: #3730a3; font-size: 0.78rem; font-weight: 600; padding: 3px 10px; border-radius: 12px;"></span>
+                <!-- 2. Painel de Resultados da Pesquisa / Relatório -->
+                <div id="reportResultContainer">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <h4 style="color: var(--blue-royal); margin: 0; display: flex; align-items: center; gap: 0.5rem; font-family: 'Cinzel', serif; font-size: 1.05rem;">
+                                <span>⚜️</span> Diagnóstico do Período
+                            </h4>
+                            <div id="repResultSubtitle" style="font-size: 0.78rem; color: #64748b; margin-top: 2px;"></div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                            <span id="repPeriodBadge" style="background: #e0e7ff; color: #3730a3; font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; border: 1px solid #c7d2fe;"></span>
+                            <span id="repCountBadge" style="background: #f1f5f9; color: #334155; font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 12px; border: 1px solid #cbd5e1;"></span>
+                        </div>
+                    </div>
+
+                    <!-- Barra de Exportação Imediata do Resultado Emitido -->
+                    <div class="report-export-bar" style="background: linear-gradient(135deg, #f0f7ff 0%, #fffdf5 100%); border: 1px solid rgba(212, 175, 55, 0.45); border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <div style="font-weight: 700; color: var(--blue-royal); font-size: 0.92rem; display: flex; align-items: center; gap: 6px;">
+                                <span>📤</span> Exportar Relatório desta Pesquisa:
+                            </div>
+                            <div style="font-size: 0.78rem; color: #64748b;">
+                                Escolha o formato desejado para exportar os dados desta consulta
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <!-- Baixar PDF -->
+                            <button type="button" class="btn btn-save" onclick="executarExportacao('download')" title="Baixar relatório em PDF no seu aparelho" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; padding: 0.55rem 0.95rem; background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); border-radius: 6px;">
+                                <span style="font-size: 1rem;">📥</span>
+                                <span>Baixar PDF</span>
+                            </button>
+                            <!-- Enviar WhatsApp -->
+                            <button type="button" class="btn report-btn-whatsapp" onclick="executarExportacao('whatsapp')" title="Enviar relatório formatado via WhatsApp" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; padding: 0.55rem 0.95rem; border-radius: 6px;">
+                                <span style="font-size: 1rem;">💬</span>
+                                <span>WhatsApp</span>
+                            </button>
+                            <!-- Visualizar -->
+                            <button type="button" class="btn report-btn-preview" onclick="executarExportacao('preview')" title="Visualizar ou imprimir o documento PDF" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; padding: 0.55rem 0.85rem; border-radius: 6px;">
+                                <span style="font-size: 1rem;">👁️</span>
+                                <span>Visualizar</span>
+                            </button>
+                        </div>
                     </div>
                     
+                    <!-- Cards KPI -->
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(115px, 1fr)); gap: 10px; margin-bottom: 1rem;">
                         <div class="report-kpi-card" style="background: #f0fdf4; border: 1px solid #bbf7d0;">
                             <div style="font-size: 0.72rem; color: #166534; font-weight: 700;">💰 Saldo Atual</div>
@@ -4185,7 +4314,7 @@
                         <div class="report-kpi-card" style="background: #eff6ff; border: 1px solid #bfdbfe;">
                             <div style="font-size: 0.72rem; color: #1e40af; font-weight: 700;">📥 Receitas</div>
                             <div id="repPreviewReceitas" style="font-size: 1.15rem; font-weight: 800; color: #2563eb; margin: 4px 0;">R$ 0,00</div>
-                            <div style="font-size: 0.68rem; color: #64748b;">Entradas do Mês</div>
+                            <div style="font-size: 0.68rem; color: #64748b;">Entradas do Período</div>
                         </div>
 
                         <div class="report-kpi-card" style="background: #fef2f2; border: 1px solid #fecaca;">
@@ -4209,12 +4338,12 @@
                         <div class="report-kpi-card" style="background: #f8fafc; border: 1px solid #e2e8f0;">
                             <div style="font-size: 0.72rem; color: #334155; font-weight: 700;">🎯 Saldo Projetado</div>
                             <div id="repPreviewProjetado" style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 4px 0;">R$ 0,00</div>
-                            <div style="font-size: 0.68rem; color: #64748b;">Final do Mês</div>
+                            <div style="font-size: 0.68rem; color: #64748b;">Final do Período</div>
                         </div>
                     </div>
 
                     <!-- Mini cards das Repartições -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-bottom: 1.25rem;">
                         <div style="background: #f1f5f9; padding: 0.75rem 1rem; border-radius: 8px; border-left: 4px solid var(--blue-royal);">
                             <div style="font-weight: 700; color: var(--blue-royal); font-size: 0.88rem; display: flex; justify-content: space-between;">
                                 <span>📂 1ª Repartição</span>
@@ -4235,12 +4364,39 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Tabela de Transações Emitidas na Pesquisa / Período -->
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+                            <h5 style="color: var(--blue-royal); margin: 0; font-size: 0.92rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                                <span>📋</span> Transações Encontradas na Pesquisa / Período
+                            </h5>
+                            <span id="repTableSummary" style="font-size: 0.78rem; color: #64748b;"></span>
+                        </div>
+                        <div style="max-height: 280px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
+                            <table class="history-table" style="margin: 0; font-size: 0.8rem; width: 100%;">
+                                <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 1;">
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Descrição</th>
+                                        <th>Categoria</th>
+                                        <th>Repartição</th>
+                                        <th>Tipo</th>
+                                        <th>Valor</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportTransactionsTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Botões de Ação de Exportação -->
-                <div style="border-top: 1px solid #e5e7eb; padding-top: 1.4rem;">
-                    <div style="font-weight: 700; color: #334155; margin-bottom: 0.85rem; font-size: 0.95rem;">
-                        Exportar Relatório da Atividade Financeira:
+                <!-- Botões de Ação de Exportação (Rodapé do Modal) -->
+                <div style="border-top: 1px solid #e5e7eb; padding-top: 1.2rem;">
+                    <div style="font-weight: 700; color: #334155; margin-bottom: 0.75rem; font-size: 0.92rem;">
+                        Exportar Relatório Consolidado:
                     </div>
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
@@ -4268,7 +4424,7 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" style="padding: 0.8rem 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end;">
                 <button type="button" class="btn btn-cancel" onclick="closeReportModal()">Fechar</button>
             </div>
         </div>
@@ -4715,6 +4871,9 @@
             'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
         ];
 
+        let currentReportPeriodType = 'mensal';
+        let reportDebounceTimeout = null;
+
         /**
          * Normaliza valor monetário para formato seguro no jsPDF (sem espaços não-separáveis)
          */
@@ -4723,22 +4882,311 @@
         }
 
         /**
-         * Coleta e consolida as métricas financeiras do período especificado
+         * Alterna o tipo de período do relatório ('mensal', 'anual', 'semanal', 'diario', 'geral')
          */
-        async function coletarDadosRelatorio(year, month) {
-            // Se estiver online e as transações do mês ainda não estiverem no localData, busca no Supabase
-            if (isOnline && supabaseClient && currentUser) {
-                const hasMonthData = localData.transactions.some(t => isTransactionInMonth(t, year, month));
-                if (!hasMonthData) {
-                    try {
-                        await fetchTransactions(year, month);
-                    } catch (err) {
-                        console.warn('Aviso ao sincronizar transações para o relatório:', err);
+        function setReportPeriodType(type) {
+            currentReportPeriodType = type;
+            
+            const tipos = ['mensal', 'anual', 'semanal', 'diario', 'geral'];
+            tipos.forEach(p => {
+                const btn = document.getElementById('btnPeriod' + p.charAt(0).toUpperCase() + p.slice(1));
+                if (btn) {
+                    if (p === type) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                }
+                const ctrl = document.getElementById('reportControls' + p.charAt(0).toUpperCase() + p.slice(1));
+                if (ctrl) {
+                    ctrl.style.display = (p === type) ? 'flex' : 'none';
+                }
+            });
+
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            if (type === 'semanal') {
+                const weekInput = document.getElementById('reportWeekDate');
+                if (weekInput && !weekInput.value) {
+                    weekInput.value = todayStr;
+                }
+                const range = getReportWeekRange(weekInput ? weekInput.value : '');
+                const infoEl = document.getElementById('reportWeekInfo');
+                if (infoEl) infoEl.textContent = `Semana: ${range.label}`;
+            } else if (type === 'diario') {
+                const dayInput = document.getElementById('reportDayDate');
+                if (dayInput && !dayInput.value) {
+                    dayInput.value = todayStr;
+                }
+            } else if (type === 'anual') {
+                const yrSelect = document.getElementById('reportYearSelectorAnual');
+                if (yrSelect && (!yrSelect.value || yrSelect.options.length === 0)) {
+                    const curY = currentMonth ? currentMonth.getFullYear() : new Date().getFullYear();
+                    yrSelect.innerHTML = '';
+                    for (let y = curY - 3; y <= curY + 3; y++) {
+                        const opt = document.createElement('option');
+                        opt.value = y;
+                        opt.textContent = y;
+                        if (y === curY) opt.selected = true;
+                        yrSelect.appendChild(opt);
                     }
                 }
             }
 
-            const transactions = localData.transactions.filter(t => isTransactionInMonth(t, year, month));
+            updateReportPreview();
+        }
+
+        /**
+         * Calcula o intervalo da semana (Segunda a Domingo) a partir de uma data YYYY-MM-DD
+         */
+        function getReportWeekRange(dateStr) {
+            let d;
+            if (dateStr) {
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+                } else {
+                    d = new Date(dateStr);
+                }
+            } else {
+                d = new Date();
+            }
+            if (isNaN(d.getTime())) d = new Date();
+
+            const day = d.getDay(); // 0 = Domingo, 1 = Segunda ... 6 = Sábado
+            const diffToMonday = day === 0 ? -6 : 1 - day;
+            const monday = new Date(d);
+            monday.setDate(d.getDate() + diffToMonday);
+            
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            
+            const formatYMD = dt => {
+                const y = dt.getFullYear();
+                const m = String(dt.getMonth() + 1).padStart(2, '0');
+                const dayNum = String(dt.getDate()).padStart(2, '0');
+                return `${y}-${m}-${dayNum}`;
+            };
+            
+            const startStr = formatYMD(monday);
+            const endStr = formatYMD(sunday);
+            const label = `${formatDate(startStr)} a ${formatDate(endStr)}`;
+            return { startStr, endStr, label };
+        }
+
+        /**
+         * Recupera os parâmetros atuais selecionados na interface do relatório
+         */
+        function obterParametrosRelatorioAtuais() {
+            const monthSelect = document.getElementById('reportMonthSelector');
+            const yearSelect = document.getElementById('reportYearSelector');
+            const yearSelectAnual = document.getElementById('reportYearSelectorAnual');
+            const weekInput = document.getElementById('reportWeekDate');
+            const dayInput = document.getElementById('reportDayDate');
+            const detailSelect = document.getElementById('reportDetailLevel');
+            const searchInput = document.getElementById('reportSearchInput');
+
+            const curY = currentMonth ? currentMonth.getFullYear() : new Date().getFullYear();
+            const curM = currentMonth ? (currentMonth.getMonth() + 1) : (new Date().getMonth() + 1);
+
+            const yearMensal = yearSelect ? parseInt(yearSelect.value) : curY;
+            const monthMensal = monthSelect ? parseInt(monthSelect.value) : curM;
+            const yearAnual = yearSelectAnual ? parseInt(yearSelectAnual.value) : curY;
+            const weekDate = weekInput && weekInput.value ? weekInput.value : new Date().toISOString().split('T')[0];
+            const weekRange = getReportWeekRange(weekDate);
+            const dayDate = dayInput && dayInput.value ? dayInput.value : new Date().toISOString().split('T')[0];
+            const searchQuery = searchInput ? searchInput.value.trim() : '';
+            const detailLevel = detailSelect ? detailSelect.value : 'completo';
+
+            return {
+                tipo: currentReportPeriodType || 'mensal',
+                year: currentReportPeriodType === 'anual' ? yearAnual : yearMensal,
+                month: monthMensal,
+                weekDate,
+                weekRange,
+                dayDate,
+                searchQuery,
+                detailLevel
+            };
+        }
+
+        /**
+         * Coleta e consolida as métricas financeiras do período e filtros especificados
+         */
+        async function coletarDadosRelatorio(filtroOuAno, possivelMes) {
+            let params;
+            if (typeof filtroOuAno === 'object' && filtroOuAno !== null) {
+                params = filtroOuAno;
+            } else if (typeof filtroOuAno === 'number') {
+                const yr = filtroOuAno;
+                const m = possivelMes || (currentMonth ? currentMonth.getMonth() + 1 : 1);
+                params = {
+                    tipo: 'mensal',
+                    year: yr,
+                    month: m,
+                    weekDate: '',
+                    weekRange: getReportWeekRange(''),
+                    dayDate: '',
+                    searchQuery: '',
+                    detailLevel: 'completo'
+                };
+            } else {
+                params = obterParametrosRelatorioAtuais();
+            }
+
+            // Se online, sincroniza os dados do período com o Supabase
+            if (isOnline && supabaseClient && currentUser) {
+                try {
+                    if (params.tipo === 'mensal') {
+                        const hasMonthData = localData.transactions.some(t => isTransactionInMonth(t, params.year, params.month));
+                        if (!hasMonthData) {
+                            await fetchTransactions(params.year, params.month);
+                        }
+                    } else if (params.tipo === 'anual') {
+                        const targetY = parseInt(params.year, 10);
+                        const startDate = `${targetY}-01-01`;
+                        const endDate = `${targetY}-12-31`;
+                        const { data, error } = await supabaseClient
+                            .from('transactions')
+                            .select('*')
+                            .or(`year.eq.${targetY},and(due_date.gte.${startDate},due_date.lte.${endDate})`)
+                            .order('due_date', { ascending: true });
+                        if (!error && Array.isArray(data)) {
+                            const map = new Map();
+                            (localData.transactions || []).forEach(t => map.set(t.id, t));
+                            data.forEach(t => {
+                                if (!map.has(t.id)) localData.transactions.push(t);
+                            });
+                        }
+                    } else if (params.tipo === 'semanal') {
+                        const s = params.weekRange.startStr;
+                        const e = params.weekRange.endStr;
+                        const { data, error } = await supabaseClient
+                            .from('transactions')
+                            .select('*')
+                            .gte('due_date', s)
+                            .lte('due_date', e)
+                            .order('due_date', { ascending: true });
+                        if (!error && Array.isArray(data)) {
+                            const map = new Map();
+                            (localData.transactions || []).forEach(t => map.set(t.id, t));
+                            data.forEach(t => {
+                                if (!map.has(t.id)) localData.transactions.push(t);
+                            });
+                        }
+                    } else if (params.tipo === 'diario') {
+                        const target = params.dayDate;
+                        const { data, error } = await supabaseClient
+                            .from('transactions')
+                            .select('*')
+                            .eq('due_date', target)
+                            .order('due_date', { ascending: true });
+                        if (!error && Array.isArray(data)) {
+                            const map = new Map();
+                            (localData.transactions || []).forEach(t => map.set(t.id, t));
+                            data.forEach(t => {
+                                if (!map.has(t.id)) localData.transactions.push(t);
+                            });
+                        }
+                    } else if (params.tipo === 'geral') {
+                        const { data, error } = await supabaseClient
+                            .from('transactions')
+                            .select('*')
+                            .order('due_date', { ascending: true });
+                        if (!error && Array.isArray(data)) {
+                            const map = new Map();
+                            (localData.transactions || []).forEach(t => map.set(t.id, t));
+                            data.forEach(t => {
+                                if (!map.has(t.id)) localData.transactions.push(t);
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Aviso ao sincronizar dados do relatório com o servidor:', err);
+                }
+            }
+
+            // Filtragem das transações segundo o período escolhido
+            let transactions = [...(localData.transactions || [])];
+
+            if (params.tipo === 'mensal') {
+                transactions = transactions.filter(t => isTransactionInMonth(t, params.year, params.month));
+            } else if (params.tipo === 'anual') {
+                const targetY = parseInt(params.year, 10);
+                transactions = transactions.filter(t => {
+                    if (!t) return false;
+                    if (t.year !== undefined && t.year !== null && parseInt(t.year, 10) === targetY) return true;
+                    if (t.due_date) {
+                        const p = parseDateParts(t.due_date);
+                        return p.year === targetY;
+                    }
+                    return false;
+                });
+            } else if (params.tipo === 'semanal') {
+                const s = params.weekRange ? params.weekRange.startStr : '';
+                const e = params.weekRange ? params.weekRange.endStr : '';
+                transactions = transactions.filter(t => {
+                    if (!t) return false;
+                    let d = t.due_date ? String(t.due_date).substring(0, 10) : '';
+                    if (!d && t.year && t.month) {
+                        d = `${t.year}-${String(t.month).padStart(2, '0')}-${String(t.due_day || 1).padStart(2, '0')}`;
+                    }
+                    return d >= s && d <= e;
+                });
+            } else if (params.tipo === 'diario') {
+                const target = params.dayDate;
+                transactions = transactions.filter(t => {
+                    if (!t) return false;
+                    let d = t.due_date ? String(t.due_date).substring(0, 10) : '';
+                    if (!d && t.year && t.month) {
+                        d = `${t.year}-${String(t.month).padStart(2, '0')}-${String(t.due_day || 1).padStart(2, '0')}`;
+                    }
+                    return d === target;
+                });
+            } else if (params.tipo === 'geral') {
+                // Todos os períodos
+            }
+
+            // Filtro por texto de pesquisa (descrição, categoria, repartição, valor)
+            if (params.searchQuery) {
+                const q = params.searchQuery.toLowerCase().trim();
+                transactions = transactions.filter(t => {
+                    const desc = (t.description || '').toLowerCase();
+                    const cat = (t.category || '').toLowerCase();
+                    const catName = (sectionNames[getSectionIdFromType(t.type, t.partition_id)] || '').toLowerCase();
+                    const valStr = (t.amount !== undefined ? String(t.amount) : '').replace('.', ',');
+                    return desc.includes(q) || cat.includes(q) || catName.includes(q) || valStr.includes(q);
+                });
+            }
+
+            // Definição dos rótulos de período e arquivo
+            const mesIdx = (params.month >= 1 && params.month <= 12) ? params.month - 1 : 0;
+            const mesNome = MONTH_NAMES_FULL[mesIdx];
+            let tituloPeriodo = '';
+            let periodoBadge = '';
+            let fileLabel = '';
+
+            if (params.tipo === 'mensal') {
+                tituloPeriodo = `${mesNome} / ${params.year}`;
+                periodoBadge = `MENSAL: ${mesNome.toUpperCase()} / ${params.year}`;
+                const nomeMesLimpo = mesNome.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                fileLabel = `${nomeMesLimpo}_${params.year}`;
+            } else if (params.tipo === 'anual') {
+                tituloPeriodo = `Exercício Anual ${params.year}`;
+                periodoBadge = `ANUAL: ${params.year}`;
+                fileLabel = `Anual_${params.year}`;
+            } else if (params.tipo === 'semanal') {
+                const lbl = params.weekRange ? params.weekRange.label : '';
+                tituloPeriodo = `Semana ${lbl}`;
+                periodoBadge = `SEMANAL: ${lbl}`;
+                fileLabel = `Semanal_${params.weekRange ? params.weekRange.startStr : 'ini'}_a_${params.weekRange ? params.weekRange.endStr : 'fim'}`;
+            } else if (params.tipo === 'diario') {
+                const dataFmt = formatDate(params.dayDate);
+                tituloPeriodo = `Diário ${dataFmt}`;
+                periodoBadge = `DIÁRIO: ${dataFmt}`;
+                fileLabel = `Diario_${params.dayDate}`;
+            } else if (params.tipo === 'geral') {
+                tituloPeriodo = `Relatório Geral (Todos os Períodos)`;
+                periodoBadge = `GERAL: TODOS OS PERÍODOS`;
+                fileLabel = `Geral_Consolidado`;
+            }
 
             let totalReceitas = 0;
             let totalDespesas = 0;
@@ -4818,7 +5266,6 @@
             const pctPago = totalDespesas > 0 ? (totalLiquidadoGeral / totalDespesas * 100) : 0;
             const pctPendente = totalDespesas > 0 ? (despesasPendentes / totalDespesas * 100) : 0;
 
-            const mesNome = MONTH_NAMES_FULL[month - 1];
             const agora = new Date();
             const emissaoStr = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
@@ -4830,9 +5277,14 @@
             }
 
             return {
-                year,
-                month,
+                tipoPeriodo: params.tipo,
+                year: params.year,
+                month: params.month,
                 mesNome,
+                tituloPeriodo,
+                periodoBadge,
+                fileLabel,
+                searchQuery: params.searchQuery,
                 emissaoStr,
                 usuarioNome,
                 transactions: transactionsOrdenadas,
@@ -4893,15 +5345,19 @@
             doc.text('RELATORIO EXECUTIVO DA ATIVIDADE FINANCEIRA', 14, 18);
 
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(9);
+            doc.setFontSize(8.5);
             doc.setTextColor(255, 255, 255);
-            const mesCompetencia = (dados.mesNome || '').toUpperCase();
-            doc.text(`COMPETENCIA: ${mesCompetencia} / ${dados.year}`, 196, 11, { align: 'right' });
+            const periodoHeader = dados.periodoBadge || `COMPETENCIA: ${(dados.mesNome || '').toUpperCase()} / ${dados.year}`;
+            doc.text(periodoHeader, 196, 11, { align: 'right' });
 
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(7.5);
             doc.setTextColor(220, 230, 245);
-            doc.text(`Emissao: ${dados.emissaoStr}`, 196, 17, { align: 'right' });
+            let subHeaderPeriodo = `Emissao: ${dados.emissaoStr}`;
+            if (dados.searchQuery) {
+                subHeaderPeriodo = `Filtro: "${dados.searchQuery}" | ${subHeaderPeriodo}`;
+            }
+            doc.text(subHeaderPeriodo, 196, 17, { align: 'right' });
             doc.text(`Usuario: ${dados.usuarioNome}`, 196, 22, { align: 'right' });
 
             // 2. DIAGNÓSTICO DO MOMENTO ATUAL (CARDS KPI)
@@ -4955,7 +5411,7 @@
                 'Receitas Totais',
                 formatCurrencyPDF(dados.totalReceitas),
                 [29, 78, 216],
-                'Total de Entradas no Mes'
+                dados.tipoPeriodo === 'mensal' ? 'Total de Entradas no Mes' : 'Total de Entradas no Periodo'
             );
 
             drawKpiCard(
@@ -4964,7 +5420,7 @@
                 'Despesas Totais Programadas',
                 formatCurrencyPDF(dados.totalDespesas),
                 [185, 28, 28],
-                'Todas Categorias do Mes'
+                dados.tipoPeriodo === 'mensal' ? 'Todas Categorias do Mes' : 'Todas Categorias do Periodo'
             );
 
             // Linha 2 de Cards
@@ -4985,7 +5441,7 @@
                 'Total Pendente a Pagar',
                 formatCurrencyPDF(dados.despesasPendentes),
                 [180, 83, 9],
-                `${dados.pctPendente.toFixed(1)}% a pagar no mes`
+                `${dados.pctPendente.toFixed(1)}% a pagar no periodo`
             );
 
             drawKpiCard(
@@ -5033,7 +5489,7 @@
                     ],
                     [
                         'TOTAL GERAL',
-                        'Consolidado Mensal',
+                        'Consolidado do Periodo',
                         formatCurrencyPDF(dados.totalReceitas),
                         formatCurrencyPDF(dados.totalLiquidadoGeral),
                         formatCurrencyPDF(dados.despesasPendentes),
@@ -5193,7 +5649,7 @@
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(10);
                 doc.setTextColor(...primaryBlue);
-                doc.text('4. EXTRATO ANALITICO COMPLETO DE TRANSACOES', 14, yPos);
+                doc.text('4. EXTRATO ANALITICO DE TRANSACOES DO PERIODO', 14, yPos);
 
                 const extratoRows = dados.transactions.map(t => {
                     const dataFmt = t.due_date ? t.due_date.split('-').reverse().join('/') : '-';
@@ -5278,7 +5734,7 @@
          */
         function gerarTextoWhatsapp(dados) {
             const {
-                year, mesNome, emissaoStr,
+                tituloPeriodo, searchQuery, emissaoStr,
                 saldoLiquidoAtual, saldoProjetadoFinal,
                 totalReceitas, totalDespesas, totalLiquidadoGeral, despesasPendentes,
                 pctPago, pctPendente,
@@ -5289,11 +5745,14 @@
 
             let txt = `⚜️ *FINANÇAS FAMÍLIA PEDROSA DE LIMA*\n`;
             txt += `📊 *RELATÓRIO DA ATIVIDADE FINANCEIRA*\n`;
-            txt += `📅 *Competência:* ${mesNome}/${year}\n`;
+            txt += `📅 *Período:* ${tituloPeriodo}\n`;
+            if (searchQuery) {
+                txt += `🔍 *Filtro de Pesquisa:* "${searchQuery}"\n`;
+            }
             txt += `⏱️ *Emitido em:* ${emissaoStr}\n\n`;
 
             txt += `━━━━━━━━━━━━━━━━━━━━\n`;
-            txt += `💰 *MOMENTO FINANCEIRO ATUAL*\n`;
+            txt += `💰 *MOMENTO FINANCEIRO CONSOLIDADO*\n`;
             txt += `━━━━━━━━━━━━━━━━━━━━\n`;
             txt += `• *Saldo Atual Disponível:* ${formatCurrency(saldoLiquidoAtual)}\n`;
             txt += `• *Receitas Totais:* ${formatCurrency(totalReceitas)}\n`;
@@ -5339,21 +5798,14 @@
          */
         async function exportarRelatorioFinanceiro(modo = 'download') {
             try {
-                const monthSelect = document.getElementById('reportMonthSelector');
-                const yearSelect = document.getElementById('reportYearSelector');
-                const detailSelect = document.getElementById('reportDetailLevel');
-
-                const year = yearSelect ? parseInt(yearSelect.value) : currentMonth.getFullYear();
-                const month = monthSelect ? parseInt(monthSelect.value) : (currentMonth.getMonth() + 1);
-                const detailLevel = detailSelect ? detailSelect.value : 'completo';
+                const params = obterParametrosRelatorioAtuais();
 
                 showNotification('Gerando relatório financeiro...', 'success');
 
-                const dados = await coletarDadosRelatorio(year, month);
-                const doc = gerarPDFRelatorio(dados, detailLevel);
+                const dados = await coletarDadosRelatorio(params);
+                const doc = gerarPDFRelatorio(dados, params.detailLevel);
 
-                const nomeMesLimpo = (dados.mesNome || 'Mes').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-                const nomeArquivo = `Relatorio_Financeiro_${nomeMesLimpo}_${year}.pdf`;
+                const nomeArquivo = `Relatorio_Financeiro_${dados.fileLabel || 'Consolidado'}.pdf`;
 
                 if (modo === 'download') {
                     doc.save(nomeArquivo);
@@ -5371,7 +5823,7 @@
                     if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
                         try {
                             await navigator.share({
-                                title: `Relatório Financeiro ${dados.mesNome}/${year}`,
+                                title: `Relatório Financeiro ${dados.tituloPeriodo}`,
                                 text: textoWhats,
                                 files: [pdfFile]
                             });
@@ -5401,38 +5853,115 @@
         }
 
         /**
+         * Renderiza a tabela de transações correspondentes à pesquisa / período
+         */
+        function renderReportTransactionsTable(transactions) {
+            const tbody = document.getElementById('reportTransactionsTableBody');
+            if (!tbody) return;
+
+            if (!transactions || transactions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">Nenhuma transação encontrada para este período ou pesquisa.</td></tr>';
+                return;
+            }
+
+            let html = '';
+            transactions.forEach(t => {
+                const categoryName = sectionNames[getSectionIdFromType(t.type, t.partition_id)] || t.category;
+                const partitionName = t.partition_id === 1 ? '1ª Rep.' : '2ª Rep.';
+                const isInc = t.type === 'income' || t.category === 'income';
+                const typeClass = isInc ? 'history-type-income' : 'history-type-expense';
+                const typeLabel = isInc ? 'Receita' : 'Despesa';
+                const isPaid = t.status === 'paid' || t.status === 'received';
+                const statusBadge = isPaid ? 
+                    '<span class="badge badge-success">Pago</span>' : 
+                    '<span class="badge badge-warning">Pendente</span>';
+
+                html += `
+                    <tr>
+                        <td style="white-space: nowrap;">${formatDate(t.due_date)}</td>
+                        <td style="font-weight: 600;">${t.description}</td>
+                        <td>${categoryName}</td>
+                        <td style="white-space: nowrap;">${partitionName}</td>
+                        <td class="${typeClass}">${typeLabel}</td>
+                        <td style="font-weight: 700; white-space: nowrap;">${formatCurrency(t.amount)}</td>
+                        <td>${statusBadge}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        /**
+         * Debounce para atualização fluida do relatório durante a digitação na pesquisa
+         */
+        function debounceReportUpdate() {
+            if (reportDebounceTimeout) clearTimeout(reportDebounceTimeout);
+            reportDebounceTimeout = setTimeout(() => {
+                updateReportPreview(false);
+            }, 300);
+        }
+
+        /**
          * Interface do Modal de Relatório
          */
         function openReportModal() {
             const monthSelect = document.getElementById('reportMonthSelector');
             const yearSelect = document.getElementById('reportYearSelector');
+            const yearSelectAnual = document.getElementById('reportYearSelectorAnual');
+            const weekInput = document.getElementById('reportWeekDate');
+            const dayInput = document.getElementById('reportDayDate');
             
-            if (monthSelect && yearSelect) {
-                if (yearSelect.options.length === 0) {
-                    const curY = new Date().getFullYear();
-                    for (let y = curY - 2; y <= curY + 3; y++) {
-                        const opt = document.createElement('option');
-                        opt.value = y;
-                        opt.textContent = y;
-                        yearSelect.appendChild(opt);
-                    }
-                }
-                
-                if (monthSelect.options.length === 0) {
-                    MONTH_NAMES_FULL.forEach((m, idx) => {
-                        const opt = document.createElement('option');
-                        opt.value = idx + 1;
-                        opt.textContent = m;
-                        monthSelect.appendChild(opt);
-                    });
-                }
+            const curY = currentMonth ? currentMonth.getFullYear() : new Date().getFullYear();
+            const curM = currentMonth ? (currentMonth.getMonth() + 1) : (new Date().getMonth() + 1);
 
-                // Sincroniza inicialmente com o mês ativo no dashboard
-                yearSelect.value = currentMonth.getFullYear();
-                monthSelect.value = currentMonth.getMonth() + 1;
+            if (yearSelect && yearSelect.options.length === 0) {
+                for (let y = curY - 3; y <= curY + 3; y++) {
+                    const opt = document.createElement('option');
+                    opt.value = y;
+                    opt.textContent = y;
+                    if (y === curY) opt.selected = true;
+                    yearSelect.appendChild(opt);
+                }
+            }
+            
+            if (monthSelect && monthSelect.options.length === 0) {
+                MONTH_NAMES_FULL.forEach((m, idx) => {
+                    const opt = document.createElement('option');
+                    opt.value = idx + 1;
+                    opt.textContent = m;
+                    if (idx + 1 === curM) opt.selected = true;
+                    monthSelect.appendChild(opt);
+                });
             }
 
-            updateReportPreview();
+            if (yearSelectAnual && yearSelectAnual.options.length === 0) {
+                for (let y = curY - 3; y <= curY + 3; y++) {
+                    const opt = document.createElement('option');
+                    opt.value = y;
+                    opt.textContent = y;
+                    if (y === curY) opt.selected = true;
+                    yearSelectAnual.appendChild(opt);
+                }
+            }
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (weekInput && !weekInput.value) {
+                weekInput.value = todayStr;
+            }
+            if (dayInput && !dayInput.value) {
+                dayInput.value = todayStr;
+            }
+
+            if (yearSelect) yearSelect.value = curY;
+            if (monthSelect) monthSelect.value = curM;
+            if (yearSelectAnual) yearSelectAnual.value = curY;
+
+            if (!currentReportPeriodType) {
+                currentReportPeriodType = 'mensal';
+            }
+            setReportPeriodType(currentReportPeriodType);
+
             const modalEl = document.getElementById('reportModal');
             if (modalEl) modalEl.classList.add('active');
         }
@@ -5453,21 +5982,33 @@
             }
         }
 
-        async function updateReportPreview() {
-            const monthSelect = document.getElementById('reportMonthSelector');
-            const yearSelect = document.getElementById('reportYearSelector');
-            if (!monthSelect || !yearSelect) return;
+        async function updateReportPreview(isExplicitAction = false) {
+            const params = obterParametrosRelatorioAtuais();
 
-            const month = parseInt(monthSelect.value) || (currentMonth.getMonth() + 1);
-            const year = parseInt(yearSelect.value) || currentMonth.getFullYear();
-
-            const badgeEl = document.getElementById('repPeriodBadge');
-            if (badgeEl) {
-                badgeEl.textContent = `${MONTH_NAMES_FULL[month - 1].toUpperCase()} / ${year}`;
+            if (params.tipo === 'semanal') {
+                const infoEl = document.getElementById('reportWeekInfo');
+                if (infoEl) infoEl.textContent = `Semana: ${params.weekRange.label}`;
             }
 
             try {
-                const dados = await coletarDadosRelatorio(year, month);
+                const dados = await coletarDadosRelatorio(params);
+
+                const badgeEl = document.getElementById('repPeriodBadge');
+                if (badgeEl) badgeEl.textContent = dados.periodoBadge;
+
+                const countBadge = document.getElementById('repCountBadge');
+                if (countBadge) {
+                    countBadge.textContent = `${dados.transactions.length} ${dados.transactions.length === 1 ? 'registro' : 'registros'}`;
+                }
+
+                const subtitleEl = document.getElementById('repResultSubtitle');
+                if (subtitleEl) {
+                    if (dados.searchQuery) {
+                        subtitleEl.textContent = `Filtro ativo: "${dados.searchQuery}" • Período: ${dados.tituloPeriodo}`;
+                    } else {
+                        subtitleEl.textContent = `Visualizando dados consolidados de: ${dados.tituloPeriodo}`;
+                    }
+                }
 
                 const saldoEl = document.getElementById('repPreviewSaldo');
                 if (saldoEl) saldoEl.textContent = formatCurrency(dados.saldoLiquidoAtual);
@@ -5504,6 +6045,18 @@
                 const part2El = document.getElementById('repPreviewPart2');
                 if (part2El) {
                     part2El.innerHTML = `Saldo Disponível: <b style="color: ${dados.saldoPart2 > 0 ? '#15803d' : '#dc2626'}">${formatCurrency(dados.saldoPart2)}</b> | Pendente: <b>${formatCurrency(dados.pend2)}</b>`;
+                }
+
+                // Renderiza a tabela de transações
+                renderReportTransactionsTable(dados.transactions);
+
+                const summaryEl = document.getElementById('repTableSummary');
+                if (summaryEl) {
+                    summaryEl.textContent = `Total: ${dados.transactions.length} transação(ões) encontrada(s)`;
+                }
+
+                if (isExplicitAction) {
+                    showNotification('Relatório emitido com sucesso!');
                 }
             } catch (err) {
                 console.warn('Erro ao atualizar prévia do relatório:', err);
@@ -11977,6 +12530,8 @@
         window.syncReportToCurrentMonth = syncReportToCurrentMonth;
         window.updateReportPreview = updateReportPreview;
         window.executarExportacao = executarExportacao;
+        window.setReportPeriodType = setReportPeriodType;
+        window.debounceReportUpdate = debounceReportUpdate;
         window.monitorar = monitorar;
         window.openPendingModal = openPendingModal;
         window.closePendingModal = closePendingModal;

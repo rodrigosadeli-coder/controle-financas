@@ -2760,6 +2760,8 @@
                         <button class="section-tab" data-section="3" data-partition="1">Parceladas</button>
                         <button class="section-tab" data-section="4" data-partition="1">À Vista</button>
                         <button class="section-tab" data-section="5" data-partition="1">Entradas</button>
+                        <button class="section-tab" data-section="11" data-partition="1">Assinaturas Digitais</button>
+                        <button class="section-tab" data-section="12" data-partition="1">Compras Programadas</button>
                     </div>
                     <button class="btn-action" onclick="openAddModal(1)">+ Nova Transação</button>
                     <div id="contentPartition1"></div>
@@ -2792,6 +2794,8 @@
                         <button class="section-tab" data-section="8" data-partition="2">Parceladas</button>
                         <button class="section-tab" data-section="9" data-partition="2">À Vista</button>
                         <button class="section-tab" data-section="10" data-partition="2">Entradas</button>
+                        <button class="section-tab" data-section="13" data-partition="2">Assinaturas Digitais</button>
+                        <button class="section-tab" data-section="14" data-partition="2">Compras Programadas</button>
                     </div>
                     <button class="btn-action" onclick="openAddModal(2)">+ Nova Transação</button>
                     <div id="contentPartition2"></div>
@@ -2896,12 +2900,17 @@
                     </div>
 
                     <div class="form-row">
-                        <label class="form-label-modal">Descrição</label>
+                        <label class="form-label-modal" id="labelDescription">Descrição</label>
                         <input type="text" class="form-input-modal" id="description" placeholder="Ex: Aluguel, Salário..." required>
                     </div>
 
+                    <div class="form-row" id="ecommerceLinkField" style="display:none;">
+                        <label class="form-label-modal" id="labelEcommerceLink">Link do E-commerce (opcional)</label>
+                        <input type="url" class="form-input-modal" id="ecommerceLink" placeholder="https://exemplo.com.br/produto...">
+                    </div>
+
                     <div class="form-row">
-                        <label class="form-label-modal">Valor (R$)</label>
+                        <label class="form-label-modal" id="labelAmount">Valor (R$)</label>
                         <input type="number" class="form-input-modal" id="amount" step="0.01" placeholder="0,00" required>
                     </div>
 
@@ -2911,8 +2920,13 @@
                     </div>
 
                     <div class="form-row">
-                        <label class="form-label-modal">Data de Vencimento</label>
+                        <label class="form-label-modal" id="labelDueDate">Data de Vencimento</label>
                         <input type="date" class="form-input-modal" id="dueDate" required>
+                    </div>
+
+                    <div class="form-row" id="observationField" style="display:none;">
+                        <label class="form-label-modal" id="labelObservation">Observações</label>
+                        <input type="text" class="form-input-modal" id="transactionObservation" placeholder="Observações sobre o item...">
                     </div>
 
                     <div class="form-row">
@@ -2927,7 +2941,7 @@
                     <div class="form-row" id="autoRenewField" style="display:none;">
                         <div class="checkbox-group">
                             <input type="checkbox" id="autoRenew">
-                            <label for="autoRenew">🔄 Repetir nos próximos meses (renovação automática)</label>
+                            <label for="autoRenew" id="labelAutoRenew">🔄 Repetir nos próximos meses (renovação automática)</label>
                         </div>
                     </div>
                 </form>
@@ -3010,6 +3024,8 @@
                             <option value="installment">Parceladas</option>
                             <option value="cash">À Vista</option>
                             <option value="income">Entradas</option>
+                            <option value="subscription">Assinaturas Digitais</option>
+                            <option value="planned">Compras Programadas</option>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -3556,7 +3572,8 @@
         const ALLOWED_INSERT_FIELDS = [
             'user_id', 'type', 'category', 'partition_id', 'description', 'amount',
             'year', 'month', 'due_day', 'due_date', 'status', 'total_installments',
-            'installment_number', 'auto_renew', 'is_fixed', 'parent_transaction_id'
+            'installment_number', 'auto_renew', 'is_fixed', 'parent_transaction_id',
+            'payment_observation'
         ];
 
         const ALLOWED_UPDATE_FIELDS = [
@@ -3723,7 +3740,9 @@
                 variable: { label: 'Contas Variáveis', count: 0, total: 0, pago: 0, pendente: 0 },
                 installment: { label: 'Contas Parceladas', count: 0, total: 0, pago: 0, pendente: 0 },
                 cash: { label: 'Gastos à Vista', count: 0, total: 0, pago: 0, pendente: 0 },
-                income: { label: 'Entradas / Receitas', count: 0, total: 0, pago: 0, pendente: 0 }
+                income: { label: 'Entradas / Receitas', count: 0, total: 0, pago: 0, pendente: 0 },
+                subscription: { label: 'Assinaturas Digitais', count: 0, total: 0, pago: 0, pendente: 0 },
+                planned: { label: 'Compras Programadas', count: 0, total: 0, pago: 0, pendente: 0 }
             };
 
             const pendentesList = [];
@@ -4494,24 +4513,62 @@
         let realtimeChannel = null;
 
         const sectionMapping = {
-            1: { type: 'expense_fixed', category: 'fixed' },
-            2: { type: 'expense_variable', category: 'variable' },
-            3: { type: 'expense_installment', category: 'installment' },
-            4: { type: 'expense_cash', category: 'cash' },
-            5: { type: 'income', category: 'income' },
-            6: { type: 'expense_fixed', category: 'fixed' },
-            7: { type: 'expense_variable', category: 'variable' },
-            8: { type: 'expense_installment', category: 'installment' },
-            9: { type: 'expense_cash', category: 'cash' },
-            10: { type: 'income', category: 'income' }
+            1: { type: 'expense_fixed', category: 'fixed', partition: 1 },
+            2: { type: 'expense_variable', category: 'variable', partition: 1 },
+            3: { type: 'expense_installment', category: 'installment', partition: 1 },
+            4: { type: 'expense_cash', category: 'cash', partition: 1 },
+            5: { type: 'income', category: 'income', partition: 1 },
+            6: { type: 'expense_fixed', category: 'fixed', partition: 2 },
+            7: { type: 'expense_variable', category: 'variable', partition: 2 },
+            8: { type: 'expense_installment', category: 'installment', partition: 2 },
+            9: { type: 'expense_cash', category: 'cash', partition: 2 },
+            10: { type: 'income', category: 'income', partition: 2 },
+            11: { type: 'expense_subscription', category: 'subscription', partition: 1 },
+            12: { type: 'expense_planned', category: 'planned', partition: 1 },
+            13: { type: 'expense_subscription', category: 'subscription', partition: 2 },
+            14: { type: 'expense_planned', category: 'planned', partition: 2 }
         };
 
         const sectionNames = {
             1: 'Contas Fixas', 2: 'Contas Variáveis', 3: 'Contas Parceladas', 
             4: 'Gastos à Vista', 5: 'Entradas',
             6: 'Contas Fixas', 7: 'Contas Variáveis', 8: 'Contas Parceladas', 
-            9: 'Gastos à Vista', 10: 'Entradas'
+            9: 'Gastos à Vista', 10: 'Entradas',
+            11: 'Assinaturas Digitais', 12: 'Compras Programadas',
+            13: 'Assinaturas Digitais', 14: 'Compras Programadas'
         };
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function extractDetails(transaction) {
+            if (!transaction) return { link: '', obs: '', payObs: '' };
+            let link = transaction.ecommerce_link || '';
+            let obs = transaction.payment_observation || '';
+            let payObs = '';
+
+            if (obs && typeof obs === 'string' && obs.trim().startsWith('{') && obs.trim().endsWith('}')) {
+                try {
+                    const parsed = JSON.parse(obs);
+                    if (parsed && typeof parsed === 'object') {
+                        if (parsed.link !== undefined) link = parsed.link;
+                        if (parsed.obs !== undefined) obs = parsed.obs;
+                        else if (parsed.observation !== undefined) obs = parsed.observation;
+                        if (parsed.pay_obs !== undefined) payObs = parsed.pay_obs;
+                    }
+                } catch (e) {
+                    // Mantém como string caso não seja JSON
+                }
+            }
+            return { link, obs, payObs };
+        }
 
         // ==========================================
         // INICIALIZAÇÃO
@@ -4955,7 +5012,7 @@
                 const serverData = [];
 
                 rawServerData.forEach(t => {
-                    if ((t.category === 'fixed' || t.is_fixed) && t.status === 'pending') {
+                    if ((t.category === 'fixed' || t.category === 'subscription' || t.is_fixed) && t.status === 'pending') {
                         const key = chaveContaFixa(t.partition_id, t.description);
                         if (seenFixedKeys.has(key)) {
                             // Duplicata identificada - marcar para exclusão
@@ -5383,7 +5440,7 @@
                         // é a única classe em que a repetição é sempre indevida.
                         // Uma despesa avulsa homônima nunca é apagada aqui.
                         const fixasPendentes = data.filter(d =>
-                            (d.category === 'fixed' || d.is_fixed) && d.status === 'pending');
+                            (d.category === 'fixed' || d.category === 'subscription' || d.is_fixed) && d.status === 'pending');
 
                         if (fixasPendentes.length > 1) {
                             const excedentes = fixasPendentes.slice(1).map(d => d.id);
@@ -6015,6 +6072,9 @@
                 // ==========================================
                 // OUTRAS SEÇÕES (comportamento padrão)
                 // ==========================================
+                const isSubscription = mapping.category === 'subscription';
+                const isPlanned = mapping.category === 'planned';
+
                 transactions.forEach(t => {
                     const isPaid = t.status === 'paid' || t.status === 'received';
                     const isIncome = t.type === 'income';
@@ -6028,19 +6088,62 @@
                     // CORREÇÃO: Badge de sincronização só aparece se realmente pendente
                     const syncBadge = t._syncPending && !isOnline ? '<span class="badge badge-warning" title="Pendente de sincronização">☁️</span>' : '';
 
+                    const details = extractDetails(t);
+
+                    let plannedExtraHtml = '';
+                    if (isPlanned) {
+                        if (details.link) {
+                            let linkHref = details.link.trim();
+                            if (!/^https?:\/\//i.test(linkHref)) {
+                                linkHref = 'https://' + linkHref;
+                            }
+                            plannedExtraHtml += `
+                                <div style="margin-top: 0.35rem;">
+                                    <a href="${escapeHtml(linkHref)}" target="_blank" rel="noopener noreferrer" 
+                                       style="display: inline-flex; align-items: center; gap: 0.35rem; color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.25rem 0.65rem; border-radius: 6px; font-size: 0.82rem; font-weight: 600; text-decoration: none;">
+                                        🛒 Acessar E-commerce ↗
+                                    </a>
+                                </div>
+                            `;
+                        }
+                        if (details.obs) {
+                            plannedExtraHtml += `<div style="font-size: 0.85rem; color: #4b5563; margin-top: 0.25rem;">📝 <strong>Obs:</strong> ${escapeHtml(details.obs)}</div>`;
+                        }
+                    }
+
+                    let subExtraHtml = '';
+                    if (isSubscription && t.auto_renew) {
+                        subExtraHtml = '<span class="badge" style="background: #e0e7ff; color: #3730a3; margin-left: 0.25rem;">🔄 Mensal</span>';
+                    }
+
+                    let payObsHtml = '';
+                    if (t.payment_observation && !isPlanned) {
+                        payObsHtml = `<div style="font-size: 0.85rem; color: #059669; margin-top: 0.25rem;">📝 ${escapeHtml(t.payment_observation)}</div>`;
+                    } else if (isPlanned && details.payObs) {
+                        payObsHtml = `<div style="font-size: 0.85rem; color: #059669; margin-top: 0.25rem;">💳 ${escapeHtml(details.payObs)}</div>`;
+                    }
+
+                    const statusBadge = isPaid 
+                        ? `<span class="badge badge-success">✓ ${isPlanned ? 'Comprado' : 'Pago'}</span>`
+                        : '<span class="badge badge-warning">⏳ Pendente</span>';
+
+                    const datePrefix = isPlanned ? 'Compra: ' : '';
+
                     html += `
                         <div class="expense-item ${itemClass}">
                             ${mapping.category === 'installment' ? renderInstallmentSummary(t) : ''}
                             <div class="expense-header">
                                 <div>
-                                    <div class="expense-name">${t.description}</div>
+                                    <div class="expense-name">${escapeHtml(t.description)}</div>
                                     <div class="expense-details">
-                                        <span>📅 ${formatDate(t.due_date)}</span>
+                                        <span>📅 ${datePrefix}${formatDate(t.due_date)}</span>
                                         ${t.total_installments > 1 ? `<span>📊 ${t.installment_number}/${t.total_installments}</span>` : ''}
-                                        ${isPaid ? '<span class="badge badge-success">✓ Pago</span>' : '<span class="badge badge-warning">⏳ Pendente</span>'}
+                                        ${statusBadge}
+                                        ${subExtraHtml}
                                         ${syncBadge}
                                     </div>
-                                    ${t.payment_observation ? `<div style="font-size: 0.85rem; color: #059669; margin-top: 0.25rem;">📝 ${t.payment_observation}</div>` : ''}
+                                    ${plannedExtraHtml}
+                                    ${payObsHtml}
                                 </div>
                                 <div class="expense-amount ${amountClass}">
                                     ${isIncome ? '+' : '-'} ${formatCurrency(t.amount)}
@@ -6048,7 +6151,7 @@
                             </div>
                             <div class="expense-actions">
                                 ${!isPaid && !isIncome ? `
-                                    <button class="btn-small btn-success-small" onclick="openPaymentModal('${t.id}')">✓ Marcar Pago</button>
+                                    <button class="btn-small btn-success-small" onclick="openPaymentModal('${t.id}')">✓ ${isPlanned ? 'Marcar Comprado' : 'Marcar Pago'}</button>
                                 ` : ''}
                                 <button class="btn-small btn-warning-small" onclick="openPaymentHistoryModal('${t.id}')">📜 Histórico</button>
                                 <button class="btn-small btn-secondary-small" onclick="openEditModal('${t.id}')">✏️ Editar</button>
@@ -6059,7 +6162,8 @@
                 });
 
                 const totalLabel = mapping.category === 'installment' ? 'Total Restante' : 
-                                  (mapping.category === 'income' ? 'Total a Receber' : 'Total a Pagar');
+                                  (mapping.category === 'income' ? 'Total a Receber' : 
+                                  (mapping.category === 'planned' ? 'Total Programado' : 'Total a Pagar'));
 
                 html += `
                     <div class="total-section">
@@ -6849,7 +6953,14 @@
             document.getElementById('transactionId').value = '';
             document.getElementById('partitionId').value = partition;
             document.getElementById('sectionId').value = section;
-            document.getElementById('modalTitle').textContent = `Nova ${sectionNames[section]}`;
+            
+            let modalTitleText = `Nova ${sectionNames[section]}`;
+            if (sectionNames[section] === 'Assinaturas Digitais') {
+                modalTitleText = 'Nova Assinatura Digital';
+            } else if (sectionNames[section] === 'Compras Programadas') {
+                modalTitleText = 'Nova Compra Programada';
+            }
+            document.getElementById('modalTitle').textContent = modalTitleText;
 
             document.getElementById('transactionType').value = mapping.type.startsWith('income') ? 'income' : 'expense';
             document.getElementById('description').value = '';
@@ -6860,8 +6971,48 @@
             document.getElementById('autoRenew').checked = false;
 
             const isInstallment = mapping.category === 'installment';
+            const isFixedOrSub = mapping.category === 'fixed' || mapping.category === 'subscription';
+            const isPlanned = mapping.category === 'planned';
+
             document.getElementById('installmentFields').style.display = isInstallment ? 'block' : 'none';
-            document.getElementById('autoRenewField').style.display = mapping.category === 'fixed' ? 'block' : 'none';
+            document.getElementById('autoRenewField').style.display = isFixedOrSub ? 'block' : 'none';
+
+            // Labels e placeholders dinâmicos
+            const labelDesc = document.getElementById('labelDescription');
+            const descInput = document.getElementById('description');
+            const labelDue = document.getElementById('labelDueDate');
+            const labelAmount = document.getElementById('labelAmount');
+            const labelAuto = document.getElementById('labelAutoRenew');
+
+            if (mapping.category === 'subscription') {
+                if (labelDesc) labelDesc.textContent = 'Nome da Assinatura';
+                if (descInput) descInput.placeholder = 'Ex: Netflix, Spotify, Prime Video...';
+                if (labelDue) labelDue.textContent = 'Data de Vencimento';
+                if (labelAmount) labelAmount.textContent = 'Valor (R$)';
+                if (labelAuto) labelAuto.textContent = '🔄 Repetir para o próximo mês (mesmo padrão das contas Fixas)';
+            } else if (isPlanned) {
+                if (labelDesc) labelDesc.textContent = 'Nome do Item';
+                if (descInput) descInput.placeholder = 'Ex: Monitor 4K, Cadeira de Escritório...';
+                if (labelDue) labelDue.textContent = 'Data da Compra';
+                if (labelAmount) labelAmount.textContent = 'Valor do Item (R$)';
+            } else {
+                if (labelDesc) labelDesc.textContent = 'Descrição';
+                if (descInput) descInput.placeholder = 'Ex: Aluguel, Salário...';
+                if (labelDue) labelDue.textContent = mapping.type.startsWith('income') ? 'Data de Recebimento' : 'Data de Vencimento';
+                if (labelAmount) labelAmount.textContent = 'Valor (R$)';
+                if (labelAuto) labelAuto.textContent = '🔄 Repetir nos próximos meses (renovação automática)';
+            }
+
+            // Campos específicos para compras programadas
+            const ecommerceField = document.getElementById('ecommerceLinkField');
+            const obsField = document.getElementById('observationField');
+            if (ecommerceField) ecommerceField.style.display = isPlanned ? 'block' : 'none';
+            if (obsField) obsField.style.display = isPlanned ? 'block' : 'none';
+
+            const ecommerceInput = document.getElementById('ecommerceLink');
+            const obsInput = document.getElementById('transactionObservation');
+            if (ecommerceInput) ecommerceInput.value = '';
+            if (obsInput) obsInput.value = '';
 
             document.getElementById('addModal').classList.add('active');
         }
@@ -6877,8 +7028,16 @@
             editingId = transactionId;
             document.getElementById('transactionId').value = t.id;
             document.getElementById('partitionId').value = t.partition_id;
-            document.getElementById('sectionId').value = getSectionIdFromType(t.type, t.partition_id);
-            document.getElementById('modalTitle').textContent = 'Editar Transação';
+            const sectionId = getSectionIdFromType(t.type, t.partition_id, t.category);
+            document.getElementById('sectionId').value = sectionId;
+            
+            let modalTitleText = `Editar ${sectionNames[sectionId] || 'Transação'}`;
+            if (sectionNames[sectionId] === 'Assinaturas Digitais') {
+                modalTitleText = 'Editar Assinatura Digital';
+            } else if (sectionNames[sectionId] === 'Compras Programadas') {
+                modalTitleText = 'Editar Compra Programada';
+            }
+            document.getElementById('modalTitle').textContent = modalTitleText;
 
             document.getElementById('transactionType').value = t.type.startsWith('income') ? 'income' : 'expense';
             document.getElementById('description').value = t.description;
@@ -6888,33 +7047,78 @@
             document.getElementById('status').value = t.status;
             document.getElementById('autoRenew').checked = t.auto_renew || false;
 
-            const mapping = sectionMapping[getSectionIdFromType(t.type, t.partition_id)];
+            const mapping = sectionMapping[sectionId] || { category: t.category || 'variable', type: t.type };
+            const isInstallment = mapping.category === 'installment';
+            const isFixedOrSub = mapping.category === 'fixed' || mapping.category === 'subscription';
+            const isPlanned = mapping.category === 'planned';
+
             document.getElementById('installmentFields').style.display = 
-                mapping.category === 'installment' ? 'block' : 'none';
+                isInstallment ? 'block' : 'none';
             document.getElementById('autoRenewField').style.display = 
-                mapping.category === 'fixed' ? 'block' : 'none';
+                isFixedOrSub ? 'block' : 'none';
+
+            // Labels e placeholders dinâmicos
+            const labelDesc = document.getElementById('labelDescription');
+            const descInput = document.getElementById('description');
+            const labelDue = document.getElementById('labelDueDate');
+            const labelAmount = document.getElementById('labelAmount');
+            const labelAuto = document.getElementById('labelAutoRenew');
+
+            if (mapping.category === 'subscription') {
+                if (labelDesc) labelDesc.textContent = 'Nome da Assinatura';
+                if (descInput) descInput.placeholder = 'Ex: Netflix, Spotify, Prime Video...';
+                if (labelDue) labelDue.textContent = 'Data de Vencimento';
+                if (labelAmount) labelAmount.textContent = 'Valor (R$)';
+                if (labelAuto) labelAuto.textContent = '🔄 Repetir para o próximo mês (mesmo padrão das contas Fixas)';
+            } else if (isPlanned) {
+                if (labelDesc) labelDesc.textContent = 'Nome do Item';
+                if (descInput) descInput.placeholder = 'Ex: Monitor 4K, Cadeira de Escritório...';
+                if (labelDue) labelDue.textContent = 'Data da Compra';
+                if (labelAmount) labelAmount.textContent = 'Valor do Item (R$)';
+            } else {
+                if (labelDesc) labelDesc.textContent = 'Descrição';
+                if (descInput) descInput.placeholder = 'Ex: Aluguel, Salário...';
+                if (labelDue) labelDue.textContent = mapping.type.startsWith('income') ? 'Data de Recebimento' : 'Data de Vencimento';
+                if (labelAmount) labelAmount.textContent = 'Valor (R$)';
+                if (labelAuto) labelAuto.textContent = '🔄 Repetir nos próximos meses (renovação automática)';
+            }
+
+            // Campos específicos para compras programadas
+            const ecommerceField = document.getElementById('ecommerceLinkField');
+            const obsField = document.getElementById('observationField');
+            if (ecommerceField) ecommerceField.style.display = isPlanned ? 'block' : 'none';
+            if (obsField) obsField.style.display = isPlanned ? 'block' : 'none';
+
+            const details = extractDetails(t);
+            const ecommerceInput = document.getElementById('ecommerceLink');
+            const obsInput = document.getElementById('transactionObservation');
+            if (ecommerceInput) ecommerceInput.value = details.link || '';
+            if (obsInput) obsInput.value = details.obs || '';
 
             document.getElementById('addModal').classList.add('active');
         }
 
-        function getSectionIdFromType(type, partition) {
+        function getSectionIdFromType(type, partition, category = null) {
+            const partNum = parseInt(partition) || 1;
             for (const [id, mapping] of Object.entries(sectionMapping)) {
-                if (mapping.type === type) {
+                if (mapping.type === type || (category && mapping.category === category && mapping.partition === partNum)) {
                     const sectionId = parseInt(id);
-                    const sectionPartition = sectionId <= 5 ? 1 : 2;
-                    // Só retorna se a seção pertencer à repartição correta
-                    if (sectionPartition === partition) {
+                    const sectionPartition = mapping.partition !== undefined ? mapping.partition : (sectionId <= 5 ? 1 : 2);
+                    if (sectionPartition === partNum) {
                         return sectionId;
                     }
                 }
             }
-            // Fallback: retorna a primeira seção da repartição correspondente
-            return partition === 1 ? 1 : 6;
+            return partNum === 1 ? 1 : 6;
         }
 
         function closeModal() {
             document.getElementById('addModal').classList.remove('active');
             editingId = null;
+            const ecommerceInput = document.getElementById('ecommerceLink');
+            const obsInput = document.getElementById('transactionObservation');
+            if (ecommerceInput) ecommerceInput.value = '';
+            if (obsInput) obsInput.value = '';
         }
 
         // ==========================================
@@ -6994,6 +7198,30 @@
                     }
                 }
 
+                // Extração e serialização de dados específicos para compras programadas
+                let finalPaymentObs = null;
+                if (mapping.category === 'planned') {
+                    const ecommerceLink = document.getElementById('ecommerceLink')?.value.trim() || '';
+                    const observation = document.getElementById('transactionObservation')?.value.trim() || '';
+                    
+                    let existingPayObs = '';
+                    if (editingId) {
+                        const prevTx = localData.transactions.find(t => t.id === editingId);
+                        const prevDetails = extractDetails(prevTx);
+                        if (prevDetails.payObs) existingPayObs = prevDetails.payObs;
+                    }
+                    
+                    if (ecommerceLink || observation || existingPayObs) {
+                        finalPaymentObs = JSON.stringify({
+                            link: ecommerceLink,
+                            obs: observation,
+                            ...(existingPayObs ? { pay_obs: existingPayObs } : {})
+                        });
+                    }
+                }
+
+                const isFixedOrSub = mapping.category === 'fixed' || mapping.category === 'subscription';
+
                 const baseTransaction = {
                     type: mapping.type,
                     category: mapping.category,
@@ -7008,7 +7236,8 @@
                     total_installments: totalInstallments,
                     installment_number: 1,
                     auto_renew: autoRenew,
-                    is_fixed: mapping.category === 'fixed'
+                    is_fixed: isFixedOrSub,
+                    ...(finalPaymentObs ? { payment_observation: finalPaymentObs } : {})
                 };
 
                 if (editingId) {
@@ -7020,11 +7249,11 @@
                         const result = await updateTransaction(editingId, baseTransaction);
                         if (!result) throw new Error('Falha ao atualizar transação');
 
-                        // Gestão de renovação automática para conta fixa.
+                        // Gestão de renovação automática para conta fixa ou assinatura digital.
                         // prevTx é repassado para que uma edição de descrição/repartição
                         // ATUALIZE a ocorrência já agendada no próximo mês em vez de
                         // criar uma segunda conta (acúmulo).
-                        if (mapping.category === 'fixed') {
+                        if (isFixedOrSub) {
                             if (autoRenew) {
                                 await createNextMonthFixed(baseTransaction, prevTx);
                             } else if (wasAutoRenew && !autoRenew) {
@@ -7083,9 +7312,9 @@
                                 throw new Error('Falha ao criar transação');
                             }
                             
-                            // Se for conta fixa com renovação marcada, agendar UMA ocorrência
+                            // Se for conta fixa ou assinatura com renovação marcada, agendar UMA ocorrência
                             // no próximo mês (a função é idempotente: se já existir, não duplica)
-                            if (mapping.category === 'fixed' && autoRenew && result) {
+                            if (isFixedOrSub && autoRenew && result) {
                                 console.log('🔄 Agendando renovação automática para o próximo mês...');
                                 await createNextMonthFixed(result);
                             }
@@ -7146,6 +7375,13 @@
             document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
             document.getElementById('paymentAmount').value = t.amount;
             document.getElementById('paymentObs').value = '';
+
+            const isPlanned = t.category === 'planned';
+            const modalTitleEl = document.querySelector('#paymentModal .modal-title');
+            if (modalTitleEl) {
+                modalTitleEl.textContent = isPlanned ? '🛒 Confirmar Compra' : 'Registrar Pagamento';
+            }
+
             document.getElementById('paymentModal').classList.add('active');
         }
 
@@ -7212,11 +7448,23 @@
                 newStatus = isLastInstallment ? 'paid' : 'pending';
             }
 
+            let paymentObs = observation || 'Pagamento registrado via sistema';
+            if (transaction.category === 'planned') {
+                const prevDetails = extractDetails(transaction);
+                if (prevDetails.link || prevDetails.obs) {
+                    paymentObs = JSON.stringify({
+                        link: prevDetails.link,
+                        obs: prevDetails.obs,
+                        pay_obs: observation || 'Compra confirmada via sistema'
+                    });
+                }
+            }
+
             const paymentData = {
                 status: newStatus,
                 payment_date: paymentDate,
                 payment_amount: finalAmount,
-                payment_observation: observation || 'Pagamento registrado via sistema',
+                payment_observation: paymentObs,
                 updated_at: new Date().toISOString()
             };
 
@@ -7238,16 +7486,17 @@
                     await createNextInstallment(transaction);
                 }
 
-                // Renovação da conta fixa marcada: gera exatamente UMA ocorrência
+                // Renovação da conta fixa ou assinatura marcada: gera exatamente UMA ocorrência
                 // no próximo mês (createNextMonthFixed é idempotente e travado).
                 if (transaction.auto_renew && isLastInstallment &&
-                    (transaction.is_fixed || transaction.category === 'fixed')) {
+                    (transaction.is_fixed || transaction.category === 'fixed' || transaction.category === 'subscription')) {
                     await createNextMonthFixed(transaction);
                 }
 
+                const isPlanned = transaction.category === 'planned';
                 showNotification(
                     isLastInstallment 
-                        ? (transaction.type === 'income' ? '✅ Recebimento confirmado!' : '✅ Dívida quitada!') 
+                        ? (transaction.type === 'income' ? '✅ Recebimento confirmado!' : (isPlanned ? '✅ Compra confirmada!' : '✅ Dívida quitada!')) 
                         : `✅ Parcela ${currentInstallment}/${totalInstallments} paga!`,
                     'success'
                 );

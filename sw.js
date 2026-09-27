@@ -7,7 +7,7 @@
  * Ao publicar uma nova versão, incremente CACHE_VERSION.
  */
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const SHELL_CACHE = `financas-shell-${CACHE_VERSION}`;
 const ASSET_CACHE = `financas-assets-${CACHE_VERSION}`;
 

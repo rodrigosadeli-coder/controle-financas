@@ -2966,11 +2966,264 @@
             gap: 8px;
         }
 
-        .debt-total-amount {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: #fbbf24;
+        /* ============================================================
+           ESTILOS DO MÓDULO DE ALERTAS E COMPROMISSOS
+           ============================================================ */
+
+        /* Modal Centralizado de Alerta Automático de Contas Pendentes */
+        #autoPendingAlertModal .modal-content {
+            border: 2px solid #f59e0b;
+            box-shadow: 0 20px 45px rgba(245, 158, 11, 0.35);
+            max-width: 600px;
+        }
+
+        .auto-pending-header-banner {
+            background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #f59e0b 100%);
+            color: white;
+            padding: 1.25rem 1.5rem;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .auto-pending-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 14px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .auto-pending-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .badge-due-urgent {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fca5a5;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            animation: pulse-red-badge 2s infinite;
+        }
+
+        .badge-due-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        @keyframes pulse-red-badge {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.75; }
+        }
+
+        /* Card de Configuração de Compromissos Manual no Dashboard */
+        .manual-appointments-card-section {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            margin-bottom: 30px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .manual-appointments-card-section:hover {
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.15);
+        }
+
+        .manual-appointments-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 60%, #b45309 100%);
+            color: white;
+            padding: 1.25rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .manual-appointments-header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .manual-app-icon {
+            font-size: 1.7rem;
+            background: rgba(255, 255, 255, 0.15);
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .manual-app-title {
             font-family: 'Cinzel', serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: block;
+            letter-spacing: 0.5px;
+        }
+
+        .manual-app-subtitle {
+            font-size: 0.78rem;
+            opacity: 0.9;
+            display: block;
+            font-family: 'Segoe UI', sans-serif;
+            margin-top: 2px;
+        }
+
+        .manual-app-count-badge {
+            background: rgba(255, 255, 255, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .btn-novo-compromisso {
+            background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
+            color: white;
+            border: none;
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-novo-compromisso:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(212, 175, 55, 0.4);
+        }
+
+        .manual-appointments-body {
+            padding: 1.5rem;
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .manual-appointment-form-box {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .manual-app-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .manual-app-grid {
+                grid-template-columns: 1fr !important;
+            }
+            .manual-app-grid .form-row {
+                grid-column: span 1 !important;
+            }
+        }
+
+        .app-filter-tab {
+            background: #e2e8f0;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .app-filter-tab.active {
+            background: var(--blue-royal);
+            color: white;
+        }
+
+        .manual-appointments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 80px;
+        }
+
+        .manual-appointment-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid var(--blue-royal);
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .manual-appointment-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .manual-appointment-item.completed {
+            border-left-color: var(--success);
+            background: #f8fafc;
+            opacity: 0.85;
+        }
+
+        .manual-appointment-item.urgent {
+            border-left-color: #ea580c;
+        }
+
+        .manual-app-notes-box {
+            background: #fffbeb;
+            border: 1px dashed #fcd34d;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.82rem;
+            color: #78350f;
+            margin-top: 8px;
+            line-height: 1.4;
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        /* Modal Centralizado de Alerta de Compromissos Disparados */
+        #appointmentAlertPopupModal .modal-content {
+            border: 2px solid var(--blue-royal);
+            box-shadow: 0 20px 45px rgba(30, 58, 138, 0.35);
+            max-width: 580px;
         }
     </style>
 </head>
@@ -3071,6 +3324,7 @@
             <button class="nav-btn" onclick="openReportModal()" style="background-color: rgba(212, 175, 55, 0.22); border: 1px solid var(--gold-primary);">📑 Relatório</button>
             <button class="nav-btn" onclick="openCalculator()">🧮 Calculadora</button>
             <button class="nav-btn" onclick="openCalendarModal()">📅 Calendário</button>
+            <button class="nav-btn" onclick="scrollToAppointmentsSection()" style="background-color: rgba(245, 158, 11, 0.18); border: 1px solid #f59e0b;" title="Compromissos e Lembretes Manuais">⏰ Compromissos</button>
             <button class="nav-btn" onclick="openHistoryModal()">📜 Histórico</button>
             <button class="nav-btn" onclick="openDebtsConsolidatedModal()" style="background-color: rgba(99, 102, 241, 0.18); border: 1px solid #818cf8;">💳 Dívidas em Aberto</button>
             <button class="nav-btn" onclick="toggleNotes()">📝 Bloco de Notas</button>
@@ -3215,6 +3469,92 @@
                         <div class="partition-total-card despesas">
                             <div class="partition-total-label">📤 Total Despesas</div>
                             <div class="partition-total-value" id="totalDespesas2">R$ 0,00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card de Configuração de Compromissos Manual -->
+                <div class="manual-appointments-card-section" id="manualAppointmentsSection">
+                    <div class="manual-appointments-header" onclick="toggleManualAppointmentsCard()">
+                        <div class="manual-appointments-header-title">
+                            <span class="manual-app-icon">⏰</span>
+                            <div>
+                                <span class="manual-app-title">Compromissos e Lembretes Manuais</span>
+                                <span class="manual-app-subtitle">Agende compromissos com alertas configuráveis por data, hora, persistência e observações</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <span class="manual-app-count-badge" id="manualAppCountBadge">0 compromissos</span>
+                            <button type="button" class="btn-novo-compromisso" onclick="event.stopPropagation(); openNewAppointmentInline()">+ Novo Compromisso</button>
+                            <span class="dropdown-arrow open" id="arrowManualAppointments">▼</span>
+                        </div>
+                    </div>
+
+                    <div class="manual-appointments-body" id="manualAppointmentsBody">
+                        <!-- Formulário de Configuração Manual -->
+                        <div class="manual-appointment-form-box" id="manualAppointmentFormBox">
+                            <h4 id="manualAppFormTitle" style="margin-top: 0; margin-bottom: 12px; color: var(--blue-royal); display: flex; align-items: center; gap: 8px;">
+                                <span>➕</span><span>Configurar Novo Compromisso</span>
+                            </h4>
+                            <input type="hidden" id="manualAppEditId" value="">
+                            
+                            <div class="manual-app-grid">
+                                <div class="form-row" style="grid-column: span 2;">
+                                    <label class="form-label-modal">Título / Descrição do Compromisso *</label>
+                                    <input type="text" id="manualAppDesc" class="form-input-modal" placeholder="Ex: Consulta Médica, Reunião de Condomínio, Ligar para Seguro..." required>
+                                </div>
+                                <div class="form-row">
+                                    <label class="form-label-modal">Data do Compromisso *</label>
+                                    <input type="date" id="manualAppDate" class="form-input-modal" required>
+                                </div>
+                                <div class="form-row">
+                                    <label class="form-label-modal">Horário (opcional)</label>
+                                    <input type="time" id="manualAppTime" class="form-input-modal">
+                                </div>
+                                <div class="form-row" style="grid-column: span 2;">
+                                    <label class="form-label-modal">Regra de Persistência do Alerta na Página *</label>
+                                    <select id="manualAppPersistence" class="form-input-modal">
+                                        <option value="startup_hourly" selected>Ao iniciar a aplicação e a cada 1 hora</option>
+                                        <option value="once">Apenas no horário agendado (Uma vez)</option>
+                                        <option value="hourly">A cada 1 hora no dia do compromisso</option>
+                                        <option value="half_hourly">A cada 30 minutos no dia do compromisso</option>
+                                        <option value="daily">Diário (repetir todo dia no mesmo horário)</option>
+                                        <option value="until_completed">Persistente (a cada 1 hora até ser concluído)</option>
+                                    </select>
+                                </div>
+                                <div class="form-row" style="grid-column: span 2;">
+                                    <label class="form-label-modal">Observações / Detalhes Adicionais</label>
+                                    <textarea id="manualAppNotes" class="form-textarea" placeholder="Descreva observações, contatos, local ou notas relevantes sobre este compromisso (opcional)..." rows="2"></textarea>
+                                </div>
+                                <div class="form-row" style="grid-column: span 2;">
+                                    <div class="checkbox-group" style="margin-top: 4px;">
+                                        <input type="checkbox" id="manualAppAlert" checked>
+                                        <label for="manualAppAlert">🔔 Disparar alertas visuais no centro da tela conforme regra de persistência</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px;">
+                                <button type="button" class="btn btn-cancel" onclick="resetManualAppointmentForm()" style="max-width: 140px;">Limpar</button>
+                                <button type="button" class="btn btn-save" onclick="saveManualAppointment()" style="max-width: 220px;">💾 Salvar Compromisso</button>
+                            </div>
+                        </div>
+
+                        <!-- Filtro / Tabs de Compromissos -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 0 10px; flex-wrap: wrap; gap: 8px;">
+                            <div style="display: flex; gap: 6px;">
+                                <button type="button" class="app-filter-tab active" id="appFilterAll" onclick="setAppointmentFilter('all')">Todos</button>
+                                <button type="button" class="app-filter-tab" id="appFilterActive" onclick="setAppointmentFilter('active')">Ativos / Pendentes</button>
+                                <button type="button" class="app-filter-tab" id="appFilterCompleted" onclick="setAppointmentFilter('completed')">Concluídos</button>
+                            </div>
+                            <div style="font-size: 0.82rem; color: #64748b;">
+                                <span>Ordenado por data e horário</span>
+                            </div>
+                        </div>
+
+                        <!-- Lista de Compromissos Cadastrados -->
+                        <div id="manualAppointmentsList" class="manual-appointments-list">
+                            <div class="empty-state">Nenhum compromisso cadastrado</div>
                         </div>
                     </div>
                 </div>
@@ -4142,6 +4482,75 @@
         </div>
     </div>
 
+    <!-- ============================================================
+         MODAIS DE ALERTAS E COMPROMISSOS (CENTRALIZADOS NA TELA)
+         ============================================================ -->
+
+    <!-- Modal Centralizado 1: Alerta Automático de Contas Pendentes (<= 2 dias) -->
+    <div class="modal" id="autoPendingAlertModal" style="z-index: 2200;">
+        <div class="modal-content" style="max-width: 620px;">
+            <div class="auto-pending-header-banner">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 1.8rem;">⚠️</span>
+                    <div>
+                        <h3 class="modal-title" style="margin: 0; font-size: 1.25rem; color: white;">Aviso de Vencimento de Contas</h3>
+                        <div style="font-size: 0.78rem; opacity: 0.92; font-family: 'Segoe UI', sans-serif;">Contas pendentes vencendo nos próximos 2 dias ou em atraso</div>
+                    </div>
+                </div>
+                <button class="close-btn" id="closeAutoPendingAlertBtn" onclick="closeAutoPendingAlertModal()" title="Fechar aviso (×)" style="font-size: 1.8rem; line-height: 1;">×</button>
+            </div>
+            <div class="modal-body" style="padding: 1.25rem;">
+                <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 14px; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: #92400e;">
+                    <span style="font-size: 1.2rem;">📢</span>
+                    <span id="autoPendingAlertSummaryText">Você possui contas pendentes com vencimento próximo. Regularize para manter o saldo em dia.</span>
+                </div>
+
+                <!-- Lista Única Consolidada -->
+                <div id="autoPendingAlertList" style="display: flex; flex-direction: column; gap: 10px; max-height: 52vh; overflow-y: auto; padding-right: 4px;">
+                    <!-- Itens gerados dinamicamente via JS -->
+                </div>
+
+                <!-- Totalizador consolidado do Alerta -->
+                <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 2px dashed #cbd5e1; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <span style="font-weight: 700; color: #475569; font-size: 0.95rem;">Total Pendente em Alerta:</span>
+                    <span id="autoPendingAlertTotalValue" style="font-size: 1.35rem; font-weight: 800; color: #b45309; font-family: 'Cinzel', serif;">R$ 0,00</span>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                <button type="button" class="btn" onclick="openPendingModal(); closeAutoPendingAlertModal();" style="background: #f1f5f9; color: #475569; font-size: 0.88rem; flex: 1;">
+                    📋 Ver Todas as Pendências
+                </button>
+                <button type="button" class="btn btn-cancel" onclick="closeAutoPendingAlertModal()" style="max-width: 150px; font-weight: 600;">
+                    Fechar (×)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Centralizado 2: Alerta de Compromissos Agendados Disparados -->
+    <div class="modal" id="appointmentAlertPopupModal" style="z-index: 2300;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--blue-royal) 0%, #1e40af 100%);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.6rem;">🔔</span>
+                    <div>
+                        <h3 class="modal-title" style="margin: 0; font-size: 1.25rem;">Compromisso Agendado!</h3>
+                        <div style="font-size: 0.75rem; opacity: 0.9; font-family: 'Segoe UI', sans-serif;">Alerta disparado conforme configuração do compromisso</div>
+                    </div>
+                </div>
+                <button class="close-btn" onclick="closeAppointmentAlertPopup()" title="Fechar aviso (×)">×</button>
+            </div>
+            <div class="modal-body" style="padding: 1.25rem;">
+                <div id="appointmentAlertPopupList" style="display: flex; flex-direction: column; gap: 12px; max-height: 55vh; overflow-y: auto;">
+                    <!-- Gerado dinamicamente via JS -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeAppointmentAlertPopup()">Fechar (×)</button>
+            </div>
+        </div>
+    </div>
+
     <div class="notification" id="notification">
         <div class="notification-title" id="notificationTitle">Sucesso</div>
         <div class="notification-text" id="notificationText">Operação realizada com sucesso!</div>
@@ -4170,6 +4579,7 @@
             debts: [],
             _pendingDeletions: []
         };
+        window.localData = localData;
 
         // Enquanto true, toda sincronização automática (Realtime, foco, heartbeat)
         // fica suspensa para não sobrescrever um backup em processo de restauração.
@@ -6510,6 +6920,7 @@
                 updateMonthDisplay();
                 await loadAllData();
                 await loadDebts();
+                await loadAppointments();
                 setupTabs();
                 document.getElementById('dueDate').value = new Date().toISOString().split('T')[0];
                 document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
@@ -6517,6 +6928,9 @@
                 checkAlerts();
                 setInterval(checkAlerts, 60000);
                 setupBackupDragAndDrop();
+
+                // Inicialização e timers dos alertas e compromissos
+                setupAppointmentsAndAlertsTimers();
             } catch (err) {
                 console.error('Erro ao inicializar app:', err);
             } finally {
@@ -9040,6 +9454,7 @@
                 closePaymentModal();
                 updateDashboard();
                 renderPartitions();
+                updateAutoPendingAlert();
                 await broadcastForceReload();
                 
             } catch (error) {
@@ -9305,7 +9720,904 @@
             container.innerHTML = html;
         }
 
-        function saveAppointment() {
+        // ==========================================
+        // MÓDULO DE ALERTAS E COMPROMISSOS (V1.0)
+        // Regra 1: Contas pendentes a vencer em até 2 dias (ao iniciar e a cada 1h)
+        // Regra 2: Exclusão automática de alerta após a conta ser paga
+        // Regra 3: Configuração manual de compromissos com data, hora, persistência e observações
+        // ==========================================
+
+        /**
+         * Emite um som suave de alerta usando a Web Audio API nativa
+         */
+        function playAlertChime() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                if (ctx.state === 'suspended') {
+                    ctx.resume().catch(() => {});
+                }
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, now); // D5
+                osc.frequency.setValueAtTime(880, now + 0.12); // A5
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.45);
+            } catch (e) {
+                // Silencioso se bloqueado por restrição de autoplay
+            }
+        }
+
+        // ----------------------------------------------------
+        // 1. ALERTA AUTOMÁTICO BASEADO NO CARD PENDENTES
+        // ----------------------------------------------------
+
+        /**
+         * Retorna lista de contas pendentes elegíveis para o aviso:
+         * - Contas de despesa (type !== 'income')
+         * - Status não pago (status !== 'paid')
+         * - Vencimento em até 2 dias ou já vencidas (diffDays <= 2)
+         */
+        function getPendingBillsForAlert() {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const list = localData.transactions || [];
+
+            const filtered = list.filter(t => {
+                if (t.type === 'income') return false;
+                if (t.status === 'paid') return false;
+
+                let dueParts = null;
+                if (t.due_date) {
+                    dueParts = parseDateParts(t.due_date);
+                } else if (t.due_day && t.year && t.month) {
+                    dueParts = {
+                        year: parseInt(t.year, 10),
+                        month: parseInt(t.month, 10),
+                        day: parseInt(t.due_day, 10)
+                    };
+                }
+
+                if (!dueParts || !dueParts.year || !dueParts.month || !dueParts.day) {
+                    return false;
+                }
+
+                const dueDate = new Date(dueParts.year, dueParts.month - 1, dueParts.day);
+                const diffTime = dueDate.getTime() - today.getTime();
+                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+                // <= 2 dias (inclui 2 dias antes, amanhã, hoje e atrasadas)
+                return diffDays <= 2;
+            });
+
+            // Ordena da mais urgente (mais atrasada ou que vence primeiro) para a mais distante
+            filtered.sort((a, b) => {
+                const da = a.due_date || '';
+                const db = b.due_date || '';
+                return da.localeCompare(db);
+            });
+
+            return filtered;
+        }
+
+        /**
+         * Sincroniza do banco de dados contas pendentes com vencimento próximo (<= 2 dias)
+         */
+        async function syncPendingBillsForAlert() {
+            if (!isOnline || !supabaseClient || !currentUser || isDevMode) return;
+            try {
+                const now = new Date();
+                const maxDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2);
+                const maxDateStr = `${maxDate.getFullYear()}-${String(maxDate.getMonth() + 1).padStart(2, '0')}-${String(maxDate.getDate()).padStart(2, '0')}`;
+
+                const { data, error } = await supabaseClient
+                    .from('transactions')
+                    .select('*')
+                    .neq('type', 'income')
+                    .or('status.eq.pending,status.is.null')
+                    .lte('due_date', maxDateStr)
+                    .order('due_date', { ascending: true })
+                    .limit(100);
+
+                if (!error && Array.isArray(data) && data.length > 0) {
+                    const map = new Map();
+                    (localData.transactions || []).forEach(t => map.set(t.id, t));
+                    data.forEach(t => {
+                        if (!map.has(t.id)) {
+                            localData.transactions.push(t);
+                            map.set(t.id, t);
+                        }
+                    });
+                }
+            } catch (err) {
+                console.warn('Aviso ao sincronizar contas pendentes para alerta:', err);
+            }
+        }
+
+        /**
+         * Verifica e exibe o alerta automático centralizado na tela
+         * @param {boolean} autoOpen - Se deve abrir o modal na tela quando houver contas
+         */
+        function checkAndShowAutoPendingAlert(autoOpen = true) {
+            const pendingAlerts = getPendingBillsForAlert();
+            if (pendingAlerts.length === 0) return;
+
+            renderAutoPendingAlertList();
+
+            if (autoOpen) {
+                const modal = document.getElementById('autoPendingAlertModal');
+                if (modal && !modal.classList.contains('active')) {
+                    modal.classList.add('active');
+                    playAlertChime();
+                }
+            }
+        }
+
+        function openAutoPendingAlertModal() {
+            renderAutoPendingAlertList();
+            const modal = document.getElementById('autoPendingAlertModal');
+            if (modal) modal.classList.add('active');
+        }
+
+        function closeAutoPendingAlertModal() {
+            const modal = document.getElementById('autoPendingAlertModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        /**
+         * Renderiza o conteúdo consolidado dentro do card único de alerta
+         */
+        function renderAutoPendingAlertList() {
+            const container = document.getElementById('autoPendingAlertList');
+            const totalEl = document.getElementById('autoPendingAlertTotalValue');
+            const summaryText = document.getElementById('autoPendingAlertSummaryText');
+            if (!container) return;
+
+            const pendingAlerts = getPendingBillsForAlert();
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            if (pendingAlerts.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 2rem 1rem; color: #059669;">
+                        <span style="font-size: 2.5rem; display: block; margin-bottom: 8px;">🎉</span>
+                        <div style="font-weight: 700; font-size: 1.05rem;">Tudo em dia!</div>
+                        <div style="font-size: 0.85rem; color: #64748b; margin-top: 4px;">Nenhuma conta pendente vencendo nos próximos 2 dias ou em atraso.</div>
+                    </div>
+                `;
+                if (totalEl) totalEl.textContent = formatCurrency(0);
+                if (summaryText) summaryText.textContent = 'Nenhuma conta pendente próxima do vencimento.';
+                return;
+            }
+
+            let html = '';
+            let totalAmount = 0;
+
+            pendingAlerts.forEach(t => {
+                const amount = parseFloat(t.amount) || 0;
+                totalAmount += amount;
+
+                let dueParts = parseDateParts(t.due_date);
+                if (!dueParts.year && t.due_day && t.year && t.month) {
+                    dueParts = { year: parseInt(t.year, 10), month: parseInt(t.month, 10), day: parseInt(t.due_day, 10) };
+                }
+
+                const dueDate = new Date(dueParts.year, dueParts.month - 1, dueParts.day);
+                const diffDays = Math.round((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+                let badgeHtml = '';
+                let borderCor = '#e2e8f0';
+
+                if (diffDays < 0) {
+                    const diasAtraso = Math.abs(diffDays);
+                    badgeHtml = `<span class="badge-due-urgent">⚠️ Vencida há ${diasAtraso} ${diasAtraso === 1 ? 'dia' : 'dias'}</span>`;
+                    borderCor = '#fca5a5';
+                } else if (diffDays === 0) {
+                    badgeHtml = `<span class="badge-due-urgent" style="background: #ffedd5; color: #c2410c; border-color: #fdba74;">🔥 Vence Hoje!</span>`;
+                    borderCor = '#fdba74';
+                } else if (diffDays === 1) {
+                    badgeHtml = `<span class="badge-due-warning">⏳ Vence Amanhã</span>`;
+                    borderCor = '#fde68a';
+                } else if (diffDays === 2) {
+                    badgeHtml = `<span class="badge-due-warning" style="background: #fef9c3; color: #854d0e; border-color: #fef08a;">📅 Vence em 2 dias</span>`;
+                    borderCor = '#fde047';
+                }
+
+                const partitionName = t.partition_id === 1 ? '1ª Repartição (5º dia útil)' : '2ª Repartição (Dia 20)';
+
+                html += `
+                    <div class="auto-pending-item" style="border-left: 5px solid ${diffDays <= 0 ? 'var(--danger)' : '#f59e0b'}; border-color: ${borderCor};">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span style="font-weight: 700; font-size: 0.96rem; color: #1e293b;">${t.description}</span>
+                                ${badgeHtml}
+                            </div>
+                            <div style="font-size: 0.8rem; color: #64748b; margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap;">
+                                <span>📅 Vencimento: <b>${formatDate(t.due_date)}</b></span>
+                                <span>📂 ${partitionName}</span>
+                                ${t.total_installments > 1 ? `<span>📊 Parc. ${t.installment_number}/${t.total_installments}</span>` : ''}
+                            </div>
+                        </div>
+                        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                            <div style="font-size: 1.05rem; font-weight: 800; color: var(--danger); white-space: nowrap;">
+                                ${formatCurrency(amount)}
+                            </div>
+                            <button class="btn-small btn-success-small" onclick="payFromAutoPendingAlert('${t.id}')" style="padding: 4px 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+                                ✓ Pagar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            if (totalEl) totalEl.textContent = formatCurrency(totalAmount);
+            if (summaryText) {
+                summaryText.textContent = `Atenção: ${pendingAlerts.length} ${pendingAlerts.length === 1 ? 'conta requer sua atenção imediata' : 'contas requerem sua atenção imediata'}.`;
+            }
+        }
+
+        /**
+         * Ao clicar em "Pagar" dentro do aviso automático de contas pendentes
+         */
+        function payFromAutoPendingAlert(transactionId) {
+            openPaymentModal(transactionId);
+        }
+
+        /**
+         * Regra 2: Após a conta ser paga, o aviso deverá ser excluído
+         */
+        function updateAutoPendingAlert() {
+            const pendingAlerts = getPendingBillsForAlert();
+            renderAutoPendingAlertList();
+
+            const modal = document.getElementById('autoPendingAlertModal');
+            if (modal && modal.classList.contains('active')) {
+                if (pendingAlerts.length === 0) {
+                    showNotification('🎉 Todas as contas em alerta foram pagas!', 'success');
+                    setTimeout(() => {
+                        closeAutoPendingAlertModal();
+                    }, 1500);
+                }
+            }
+        }
+
+        // ----------------------------------------------------
+        // 2. MÓDULO DE COMPROMISSOS COM CONFIGURAÇÃO MANUAL
+        // ----------------------------------------------------
+
+        let appointmentFilterState = 'all'; // 'all' | 'active' | 'completed'
+
+        /**
+         * Salva compromissos no localStorage para persistência offline imediata
+         */
+        function saveAppointmentsToLocalStorage() {
+            try {
+                localStorage.setItem('financas_pedrosa_appointments', JSON.stringify(localData.appointments || []));
+            } catch (e) {
+                console.warn('Erro ao salvar compromissos no localStorage:', e);
+            }
+        }
+
+        /**
+         * Carrega compromissos do localStorage e sincroniza com o Supabase
+         */
+        async function loadAppointments() {
+            // 1. Carregamento imediato do localStorage (offline-first)
+            try {
+                const stored = localStorage.getItem('financas_pedrosa_appointments');
+                if (stored) {
+                    localData.appointments = JSON.parse(stored);
+                } else if (!localData.appointments) {
+                    localData.appointments = [];
+                }
+            } catch (e) {
+                console.warn('Erro ao carregar compromissos do localStorage:', e);
+                if (!localData.appointments) localData.appointments = [];
+            }
+
+            // 2. Sincronização em nuvem via Supabase
+            if (isOnline && supabaseClient && currentUser && !isDevMode) {
+                let sincronizado = false;
+
+                // Tenta buscar da tabela dedicada appointments
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('appointments')
+                        .select('*')
+                        .order('date', { ascending: true });
+
+                    if (!error && Array.isArray(data)) {
+                        localData.appointments = data;
+                        saveAppointmentsToLocalStorage();
+                        sincronizado = true;
+                    }
+                } catch (err) {
+                    // Tabela appointments pode não existir ainda
+                }
+
+                // Fallback na tabela notes (caderno _SYS_COMPROMISSOS_)
+                if (!sincronizado) {
+                    try {
+                        const { data: notesData } = await supabaseClient
+                            .from('notes')
+                            .select('*')
+                            .eq('title', '__SYS_APPOINTMENTS_DATA__')
+                            .limit(1);
+
+                        if (notesData && notesData.length > 0 && notesData[0].content) {
+                            const cloudApps = JSON.parse(notesData[0].content);
+                            if (Array.isArray(cloudApps)) {
+                                const map = new Map();
+                                (localData.appointments || []).forEach(a => map.set(a.id, a));
+                                cloudApps.forEach(a => map.set(a.id, a));
+                                localData.appointments = Array.from(map.values());
+                                saveAppointmentsToLocalStorage();
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Fallback de nuvem para compromissos:', e);
+                    }
+                }
+            }
+
+            renderManualAppointmentsCard();
+            checkAlerts();
+        }
+
+        /**
+         * Persiste um compromisso (inserção ou edição) no localData, localStorage e nuvem
+         */
+        async function persistAppointment(app) {
+            if (!localData.appointments) localData.appointments = [];
+
+            const index = localData.appointments.findIndex(a => a.id === app.id);
+            if (index >= 0) {
+                localData.appointments[index] = app;
+            } else {
+                localData.appointments.unshift(app);
+            }
+
+            saveAppointmentsToLocalStorage();
+
+            // Sincronização em nuvem
+            if (isOnline && supabaseClient && currentUser && !isDevMode) {
+                let salvo = false;
+                try {
+                    const { error } = await supabaseClient
+                        .from('appointments')
+                        .upsert(app, { onConflict: 'id' });
+                    if (!error) salvo = true;
+                } catch (e) {}
+
+                if (!salvo) {
+                    await syncAppointmentsToNotesFallback();
+                }
+            }
+
+            renderManualAppointmentsCard();
+            renderCalendar();
+            checkAlerts();
+            return true;
+        }
+
+        /**
+         * Remove um compromisso
+         */
+        async function removeAppointment(appId) {
+            if (!localData.appointments) return;
+            localData.appointments = localData.appointments.filter(a => a.id !== appId);
+            saveAppointmentsToLocalStorage();
+
+            if (isOnline && supabaseClient && currentUser && !isDevMode) {
+                try {
+                    await supabaseClient.from('appointments').delete().eq('id', appId);
+                } catch (e) {}
+                await syncAppointmentsToNotesFallback();
+            }
+
+            renderManualAppointmentsCard();
+            renderCalendar();
+            checkAlerts();
+        }
+
+        /**
+         * Fallback em nuvem usando a tabela de notas
+         */
+        async function syncAppointmentsToNotesFallback() {
+            if (!supabaseClient || !isOnline || !currentUser || isDevMode) return;
+            try {
+                let sysNotebookId = null;
+                const { data: nbs } = await supabaseClient
+                    .from('notebooks')
+                    .select('id')
+                    .eq('name', '_SYS_COMPROMISSOS_')
+                    .limit(1);
+
+                if (nbs && nbs.length > 0) {
+                    sysNotebookId = nbs[0].id;
+                } else {
+                    const { data: newNb } = await supabaseClient
+                        .from('notebooks')
+                        .insert({ name: '_SYS_COMPROMISSOS_', user_id: currentUser.id })
+                        .select('id')
+                        .single();
+                    if (newNb) sysNotebookId = newNb.id;
+                }
+
+                if (!sysNotebookId) return;
+
+                const { data: existingNotes } = await supabaseClient
+                    .from('notes')
+                    .select('id')
+                    .eq('title', '__SYS_APPOINTMENTS_DATA__')
+                    .limit(1);
+
+                const contentJson = JSON.stringify(localData.appointments || []);
+
+                if (existingNotes && existingNotes.length > 0) {
+                    await supabaseClient
+                        .from('notes')
+                        .update({ content: contentJson, updated_at: new Date().toISOString() })
+                        .eq('id', existingNotes[0].id);
+                } else {
+                    await supabaseClient
+                        .from('notes')
+                        .insert({
+                            notebook_id: sysNotebookId,
+                            title: '__SYS_APPOINTMENTS_DATA__',
+                            content: contentJson,
+                            user_id: currentUser.id
+                        });
+                }
+            } catch (e) {
+                console.warn('Aviso ao sincronizar compromissos no fallback:', e);
+            }
+        }
+
+        /**
+         * Salva o compromisso configurado manualmente no card
+         */
+        async function saveManualAppointment() {
+            const editId = document.getElementById('manualAppEditId').value;
+            const description = document.getElementById('manualAppDesc').value.trim();
+            const date = document.getElementById('manualAppDate').value;
+            const time = document.getElementById('manualAppTime').value;
+            const persistence = document.getElementById('manualAppPersistence').value;
+            const notes = document.getElementById('manualAppNotes').value.trim();
+            const alert = document.getElementById('manualAppAlert').checked;
+
+            if (!description) {
+                showNotification('Informe o título/descrição do compromisso!', 'error');
+                document.getElementById('manualAppDesc').focus();
+                return;
+            }
+
+            if (!date) {
+                showNotification('Informe a data do compromisso!', 'error');
+                document.getElementById('manualAppDate').focus();
+                return;
+            }
+
+            const appointment = {
+                id: editId || ('app_' + Date.now().toString() + '_' + Math.random().toString(36).substr(2, 5)),
+                user_id: currentUser ? currentUser.id : null,
+                description: description,
+                date: date,
+                time: time || '',
+                persistence: persistence || 'startup_hourly',
+                notes: notes || '',
+                alert: alert !== false,
+                status: 'pending',
+                lastAlertTimestamp: null,
+                lastAlertDate: null,
+                created_at: new Date().toISOString()
+            };
+
+            // Se estiver editando, preserva campos existentes
+            if (editId) {
+                const existing = (localData.appointments || []).find(a => a.id === editId);
+                if (existing) {
+                    appointment.created_at = existing.created_at || appointment.created_at;
+                    appointment.status = existing.status || 'pending';
+                    appointment.lastAlertTimestamp = existing.lastAlertTimestamp;
+                    appointment.lastAlertDate = existing.lastAlertDate;
+                }
+            }
+
+            await persistAppointment(appointment);
+            resetManualAppointmentForm();
+            showNotification(editId ? '✅ Compromisso atualizado com sucesso!' : '✅ Compromisso agendado com sucesso!', 'success');
+
+            // Verifica se deve alertar imediatamente caso o horário já tenha chegado
+            checkScheduledAppointmentAlerts(false);
+        }
+
+        function resetManualAppointmentForm() {
+            document.getElementById('manualAppEditId').value = '';
+            document.getElementById('manualAppDesc').value = '';
+            document.getElementById('manualAppDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('manualAppTime').value = '';
+            document.getElementById('manualAppPersistence').value = 'startup_hourly';
+            document.getElementById('manualAppNotes').value = '';
+            document.getElementById('manualAppAlert').checked = true;
+
+            const titleEl = document.getElementById('manualAppFormTitle');
+            if (titleEl) {
+                titleEl.innerHTML = '<span>➕</span><span>Configurar Novo Compromisso</span>';
+            }
+        }
+
+        function openNewAppointmentInline() {
+            const body = document.getElementById('manualAppointmentsBody');
+            const arrow = document.getElementById('arrowManualAppointments');
+            if (body && body.style.display === 'none') {
+                body.style.display = 'block';
+                if (arrow) arrow.classList.add('open');
+            }
+            resetManualAppointmentForm();
+            document.getElementById('manualAppDesc').focus();
+        }
+
+        function toggleManualAppointmentsCard() {
+            const body = document.getElementById('manualAppointmentsBody');
+            const arrow = document.getElementById('arrowManualAppointments');
+            if (!body) return;
+            const isHidden = body.style.display === 'none';
+            body.style.display = isHidden ? 'block' : 'none';
+            if (arrow) {
+                if (isHidden) arrow.classList.add('open');
+                else arrow.classList.remove('open');
+            }
+        }
+
+        function scrollToAppointmentsSection() {
+            showView('dashboard');
+            const section = document.getElementById('manualAppointmentsSection');
+            const body = document.getElementById('manualAppointmentsBody');
+            const arrow = document.getElementById('arrowManualAppointments');
+            if (body && body.style.display === 'none') {
+                body.style.display = 'block';
+                if (arrow) arrow.classList.add('open');
+            }
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function setAppointmentFilter(filter) {
+            appointmentFilterState = filter;
+            document.querySelectorAll('.app-filter-tab').forEach(b => b.classList.remove('active'));
+            if (filter === 'all') document.getElementById('appFilterAll')?.classList.add('active');
+            if (filter === 'active') document.getElementById('appFilterActive')?.classList.add('active');
+            if (filter === 'completed') document.getElementById('appFilterCompleted')?.classList.add('active');
+            renderManualAppointmentsCard();
+        }
+
+        function editManualAppointment(id) {
+            const app = (localData.appointments || []).find(a => a.id === id);
+            if (!app) return;
+
+            document.getElementById('manualAppEditId').value = app.id;
+            document.getElementById('manualAppDesc').value = app.description || '';
+            document.getElementById('manualAppDate').value = app.date || '';
+            document.getElementById('manualAppTime').value = app.time || '';
+            document.getElementById('manualAppPersistence').value = app.persistence || 'startup_hourly';
+            document.getElementById('manualAppNotes').value = app.notes || '';
+            document.getElementById('manualAppAlert').checked = app.alert !== false;
+
+            const titleEl = document.getElementById('manualAppFormTitle');
+            if (titleEl) {
+                titleEl.innerHTML = '<span>✏️</span><span>Editar Compromisso</span>';
+            }
+
+            const body = document.getElementById('manualAppointmentsBody');
+            const arrow = document.getElementById('arrowManualAppointments');
+            if (body && body.style.display === 'none') {
+                body.style.display = 'block';
+                if (arrow) arrow.classList.add('open');
+            }
+
+            document.getElementById('manualAppointmentFormBox')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            document.getElementById('manualAppDesc').focus();
+        }
+
+        async function deleteManualAppointment(id) {
+            if (confirm('Tem certeza que deseja excluir este compromisso?')) {
+                await removeAppointment(id);
+                showNotification('🗑️ Compromisso excluído com sucesso!');
+            }
+        }
+
+        async function toggleManualAppointmentStatus(id) {
+            const app = (localData.appointments || []).find(a => a.id === id);
+            if (!app) return;
+            const novoStatus = app.status === 'completed' ? 'pending' : 'completed';
+            app.status = novoStatus;
+            await persistAppointment(app);
+            showNotification(novoStatus === 'completed' ? '✅ Compromisso concluído!' : '🔄 Compromisso reaberto!');
+        }
+
+        function testAppointmentAlert(id) {
+            const app = (localData.appointments || []).find(a => a.id === id);
+            if (!app) return;
+            showAppointmentAlertPopup([app]);
+        }
+
+        /**
+         * Renderiza a listagem de compromissos no Card da página
+         */
+        function renderManualAppointmentsCard() {
+            const container = document.getElementById('manualAppointmentsList');
+            const countBadge = document.getElementById('manualAppCountBadge');
+            const navBadge = document.getElementById('navAppointmentsBadge');
+            if (!container) return;
+
+            const allApps = localData.appointments || [];
+            const activeCount = allApps.filter(a => a.status !== 'completed').length;
+
+            if (countBadge) {
+                countBadge.textContent = `${activeCount} ${activeCount === 1 ? 'ativo' : 'ativos'}`;
+            }
+
+            if (navBadge) {
+                if (activeCount > 0) {
+                    navBadge.textContent = activeCount;
+                    navBadge.style.display = 'inline-block';
+                } else {
+                    navBadge.style.display = 'none';
+                }
+            }
+
+            let filtered = [...allApps];
+            if (appointmentFilterState === 'active') {
+                filtered = filtered.filter(a => a.status !== 'completed');
+            } else if (appointmentFilterState === 'completed') {
+                filtered = filtered.filter(a => a.status === 'completed');
+            }
+
+            // Ordena por data e hora
+            filtered.sort((a, b) => {
+                const da = (a.date || '') + ' ' + (a.time || '');
+                const db = (b.date || '') + ' ' + (b.time || '');
+                return da.localeCompare(db);
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="padding: 1.5rem; text-align: center; color: #94a3b8;">
+                        <span style="font-size: 1.8rem; display: block; margin-bottom: 6px;">📅</span>
+                        Nenhum compromisso encontrado para este filtro.
+                    </div>
+                `;
+                return;
+            }
+
+            const persistenceLabels = {
+                'startup_hourly': '🔄 Ao iniciar e a cada 1 hora',
+                'once': '⭐ No horário (Uma vez)',
+                'hourly': '⏰ A cada 1 hora no dia',
+                'half_hourly': '⏱️ A cada 30 min no dia',
+                'daily': '🔁 Diário',
+                'until_completed': '🔔 Persistente até concluir'
+            };
+
+            let html = '';
+            filtered.forEach(app => {
+                const isCompleted = app.status === 'completed';
+                const persistText = persistenceLabels[app.persistence] || '🔄 Ao iniciar e a cada 1 hora';
+
+                html += `
+                    <div class="manual-appointment-item ${isCompleted ? 'completed' : ''}">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span style="font-weight: 700; font-size: 1rem; color: ${isCompleted ? '#64748b' : '#1e293b'}; text-decoration: ${isCompleted ? 'line-through' : 'none'};">
+                                    ${app.description}
+                                </span>
+                                ${isCompleted 
+                                    ? '<span style="background: #dcfce7; color: #166534; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;">✅ Concluído</span>' 
+                                    : (app.alert ? '<span style="background: #fef3c7; color: #92400e; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;">🔔 Alerta Ativo</span>' : '<span style="background: #f1f5f9; color: #64748b; font-size: 0.72rem; padding: 2px 8px; border-radius: 10px;">Sem alerta</span>')}
+                            </div>
+                            
+                            <div style="font-size: 0.82rem; color: #64748b; margin-top: 6px; display: flex; gap: 12px; flex-wrap: wrap;">
+                                <span>📅 <b>${formatDate(app.date)}</b></span>
+                                <span>⏰ ${app.time ? `às <b>${app.time}</b>` : 'Sem horário fixo'}</span>
+                                <span style="color: #475569;"><b>Regra:</b> ${persistText}</span>
+                            </div>
+
+                            ${app.notes ? `
+                                <div class="manual-app-notes-box">
+                                    <span style="font-size: 0.95rem;">📝</span>
+                                    <span><b>Observações:</b> ${app.notes.replace(/\n/g, '<br>')}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
+                                <button type="button" class="btn-small ${isCompleted ? 'btn-secondary-small' : 'btn-success-small'}" onclick="toggleManualAppointmentStatus('${app.id}')" title="${isCompleted ? 'Reabrir compromisso' : 'Marcar como concluído'}">
+                                    ${isCompleted ? '🔄 Reabrir' : '✓ Concluir'}
+                                </button>
+                                <button type="button" class="btn-small btn-secondary-small" onclick="testAppointmentAlert('${app.id}')" title="Testar exibição do alerta na tela">
+                                    🔔 Testar Alerta
+                                </button>
+                                <button type="button" class="btn-small btn-secondary-small" onclick="editManualAppointment('${app.id}')" title="Editar compromisso">
+                                    ✏️
+                                </button>
+                                <button type="button" class="btn-small btn-danger-small" onclick="deleteManualAppointment('${app.id}')" title="Excluir compromisso">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // ----------------------------------------------------
+        // 3. DISPARO DE ALERTAS DE COMPROMISSOS NA PÁGINA
+        // ----------------------------------------------------
+
+        /**
+         * Verifica compromissos agendados e dispara alertas visuais na página
+         * conforme regras configuradas de data, hora e persistência
+         */
+        function checkScheduledAppointmentAlerts(isStartup = false) {
+            const apps = localData.appointments || [];
+            if (apps.length === 0) return;
+
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            const nowTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            const nowTimestamp = now.getTime();
+
+            const toAlert = [];
+
+            apps.forEach(app => {
+                if (!app.alert || app.status === 'completed') return;
+
+                const appDate = app.date;
+                const isPastOrToday = appDate <= todayStr;
+                const isToday = appDate === todayStr;
+                const isTimeReached = !app.time || (isToday && nowTimeStr >= app.time) || (appDate < todayStr);
+
+                if (!isPastOrToday || !isTimeReached) return;
+
+                const lastAlert = app.lastAlertTimestamp ? parseInt(app.lastAlertTimestamp, 10) : 0;
+                const timeSinceLast = nowTimestamp - lastAlert;
+                let shouldAlert = false;
+
+                switch (app.persistence) {
+                    case 'once':
+                        if (!app.lastAlertTimestamp) shouldAlert = true;
+                        break;
+                    case 'startup_hourly':
+                        if (isStartup || !app.lastAlertTimestamp || timeSinceLast >= 60 * 60 * 1000) {
+                            shouldAlert = true;
+                        }
+                        break;
+                    case 'hourly':
+                        if (!app.lastAlertTimestamp || timeSinceLast >= 60 * 60 * 1000) {
+                            shouldAlert = true;
+                        }
+                        break;
+                    case 'half_hourly':
+                        if (!app.lastAlertTimestamp || timeSinceLast >= 30 * 60 * 1000) {
+                            shouldAlert = true;
+                        }
+                        break;
+                    case 'daily':
+                        if (app.lastAlertDate !== todayStr) shouldAlert = true;
+                        break;
+                    case 'until_completed':
+                        if (isStartup || !app.lastAlertTimestamp || timeSinceLast >= 60 * 60 * 1000) {
+                            shouldAlert = true;
+                        }
+                        break;
+                    default:
+                        if (!app.lastAlertTimestamp) shouldAlert = true;
+                }
+
+                if (shouldAlert) {
+                    toAlert.push(app);
+                    app.lastAlertTimestamp = nowTimestamp;
+                    app.lastAlertDate = todayStr;
+                }
+            });
+
+            if (toAlert.length > 0) {
+                saveAppointmentsToLocalStorage();
+                showAppointmentAlertPopup(toAlert);
+            }
+        }
+
+        /**
+         * Exibe o card centralizado de compromisso agendado na tela
+         */
+        function showAppointmentAlertPopup(appointments) {
+            const container = document.getElementById('appointmentAlertPopupList');
+            const modal = document.getElementById('appointmentAlertPopupModal');
+            if (!container || !modal || !appointments || appointments.length === 0) return;
+
+            let html = '';
+            appointments.forEach(app => {
+                html += `
+                    <div style="background: #ffffff; border: 1px solid #bfdbfe; border-left: 5px solid var(--blue-royal); border-radius: 12px; padding: 14px; box-shadow: 0 4px 12px rgba(30, 58, 138, 0.08);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                            <div>
+                                <div style="font-size: 1.1rem; font-weight: 800; color: var(--blue-royal);">
+                                    📌 ${app.description}
+                                </div>
+                                <div style="font-size: 0.85rem; color: #475569; margin-top: 4px; display: flex; gap: 12px; flex-wrap: wrap;">
+                                    <span>📅 <b>${formatDate(app.date)}</b></span>
+                                    <span>⏰ ${app.time ? `às <b>${app.time}</b>` : 'Sem horário fixo'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${app.notes ? `
+                            <div style="background: #fffbeb; border: 1px dashed #fcd34d; border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 0.85rem; color: #78350f;">
+                                <b>📝 Observações:</b> ${app.notes.replace(/\n/g, '<br>')}
+                            </div>
+                        ` : ''}
+
+                        <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px;">
+                            <button type="button" class="btn-small btn-secondary-small" onclick="snoozeAppointmentAlert('${app.id}')">
+                                ⏰ Lembrar em 15 min
+                            </button>
+                            <button type="button" class="btn-small btn-success-small" onclick="completeAppointmentFromAlert('${app.id}')">
+                                ✓ Concluir Compromisso
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            modal.classList.add('active');
+            playAlertChime();
+        }
+
+        function closeAppointmentAlertPopup() {
+            const modal = document.getElementById('appointmentAlertPopupModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        async function completeAppointmentFromAlert(id) {
+            const app = (localData.appointments || []).find(a => a.id === id);
+            if (app) {
+                app.status = 'completed';
+                await persistAppointment(app);
+                showNotification('✅ Compromisso marcado como concluído!', 'success');
+            }
+            closeAppointmentAlertPopup();
+        }
+
+        function snoozeAppointmentAlert(id) {
+            const app = (localData.appointments || []).find(a => a.id === id);
+            if (app) {
+                // Adia por 15 minutos: subtrai 45 min do intervalo de 1h
+                app.lastAlertTimestamp = Date.now() - (45 * 60 * 1000);
+                saveAppointmentsToLocalStorage();
+                showNotification('⏰ Alerta adiado para daqui a 15 minutos.');
+            }
+            closeAppointmentAlertPopup();
+        }
+
+        // ----------------------------------------------------
+        // 4. ATUALIZAÇÃO DAS FUNÇÕES DO MODAL DE CALENDÁRIO E SINO
+        // ----------------------------------------------------
+
+        async function saveAppointment() {
             const description = document.getElementById('appointmentDesc').value.trim();
             const time = document.getElementById('appointmentTime').value;
             const alert = document.getElementById('appointmentAlert').checked;
@@ -9316,32 +10628,36 @@
             }
 
             const appointment = {
-                id: Date.now().toString(),
-                user_id: currentUser.id,
+                id: 'app_' + Date.now().toString() + '_' + Math.random().toString(36).substr(2, 5),
+                user_id: currentUser ? currentUser.id : null,
                 date: selectedDate,
                 description: description,
-                time: time,
+                time: time || '',
+                persistence: 'startup_hourly',
+                notes: '',
                 alert: alert,
+                status: 'pending',
+                lastAlertTimestamp: null,
+                lastAlertDate: null,
                 created_at: new Date().toISOString()
             };
 
-            localData.appointments.push(appointment);
-            
+            await persistAppointment(appointment);
+
             renderDayAppointments();
             renderCalendar();
-            
+
             document.getElementById('appointmentDesc').value = '';
             document.getElementById('appointmentTime').value = '';
             document.getElementById('appointmentAlert').checked = false;
-            
+
             showNotification('Compromisso salvo!');
             checkAlerts();
         }
 
-        function deleteAppointment(id) {
+        async function deleteAppointment(id) {
             if (confirm('Excluir este compromisso?')) {
-                localData.appointments = localData.appointments.filter(a => a.id !== id);
-                
+                await removeAppointment(id);
                 renderDayAppointments();
                 renderCalendar();
                 checkAlerts();
@@ -9352,32 +10668,36 @@
             const today = new Date().toISOString().split('T')[0];
             const now = new Date();
             const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-            
-            const upcomingAlerts = localData.appointments.filter(a => {
-                if (!a.alert) return false;
-                if (a.date < today) return false;
-                if (a.date === today && a.time && a.time < currentTime) return false;
+
+            const upcomingAlerts = (localData.appointments || []).filter(a => {
+                if (!a.alert || a.status === 'completed') return false;
+                if (a.date < today && a.persistence !== 'until_completed') return false;
+                if (a.date === today && a.time && a.time < currentTime && a.persistence === 'once') return false;
                 return true;
             });
 
             const bell = document.getElementById('alertBell');
             const badge = document.getElementById('alertBadge');
-            
+
             if (upcomingAlerts.length > 0) {
-                bell.classList.add('has-alerts');
-                badge.textContent = upcomingAlerts.length;
-                badge.style.display = 'flex';
+                if (bell) bell.classList.add('has-alerts');
+                if (badge) {
+                    badge.textContent = upcomingAlerts.length;
+                    badge.style.display = 'flex';
+                }
             } else {
-                bell.classList.remove('has-alerts');
-                badge.style.display = 'none';
+                if (bell) bell.classList.remove('has-alerts');
+                if (badge) badge.style.display = 'none';
             }
+
+            renderManualAppointmentsCard();
         }
 
         function openAlertsModal() {
             const container = document.getElementById('alertsList');
             const today = new Date().toISOString().split('T')[0];
-            
-            const upcomingAlerts = localData.appointments.filter(a => a.alert && a.date >= today)
+
+            const upcomingAlerts = (localData.appointments || []).filter(a => a.alert && a.status !== 'completed' && a.date >= today)
                 .sort((a, b) => a.date.localeCompare(b.date));
 
             if (upcomingAlerts.length === 0) {
@@ -9393,19 +10713,50 @@
                                     ${isToday ? '📅 Hoje' : formatDate(app.date)} ${app.time ? 'às ' + app.time : ''}
                                 </div>
                                 <div class="appointment-desc">${app.description}</div>
+                                ${app.notes ? `<div style="font-size: 0.78rem; color: #b45309; margin-top: 3px;">📝 ${app.notes}</div>` : ''}
                             </div>
-                            <button class="btn-small btn-danger-small" onclick="deleteAppointment('${app.id}'); openAlertsModal();">🗑️</button>
+                            <div style="display: flex; gap: 4px;">
+                                <button class="btn-small btn-success-small" onclick="toggleManualAppointmentStatus('${app.id}'); openAlertsModal();" title="Concluir">✓</button>
+                                <button class="btn-small btn-danger-small" onclick="deleteAppointment('${app.id}'); openAlertsModal();" title="Excluir">🗑️</button>
+                            </div>
                         </div>
                     `;
                 });
                 container.innerHTML = html;
             }
-            
+
             document.getElementById('alertsModal').classList.add('active');
         }
 
         function closeAlertsModal() {
             document.getElementById('alertsModal').classList.remove('active');
+        }
+
+        /**
+         * Inicialização e configuração de timers periódicos de alertas e persistência
+         */
+        async function setupAppointmentsAndAlertsTimers() {
+            try {
+                // Sincroniza contas pendentes do banco
+                await syncPendingBillsForAlert();
+
+                // 1- Ao iniciar a aplicação: emite alertas automáticos
+                checkAndShowAutoPendingAlert(true);
+                checkScheduledAppointmentAlerts(true);
+
+                // 2- Se a aplicação estiver aberta, a cada 1 hora deve aparecer o aviso
+                setInterval(async () => {
+                    await syncPendingBillsForAlert();
+                    checkAndShowAutoPendingAlert(true);
+                }, 60 * 60 * 1000); // 1 hora
+
+                // Verificador periódico a cada 1 minuto para compromissos manuais
+                setInterval(() => {
+                    checkScheduledAppointmentAlerts(false);
+                }, 60000); // 1 minuto
+            } catch (err) {
+                console.warn('Aviso ao iniciar timers de alertas:', err);
+            }
         }
 
         // ==========================================
@@ -10557,6 +11908,10 @@
         // Event Listeners
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
+                // Modais de alerta automático e compromissos só saem ao clicar no "x"
+                if (event.target.id === 'autoPendingAlertModal' || event.target.id === 'appointmentAlertPopupModal') {
+                    return;
+                }
                 event.target.classList.remove('active');
             }
         }
@@ -10669,6 +12024,40 @@
         window.setDebtPartitionFilter = setDebtPartitionFilter;
         window.onDebtStatusChange = onDebtStatusChange;
         window.calcSuggestedInstallment = calcSuggestedInstallment;
+
+        // FUNÇÕES DO MÓDULO ALERTAS E COMPROMISSOS EXPORTADAS
+        window.getPendingBillsForAlert = getPendingBillsForAlert;
+        window.syncPendingBillsForAlert = syncPendingBillsForAlert;
+        window.checkAndShowAutoPendingAlert = checkAndShowAutoPendingAlert;
+        window.openAutoPendingAlertModal = openAutoPendingAlertModal;
+        window.closeAutoPendingAlertModal = closeAutoPendingAlertModal;
+        window.payFromAutoPendingAlert = payFromAutoPendingAlert;
+        window.updateAutoPendingAlert = updateAutoPendingAlert;
+        window.renderAutoPendingAlertList = renderAutoPendingAlertList;
+        window.playAlertChime = playAlertChime;
+
+        window.loadAppointments = loadAppointments;
+        window.saveAppointmentsToLocalStorage = saveAppointmentsToLocalStorage;
+        window.persistAppointment = persistAppointment;
+        window.removeAppointment = removeAppointment;
+        window.saveManualAppointment = saveManualAppointment;
+        window.resetManualAppointmentForm = resetManualAppointmentForm;
+        window.renderManualAppointmentsCard = renderManualAppointmentsCard;
+        window.toggleManualAppointmentsCard = toggleManualAppointmentsCard;
+        window.openNewAppointmentInline = openNewAppointmentInline;
+        window.editManualAppointment = editManualAppointment;
+        window.deleteManualAppointment = deleteManualAppointment;
+        window.toggleManualAppointmentStatus = toggleManualAppointmentStatus;
+        window.testAppointmentAlert = testAppointmentAlert;
+        window.setAppointmentFilter = setAppointmentFilter;
+        window.scrollToAppointmentsSection = scrollToAppointmentsSection;
+
+        window.checkScheduledAppointmentAlerts = checkScheduledAppointmentAlerts;
+        window.showAppointmentAlertPopup = showAppointmentAlertPopup;
+        window.closeAppointmentAlertPopup = closeAppointmentAlertPopup;
+        window.completeAppointmentFromAlert = completeAppointmentFromAlert;
+        window.snoozeAppointmentAlert = snoozeAppointmentAlert;
+        window.setupAppointmentsAndAlertsTimers = setupAppointmentsAndAlertsTimers;
 
         // FUNÇÕES REALTIME E ATUALIZAÇÃO EXPORTADAS
         window.setupRealtimeSubscription = setupRealtimeSubscription;

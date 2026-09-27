@@ -2557,21 +2557,420 @@
             font-size: 0.72rem;
             font-weight: 600;
             color: #93c5fd;
-            letter-spacing: 0.02em;
+        /* ==========================================
+           MÓDULO: DÍVIDAS EM ABERTO (CONTROLE GERENCIAL)
+           ========================================== */
+        .debt-banner-info {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #cbd5e1;
+            border-left: 4px solid var(--gold-primary);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
         }
 
-        .auto-sync-indicator.active {
+        .debt-banner-icon {
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+
+        .debt-banner-content h4 {
+            margin: 0 0 4px 0;
+            font-size: 1rem;
+            color: #1e293b;
+            font-weight: 700;
+        }
+
+        .debt-banner-content p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        .debt-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 1.25rem;
+        }
+
+        .debt-kpi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .debt-kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .debt-kpi-card.kpi-total { border-left: 4px solid #6366f1; }
+        .debt-kpi-card.kpi-pagamento { border-left: 4px solid #2563eb; }
+        .debt-kpi-card.kpi-negociacao { border-left: 4px solid #d97706; }
+        .debt-kpi-card.kpi-estacionada { border-left: 4px solid #7c3aed; }
+
+        .debt-kpi-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .debt-kpi-val {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #1e293b;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .debt-kpi-sub {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        .debt-filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 1.25rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .debt-filter-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .debt-chip-btn {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            padding: 0.45rem 0.9rem;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .debt-chip-btn:hover {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .debt-chip-btn.active {
+            background: var(--blue-royal);
+            color: white;
+            border-color: var(--blue-royal);
+            box-shadow: 0 2px 6px rgba(30, 58, 138, 0.3);
+        }
+
+        /* Card Individual de Dívida */
+        .debt-card-item {
+            background: white;
+            border-radius: 14px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border: 1.5px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .debt-card-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+        }
+
+        .debt-card-item.status-pagamento {
+            border-left: 5px solid #2563eb;
+            background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+        }
+
+        .debt-card-item.status-negociacao {
+            border-left: 5px solid #d97706;
+            background: linear-gradient(180deg, #ffffff 0%, #fffdf8 100%);
+        }
+
+        .debt-card-item.status-estacionada {
+            border-left: 5px solid #7c3aed;
+            background: linear-gradient(180deg, #ffffff 0%, #fbf8ff 100%);
+        }
+
+        .debt-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 0.85rem;
+            flex-wrap: wrap;
+        }
+
+        .debt-card-title-area {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .debt-card-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .debt-card-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .badge-debt-pagamento {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            padding: 0.25rem 0.65rem;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 700;
             display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        .auto-sync-indicator .sync-icon {
-            display: inline-block;
-            animation: spinSyncAnim 0.8s linear infinite;
+        .badge-debt-negociacao {
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fde68a;
+            padding: 0.25rem 0.65rem;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        @keyframes spinSyncAnim {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        .badge-debt-estacionada {
+            background: #ede9fe;
+            color: #6d28d9;
+            border: 1px solid #ddd6fe;
+            padding: 0.25rem 0.65rem;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .badge-debt-partition {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .debt-card-amount-area {
+            text-align: right;
+        }
+
+        .debt-card-amount-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .debt-card-amount-val {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }
+
+        /* Grid de métricas do card */
+        .debt-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 8px;
+            margin: 0.85rem 0;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.75rem;
+        }
+
+        .debt-info-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .debt-info-cell-label {
+            font-size: 0.72rem;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .debt-info-cell-val {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .debt-info-cell-val.highlight {
+            color: #2563eb;
+        }
+
+        .debt-info-cell-val.warning {
+            color: #d97706;
+        }
+
+        .debt-info-cell-val.purple {
+            color: #7c3aed;
+        }
+
+        /* Caixa de observações/anotações do card */
+        .debt-obs-box {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-left: 3px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 0.75rem 0.9rem;
+            margin: 0.85rem 0;
+            font-size: 0.86rem;
+            color: #334155;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .debt-obs-box.negotiation {
+            background: #fffdf5;
+            border-color: #fef08a;
+            border-left-color: #f59e0b;
+            color: #78350f;
+        }
+
+        .debt-obs-box.parked {
+            background: #fdfcff;
+            border-color: #ede9fe;
+            border-left-color: #8b5cf6;
+            color: #4c1d95;
+        }
+
+        .debt-obs-box-header {
+            font-weight: 700;
+            font-size: 0.78rem;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Rodapé de Ações do card */
+        .debt-card-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-debt-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: none;
+        }
+
+        .btn-debt-edit {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        .btn-debt-edit:hover { background: #dbeafe; }
+
+        .btn-debt-status {
+            background: #f5f3ff;
+            color: #6d28d9;
+            border: 1px solid #ddd6fe;
+        }
+        .btn-debt-status:hover { background: #ede9fe; }
+
+        .btn-debt-delete {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+        .btn-debt-delete:hover { background: #fee2e2; }
+
+        .debt-total-footer {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 1.1rem 1.4rem;
+            border-radius: 12px;
+            margin-top: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+        }
+
+        .debt-total-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .debt-total-amount {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fbbf24;
+            font-family: 'Cinzel', serif;
         }
     </style>
 </head>
@@ -2673,6 +3072,7 @@
             <button class="nav-btn" onclick="openCalculator()">🧮 Calculadora</button>
             <button class="nav-btn" onclick="openCalendarModal()">📅 Calendário</button>
             <button class="nav-btn" onclick="openHistoryModal()">📜 Histórico</button>
+            <button class="nav-btn" onclick="openDebtsConsolidatedModal()" style="background-color: rgba(99, 102, 241, 0.18); border: 1px solid #818cf8;">💳 Dívidas em Aberto</button>
             <button class="nav-btn" onclick="toggleNotes()">📝 Bloco de Notas</button>
             <button class="nav-btn btn-backup-nav" onclick="openBackupModal()">💾 Backup</button>
             <button class="nav-btn" onclick="openSettingsModal()">⚙️ Configurações</button>
@@ -2762,8 +3162,9 @@
                         <button class="section-tab" data-section="5" data-partition="1">Entradas</button>
                         <button class="section-tab" data-section="11" data-partition="1">Assinaturas Digitais</button>
                         <button class="section-tab" data-section="12" data-partition="1">Compras Programadas</button>
+                        <button class="section-tab" data-section="15" data-partition="1">Dívidas em Aberto</button>
                     </div>
-                    <button class="btn-action" onclick="openAddModal(1)">+ Nova Transação</button>
+                    <button class="btn-action" id="btnActionPartition1" onclick="openAddModal(1)">+ Nova Transação</button>
                     <div id="contentPartition1"></div>
                     <!-- Totalizadores da 1ª Repartição -->
                     <div class="partition-totals" id="partitionTotals1">
@@ -2796,8 +3197,9 @@
                         <button class="section-tab" data-section="10" data-partition="2">Entradas</button>
                         <button class="section-tab" data-section="13" data-partition="2">Assinaturas Digitais</button>
                         <button class="section-tab" data-section="14" data-partition="2">Compras Programadas</button>
+                        <button class="section-tab" data-section="16" data-partition="2">Dívidas em Aberto</button>
                     </div>
-                    <button class="btn-action" onclick="openAddModal(2)">+ Nova Transação</button>
+                    <button class="btn-action" id="btnActionPartition2" onclick="openAddModal(2)">+ Nova Transação</button>
                     <div id="contentPartition2"></div>
                     <!-- Totalizadores da 2ª Repartição -->
                     <div class="partition-totals" id="partitionTotals2">
@@ -3534,6 +3936,212 @@
         </div>
     </div>
 
+    <!-- ==========================================
+         MODAIS DO MÓDULO DÍVIDAS EM ABERTO
+         ========================================== -->
+
+    <!-- 1. Modal Adicionar / Editar Dívida em Aberto -->
+    <div class="modal" id="debtModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="debtModalTitle">Nova Dívida em Aberto</h3>
+                <button class="close-btn" onclick="closeDebtModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="debtForm" onsubmit="event.preventDefault(); saveDebt();">
+                    <input type="hidden" id="debtId">
+
+                    <div class="form-row">
+                        <label class="form-label-modal">Repartição de Referência</label>
+                        <select class="form-input-modal" id="debtPartition">
+                            <option value="1">1ª Repartição (Vencimento 5º dia útil)</option>
+                            <option value="2">2ª Repartição (Vencimento dia 20)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label-modal">Nome da Dívida <span style="color:var(--danger)">*</span></label>
+                        <input type="text" class="form-input-modal" id="debtName" placeholder="Ex: Cartão Santander, Empréstimo Caixa, Fornecedor X..." required>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label-modal">Valor da Dívida (R$) <span style="color:var(--danger)">*</span></label>
+                        <input type="number" step="0.01" min="0.01" class="form-input-modal" id="debtAmount" placeholder="0,00" required>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label-modal">Situação Atual <span style="color:var(--danger)">*</span></label>
+                        <select class="form-input-modal" id="debtStatus" onchange="onDebtStatusChange()">
+                            <option value="em_pagamento">💳 Em pagamento</option>
+                            <option value="em_negociacao">🤝 Em negociação</option>
+                            <option value="estacionada">⏸️ Estacionada</option>
+                        </select>
+                    </div>
+
+                    <!-- Campos condicionais: EM PAGAMENTO -->
+                    <div id="debtFieldsEmPagamento" class="debt-conditional-box" style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+                        <div style="font-weight: 700; color: #1e40af; font-size: 0.88rem; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                            <span>💳</span><span>Informações de Pagamento</span>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label-modal">Valor Inicial (R$)</label>
+                            <input type="number" step="0.01" min="0" class="form-input-modal" id="debtInitialAmountPay" placeholder="Valor original quando contraída">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label-modal">Valor Total (R$)</label>
+                            <input type="number" step="0.01" min="0" class="form-input-modal" id="debtTotalAmountPay" placeholder="Valor total acordado/renegociado" oninput="calcSuggestedInstallment()">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div class="form-row">
+                                <label class="form-label-modal">Qtd. de Parcelas</label>
+                                <input type="number" min="1" max="480" class="form-input-modal" id="debtInstallmentsPay" placeholder="Ex: 12" oninput="calcSuggestedInstallment()">
+                            </div>
+                            <div class="form-row">
+                                <label class="form-label-modal">Valor das Parcelas (R$)</label>
+                                <input type="number" step="0.01" min="0" class="form-input-modal" id="debtInstallmentValuePay" placeholder="0,00">
+                            </div>
+                        </div>
+                        <div class="form-row" style="margin-bottom: 0;">
+                            <label class="form-label-modal">Observações (opcional)</label>
+                            <input type="text" class="form-input-modal" id="debtObsPay" placeholder="Ex: Débito em conta dia 10, banco...">
+                        </div>
+                    </div>
+
+                    <!-- Campos condicionais: EM NEGOCIAÇÃO -->
+                    <div id="debtFieldsEmNegociacao" class="debt-conditional-box" style="display: none; background: #fffdf5; border: 1px solid #fde68a; border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+                        <div style="font-weight: 700; color: #92400e; font-size: 0.88rem; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                            <span>🤝</span><span>Anotações da Negociação</span>
+                        </div>
+                        <div class="form-row" style="margin-bottom: 0;">
+                            <label class="form-label-modal">Observações para Anotações</label>
+                            <textarea class="form-input-modal" id="debtObsNegociation" rows="4" placeholder="Anote detalhes da negociação: proposta oferecida, contraproposta, atendente, canal de contato, prazos..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Campos condicionais: ESTACIONADA -->
+                    <div id="debtFieldsEstacionada" class="debt-conditional-box" style="display: none; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+                        <div style="font-weight: 700; color: #6b21a8; font-size: 0.88rem; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                            <span>⏸️</span><span>Dados da Dívida Estacionada</span>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label-modal">Valor Inicial (R$)</label>
+                            <input type="number" step="0.01" min="0" class="form-input-modal" id="debtInitialAmountParked" placeholder="Valor original quando contraída">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label-modal">Valor Atual da Dívida (R$)</label>
+                            <input type="number" step="0.01" min="0" class="form-input-modal" id="debtCurrentAmountParked" placeholder="Valor atual atualizado pelo credor">
+                        </div>
+                        <div class="form-row" style="margin-bottom: 0;">
+                            <label class="form-label-modal">Observações para Anotações</label>
+                            <textarea class="form-input-modal" id="debtObsParked" rows="3" placeholder="Anote o motivo de estar estacionada, estratégia para quitação no futuro, situação jurídica..."></textarea>
+                        </div>
+                    </div>
+
+                    <div style="background: #f8fafc; border-left: 4px solid var(--blue-royal); border-radius: 6px; padding: 10px 12px; font-size: 0.8rem; color: #475569; line-height: 1.45;">
+                        ℹ️ <b>Controle Gerencial:</b> Esta funcionalidade é apenas de acompanhamento e planejamento. Não interage com pagamentos nem altera o saldo líquido.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeDebtModal()">Cancelar</button>
+                <button type="button" class="btn btn-save" id="btnSaveDebt" onclick="saveDebt()">Salvar Dívida</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Modal Rápido de Alteração de Situação -->
+    <div class="modal" id="debtStatusModal">
+        <div class="modal-content" style="max-width: 440px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Alterar Situação da Dívida</h3>
+                <button class="close-btn" onclick="closeDebtStatusModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="quickDebtId">
+                <div style="font-weight: 700; color: #1e293b; font-size: 1.05rem; margin-bottom: 0.75rem;" id="quickDebtName">
+                    Nome da Dívida
+                </div>
+                <div class="form-row">
+                    <label class="form-label-modal">Selecione a Nova Situação:</label>
+                    <select class="form-input-modal" id="quickDebtNewStatus">
+                        <option value="em_pagamento">💳 Em pagamento</option>
+                        <option value="em_negociacao">🤝 Em negociação</option>
+                        <option value="estacionada">⏸️ Estacionada</option>
+                    </select>
+                </div>
+                <p style="font-size: 0.82rem; color: #64748b; margin-top: 0.5rem;">
+                    💡 Para preencher ou revisar valores detalhados específicos da nova situação (parcelas, juros ou anotações), você também pode usar o botão <b>Editar</b> no card da dívida.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeDebtStatusModal()">Cancelar</button>
+                <button type="button" class="btn btn-save" onclick="saveQuickChangeDebtStatus()">Confirmar Alteração</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Modal Visão Consolidada de Dívidas em Aberto -->
+    <div class="modal" id="debtsConsolidatedModal">
+        <div class="modal-content large" style="max-width: 960px;">
+            <div class="modal-header">
+                <h3 class="modal-title">💳 Dívidas em Aberto — Painel Consolidado</h3>
+                <button class="close-btn" onclick="closeDebtsConsolidatedModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Banner Informativo -->
+                <div class="debt-banner-info">
+                    <div class="debt-banner-icon">⚖️</div>
+                    <div class="debt-banner-content">
+                        <h4>Controle Gerencial de Dívidas em Aberto</h4>
+                        <p>Visão geral de todas as dívidas cadastradas na 1ª e 2ª Repartição. Acompanhe situações de pagamento, negociações em andamento e dívidas estacionadas sem interferir no fluxo de pagamentos mensais.</p>
+                    </div>
+                </div>
+
+                <!-- KPIs Consolidados -->
+                <div class="debt-kpi-grid" id="consolidatedKpiGrid">
+                    <!-- Gerado via JS -->
+                </div>
+
+                <!-- Barra de Ações e Filtros -->
+                <div class="debt-filter-bar">
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                        <label style="font-size: 0.82rem; font-weight: 700; color: #475569;">Repartição:</label>
+                        <select class="form-input-modal" id="consolidatedPartitionFilter" onchange="renderConsolidatedDebtsList()" style="width: auto; padding: 0.4rem 0.75rem; margin: 0; font-size: 0.84rem;">
+                            <option value="all">Todas as Repartições</option>
+                            <option value="1">1ª Repartição (5º dia útil)</option>
+                            <option value="2">2ª Repartição (Dia 20)</option>
+                        </select>
+
+                        <label style="font-size: 0.82rem; font-weight: 700; color: #475569; margin-left: 6px;">Situação:</label>
+                        <select class="form-input-modal" id="consolidatedStatusFilter" onchange="renderConsolidatedDebtsList()" style="width: auto; padding: 0.4rem 0.75rem; margin: 0; font-size: 0.84rem;">
+                            <option value="all">Todas as Situações</option>
+                            <option value="em_pagamento">💳 Em pagamento</option>
+                            <option value="em_negociacao">🤝 Em negociação</option>
+                            <option value="estacionada">⏸️ Estacionada</option>
+                        </select>
+                    </div>
+
+                    <button type="button" class="btn-action" onclick="openDebtModal(1)" style="margin: 0; padding: 0.55rem 1.1rem; font-size: 0.88rem;">
+                        + Nova Dívida
+                    </button>
+                </div>
+
+                <!-- Lista de Cards Consolidados -->
+                <div id="consolidatedDebtsList" style="min-height: 120px;">
+                    <!-- Cards gerados via JS -->
+                </div>
+
+                <!-- Totalizador Geral -->
+                <div class="debt-total-footer" id="consolidatedTotalFooter">
+                    <!-- Gerado via JS -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" onclick="closeDebtsConsolidatedModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <div class="notification" id="notification">
         <div class="notification-title" id="notificationTitle">Sucesso</div>
         <div class="notification-text" id="notificationText">Operação realizada com sucesso!</div>
@@ -3559,6 +4167,7 @@
             notes: [],
             appointments: [],
             paymentHistory: [],
+            debts: [],
             _pendingDeletions: []
         };
 
@@ -4526,7 +5135,9 @@
             11: { type: 'expense_subscription', category: 'subscription', partition: 1 },
             12: { type: 'expense_planned', category: 'planned', partition: 1 },
             13: { type: 'expense_subscription', category: 'subscription', partition: 2 },
-            14: { type: 'expense_planned', category: 'planned', partition: 2 }
+            14: { type: 'expense_planned', category: 'planned', partition: 2 },
+            15: { type: 'debt', category: 'debt', partition: 1 },
+            16: { type: 'debt', category: 'debt', partition: 2 }
         };
 
         const sectionNames = {
@@ -4535,7 +5146,8 @@
             6: 'Contas Fixas', 7: 'Contas Variáveis', 8: 'Contas Parceladas', 
             9: 'Gastos à Vista', 10: 'Entradas',
             11: 'Assinaturas Digitais', 12: 'Compras Programadas',
-            13: 'Assinaturas Digitais', 14: 'Compras Programadas'
+            13: 'Assinaturas Digitais', 14: 'Compras Programadas',
+            15: 'Dívidas em Aberto', 16: 'Dívidas em Aberto'
         };
 
         function escapeHtml(str) {
@@ -5806,6 +6418,7 @@
                 const month = currentMonth.getMonth() + 1;
 
                 await fetchTransactions(year, month);
+                await loadDebts();
 
                 renderData();
 
@@ -5896,6 +6509,7 @@
                 setInterval(updateDateTime, 1000);
                 updateMonthDisplay();
                 await loadAllData();
+                await loadDebts();
                 setupTabs();
                 document.getElementById('dueDate').value = new Date().toISOString().split('T')[0];
                 document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
@@ -5992,6 +6606,19 @@
             }
         }
 
+        function updatePartitionActionBtn(partition) {
+            const section = getActiveSection(partition);
+            const btn = document.getElementById(`btnActionPartition${partition}`);
+            if (!btn) return;
+            if (section === 15 || section === 16) {
+                btn.textContent = '+ Nova Dívida em Aberto';
+                btn.setAttribute('onclick', `openDebtModal(${partition})`);
+            } else {
+                btn.textContent = '+ Nova Transação';
+                btn.setAttribute('onclick', `openAddModal(${partition})`);
+            }
+        }
+
         function setupTabs() {
             document.querySelectorAll('.section-tab').forEach(tab => {
                 tab.addEventListener('click', function() {
@@ -5999,7 +6626,9 @@
                     const container = document.getElementById(`tabsPartition${partition}`);
                     container.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
-                    renderPartitionContent(parseInt(partition));
+                    const partNum = parseInt(partition);
+                    updatePartitionActionBtn(partNum);
+                    renderPartitionContent(partNum);
                 });
             });
         }
@@ -6026,6 +6655,14 @@
                 const section = getActiveSection(partition);
                 const container = document.getElementById(`contentPartition${partition}`);
                 const mapping = sectionMapping[section];
+                
+                updatePartitionActionBtn(partition);
+
+                // SEÇÃO DÍVIDAS EM ABERTO (CONTROLE GERENCIAL SEM INTERAÇÃO COM PAGAMENTOS)
+                if (mapping && mapping.category === 'debt') {
+                    renderDebtsPartitionContent(partition, container);
+                    return;
+                }
                 
                 const year = currentMonth.getFullYear();
                 const month = currentMonth.getMonth() + 1;
@@ -6357,6 +6994,900 @@
             `;
         }
 
+
+        // ==========================================
+        // MÓDULO: DÍVIDAS EM ABERTO (CONTROLE GERENCIAL)
+        // Não interage com pagamentos, saldo líquido ou despesas do mês
+        // ==========================================
+
+        const debtsFilterState = {
+            1: 'all',
+            2: 'all'
+        };
+
+        /**
+         * Salva as dívidas no localStorage
+         */
+        function saveDebtsToLocalStorage() {
+            try {
+                localStorage.setItem('financas_pedrosa_debts', JSON.stringify(localData.debts || []));
+            } catch (e) {
+                console.warn('Erro ao salvar dívidas no localStorage:', e);
+            }
+        }
+
+        /**
+         * Carrega as dívidas do localStorage e sincroniza com o Supabase
+         */
+        async function loadDebts() {
+            // 1. Carregamento imediato do localStorage (offline-first)
+            try {
+                const stored = localStorage.getItem('financas_pedrosa_debts');
+                if (stored) {
+                    localData.debts = JSON.parse(stored);
+                } else if (!localData.debts) {
+                    localData.debts = [];
+                }
+            } catch (e) {
+                console.warn('Erro ao ler dívidas do localStorage:', e);
+                if (!localData.debts) localData.debts = [];
+            }
+
+            // 2. Se online e autenticado no Supabase, tenta sincronizar
+            if (isOnline && supabaseClient && currentUser && !isDevMode) {
+                let sincronizado = false;
+
+                // Tenta buscar da tabela dedicada 'debts'
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('debts')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+
+                    if (!error && Array.isArray(data)) {
+                        localData.debts = data;
+                        saveDebtsToLocalStorage();
+                        sincronizado = true;
+                    }
+                } catch (err) {
+                    // Tabela debts pode não existir ainda
+                }
+
+                // Fallback: se a tabela debts não existir, sincroniza via nota de sistema na tabela 'notes'
+                if (!sincronizado) {
+                    try {
+                        const { data: notesData } = await supabaseClient
+                            .from('notes')
+                            .select('*')
+                            .eq('title', '__SYS_DEBTS_DATA__')
+                            .limit(1);
+
+                        if (notesData && notesData.length > 0 && notesData[0].content) {
+                            const cloudDebts = JSON.parse(notesData[0].content);
+                            if (Array.isArray(cloudDebts)) {
+                                const map = new Map();
+                                (localData.debts || []).forEach(d => map.set(d.id, d));
+                                cloudDebts.forEach(d => map.set(d.id, d));
+                                localData.debts = Array.from(map.values());
+                                saveDebtsToLocalStorage();
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Fallback de nuvem para dívidas:', e);
+                    }
+                }
+            }
+
+            // Atualiza renderização se repartição estiver aberta
+            if (openPartitions[1]) renderPartitionContent(1);
+            if (openPartitions[2]) renderPartitionContent(2);
+        }
+
+        /**
+         * Persiste uma dívida no localData, localStorage e Supabase
+         */
+        async function persistDebt(debt) {
+            if (!localData.debts) localData.debts = [];
+
+            const index = localData.debts.findIndex(d => d.id === debt.id);
+            if (index >= 0) {
+                localData.debts[index] = debt;
+            } else {
+                localData.debts.unshift(debt);
+            }
+
+            saveDebtsToLocalStorage();
+
+            // Sincronização com Supabase
+            if (isOnline && supabaseClient && currentUser && !isDevMode) {
+                let salvoNoBanco = false;
+
+                // Tenta salvar na tabela 'debts'
+                try {
+                    const { error } = await supabaseClient
+                        .from('debts')
+                        .upsert(debt, { onConflict: 'id' });
+                    if (!error) salvoNoBanco = true;
+                } catch (e) {
+                    // Falha esperada caso a tabela não exista ainda
+                }
+
+                // Fallback transparente na tabela 'notes'
+                if (!salvoNoBanco) {
+                    await syncDebtsToNotesFallback();
+                }
+            }
+
+            return true;
+        }
+
+        /**
+         * Remove uma dívida
+         */
+        async function removeDebt(debtId) {
+            if (!localData.debts) return;
+
+            localData.debts = localData.debts.filter(d => d.id !== debtId);
+            saveDebtsToLocalStorage();
+
+            if (isOnline && supabaseClient && currentUser && !isDevMode) {
+                try {
+                    await supabaseClient.from('debts').delete().eq('id', debtId);
+                } catch (e) {}
+
+                await syncDebtsToNotesFallback();
+            }
+        }
+
+        /**
+         * Fallback de persistência em nuvem usando a tabela notes
+         */
+        async function syncDebtsToNotesFallback() {
+            if (!supabaseClient || !isOnline || !currentUser || isDevMode) return;
+            try {
+                // Busca ou cria o caderno de sistema
+                let sysNotebookId = null;
+                const { data: nbs } = await supabaseClient
+                    .from('notebooks')
+                    .select('id')
+                    .eq('name', '_SYS_DIVIDAS_')
+                    .limit(1);
+
+                if (nbs && nbs.length > 0) {
+                    sysNotebookId = nbs[0].id;
+                } else {
+                    const { data: newNb } = await supabaseClient
+                        .from('notebooks')
+                        .insert({ name: '_SYS_DIVIDAS_', user_id: currentUser.id })
+                        .select('id')
+                        .single();
+                    if (newNb) sysNotebookId = newNb.id;
+                }
+
+                if (!sysNotebookId) return;
+
+                // Salva a nota com o JSON das dívidas
+                const { data: existingNotes } = await supabaseClient
+                    .from('notes')
+                    .select('id')
+                    .eq('title', '__SYS_DEBTS_DATA__')
+                    .limit(1);
+
+                const contentJson = JSON.stringify(localData.debts || []);
+
+                if (existingNotes && existingNotes.length > 0) {
+                    await supabaseClient
+                        .from('notes')
+                        .update({ content: contentJson, updated_at: new Date().toISOString() })
+                        .eq('id', existingNotes[0].id);
+                } else {
+                    await supabaseClient
+                        .from('notes')
+                        .insert({
+                            notebook_id: sysNotebookId,
+                            title: '__SYS_DEBTS_DATA__',
+                            content: contentJson,
+                            user_id: currentUser.id
+                        });
+                }
+            } catch (e) {
+                console.warn('Aviso ao sincronizar dívidas no fallback:', e);
+            }
+        }
+
+        /**
+         * Altera o filtro da aba de dívidas na repartição
+         */
+        function setDebtPartitionFilter(partition, status) {
+            debtsFilterState[partition] = status;
+            renderPartitionContent(partition);
+        }
+
+        /**
+         * Renderiza o conteúdo da aba "Dívidas em Aberto" em uma repartição
+         */
+        function renderDebtsPartitionContent(partition, container) {
+            if (!localData.debts) localData.debts = [];
+
+            const currentFilter = debtsFilterState[partition] || 'all';
+            const partitionDebts = localData.debts.filter(d => parseInt(d.partition_id) === partition);
+
+            // Cálculos dos KPIs
+            let totalAmount = 0;
+            let countPagamento = 0;
+            let totalPagamento = 0;
+            let countNegociacao = 0;
+            let countEstacionada = 0;
+            let totalEstacionada = 0;
+
+            partitionDebts.forEach(d => {
+                const amt = parseFloat(d.amount) || 0;
+                totalAmount += amt;
+
+                if (d.status === 'em_pagamento') {
+                    countPagamento++;
+                    totalPagamento += parseFloat(d.total_amount || amt);
+                } else if (d.status === 'em_negociacao') {
+                    countNegociacao++;
+                } else if (d.status === 'estacionada') {
+                    countEstacionada++;
+                    totalEstacionada += parseFloat(d.current_amount || amt);
+                }
+            });
+
+            // Filtro aplicado aos cards
+            const filteredDebts = partitionDebts.filter(d => {
+                if (currentFilter === 'all') return true;
+                return d.status === currentFilter;
+            });
+
+            let html = `
+                <!-- Banner Informativo -->
+                <div class="debt-banner-info">
+                    <div class="debt-banner-icon">⚖️</div>
+                    <div class="debt-banner-content">
+                        <h4>Dívidas em Aberto — Painel de Controle (${partition}ª Repartição)</h4>
+                        <p>Esta seção é exclusiva para acompanhamento, negociação e planejamento de dívidas. <b>Não deduz do saldo disponível nem interfere no fluxo de pagamentos mensais.</b></p>
+                    </div>
+                </div>
+
+                <!-- KPIs da Repartição -->
+                <div class="debt-kpi-grid">
+                    <div class="debt-kpi-card kpi-total">
+                        <div class="debt-kpi-label">💳 Total em Aberto</div>
+                        <div class="debt-kpi-val">${formatCurrency(totalAmount)}</div>
+                        <div class="debt-kpi-sub">${partitionDebts.length} dívida(s) cadastrada(s)</div>
+                    </div>
+                    <div class="debt-kpi-card kpi-pagamento">
+                        <div class="debt-kpi-label">🔵 Em Pagamento</div>
+                        <div class="debt-kpi-val">${formatCurrency(totalPagamento)}</div>
+                        <div class="debt-kpi-sub">${countPagamento} dívida(s) parcelada(s)</div>
+                    </div>
+                    <div class="debt-kpi-card kpi-negociacao">
+                        <div class="debt-kpi-label">🟡 Em Negociação</div>
+                        <div class="debt-kpi-val">${countNegociacao}</div>
+                        <div class="debt-kpi-sub">Acordos e propostas em curso</div>
+                    </div>
+                    <div class="debt-kpi-card kpi-estacionada">
+                        <div class="debt-kpi-label">🟣 Estacionadas</div>
+                        <div class="debt-kpi-val">${formatCurrency(totalEstacionada)}</div>
+                        <div class="debt-kpi-sub">${countEstacionada} sob congelamento/espera</div>
+                    </div>
+                </div>
+
+                <!-- Barra de Filtros e Nova Dívida -->
+                <div class="debt-filter-bar">
+                    <div class="debt-filter-chips">
+                        <button type="button" class="debt-chip-btn ${currentFilter === 'all' ? 'active' : ''}" onclick="setDebtPartitionFilter(${partition}, 'all')">
+                            Todas (${partitionDebts.length})
+                        </button>
+                        <button type="button" class="debt-chip-btn ${currentFilter === 'em_pagamento' ? 'active' : ''}" onclick="setDebtPartitionFilter(${partition}, 'em_pagamento')">
+                            💳 Em Pagamento (${countPagamento})
+                        </button>
+                        <button type="button" class="debt-chip-btn ${currentFilter === 'em_negociacao' ? 'active' : ''}" onclick="setDebtPartitionFilter(${partition}, 'em_negociacao')">
+                            🤝 Em Negociação (${countNegociacao})
+                        </button>
+                        <button type="button" class="debt-chip-btn ${currentFilter === 'estacionada' ? 'active' : ''}" onclick="setDebtPartitionFilter(${partition}, 'estacionada')">
+                            ⏸️ Estacionadas (${countEstacionada})
+                        </button>
+                    </div>
+
+                    <button type="button" class="btn-action" onclick="openDebtModal(${partition})" style="margin: 0; padding: 0.55rem 1.1rem; font-size: 0.88rem;">
+                        + Nova Dívida em Aberto
+                    </button>
+                </div>
+
+                <!-- Lista de Cards de Dívidas -->
+                <div class="debt-cards-list">
+            `;
+
+            if (filteredDebts.length === 0) {
+                html += `
+                    <div class="empty-state" style="padding: 2.5rem 1rem; text-align: center; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                        <div style="font-size: 3rem; margin-bottom: 0.75rem;">🛡️</div>
+                        <p style="font-weight: 600; color: #334155; margin-bottom: 0.25rem;">Nenhuma dívida encontrada nesta categoria</p>
+                        <span style="font-size: 0.84rem; color: #64748b;">
+                            ${partitionDebts.length === 0 ? 'Cadastre suas dívidas para manter o controle gerencial organizado.' : 'Nenhuma dívida corresponde ao filtro selecionado.'}
+                        </span>
+                        <div style="margin-top: 1rem;">
+                            <button type="button" class="btn-action" onclick="openDebtModal(${partition})" style="margin: 0; font-size: 0.84rem; padding: 0.5rem 1rem;">
+                                + Cadastrar Dívida
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                filteredDebts.forEach(d => {
+                    html += renderDebtCard(d, false);
+                });
+            }
+
+            html += `
+                </div>
+
+                <!-- Totalizador da Repartição -->
+                <div class="debt-total-footer">
+                    <div class="debt-total-label">
+                        <span>📊</span>
+                        <span>Total de Dívidas em Aberto (${partition}ª Repartição)</span>
+                    </div>
+                    <div class="debt-total-amount">
+                        ${formatCurrency(totalAmount)}
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        /**
+         * Renderiza o HTML de um CARD de dívida individual (seguindo a ordem e visual dos cards do sistema)
+         */
+        function renderDebtCard(debt, isConsolidated = false) {
+            const amount = parseFloat(debt.amount) || 0;
+            const status = debt.status || 'em_pagamento';
+
+            let statusClass = 'status-pagamento';
+            let badgeHtml = '<span class="badge-debt-pagamento">💳 Em pagamento</span>';
+
+            if (status === 'em_negociacao') {
+                statusClass = 'status-negociacao';
+                badgeHtml = '<span class="badge-debt-negociacao">🤝 Em negociação</span>';
+            } else if (status === 'estacionada') {
+                statusClass = 'status-estacionada';
+                badgeHtml = '<span class="badge-debt-estacionada">⏸️ Estacionada</span>';
+            }
+
+            const partitionBadge = `<span class="badge-debt-partition">📂 ${debt.partition_id}ª Repartição</span>`;
+
+            // Construção dos blocos conforme a situação
+            let bodyContentHtml = '';
+
+            if (status === 'em_pagamento') {
+                const initialAmount = parseFloat(debt.initial_amount) || amount;
+                const totalAmount = parseFloat(debt.total_amount) || amount;
+                const installments = parseInt(debt.installments) || 1;
+                const installmentVal = parseFloat(debt.installment_value) || (installments > 0 ? (totalAmount / installments) : 0);
+
+                bodyContentHtml = `
+                    <div class="debt-info-grid">
+                        <div class="debt-info-cell">
+                            <span class="debt-info-cell-label">📌 Valor Inicial</span>
+                            <span class="debt-info-cell-val">${formatCurrency(initialAmount)}</span>
+                        </div>
+                        <div class="debt-info-cell">
+                            <span class="debt-info-cell-label">💰 Valor Total</span>
+                            <span class="debt-info-cell-val highlight">${formatCurrency(totalAmount)}</span>
+                        </div>
+                        <div class="debt-info-cell">
+                            <span class="debt-info-cell-label">🔢 Qtd. Parcelas</span>
+                            <span class="debt-info-cell-val">${installments}x</span>
+                        </div>
+                        <div class="debt-info-cell">
+                            <span class="debt-info-cell-label">💵 Valor da Parcela</span>
+                            <span class="debt-info-cell-val highlight">${formatCurrency(installmentVal)}</span>
+                        </div>
+                    </div>
+                    ${debt.observation ? `
+                        <div class="debt-obs-box">
+                            <div class="debt-obs-box-header">📝 Observações</div>
+                            <div>${escapeHtml(debt.observation)}</div>
+                        </div>
+                    ` : ''}
+                `;
+            } else if (status === 'em_negociacao') {
+                bodyContentHtml = `
+                    <div class="debt-obs-box negotiation">
+                        <div class="debt-obs-box-header">🤝 Observações para Anotações da Negociação</div>
+                        <div>${debt.observation ? escapeHtml(debt.observation) : '<i>Nenhuma anotação de negociação registrada. Clique em Editar para anotar propostas, contatos e prazos.</i>'}</div>
+                    </div>
+                `;
+            } else if (status === 'estacionada') {
+                const initialAmount = parseFloat(debt.initial_amount) || amount;
+                const currentAmount = parseFloat(debt.current_amount) || amount;
+                const diferenca = currentAmount - initialAmount;
+
+                bodyContentHtml = `
+                    <div class="debt-info-grid">
+                        <div class="debt-info-cell">
+                            <span class="debt-info-cell-label">📌 Valor Inicial</span>
+                            <span class="debt-info-cell-val">${formatCurrency(initialAmount)}</span>
+                        </div>
+                        <div class="debt-info-cell">
+                            <span class="debt-info-cell-label">📈 Valor Atual da Dívida</span>
+                            <span class="debt-info-cell-val purple">${formatCurrency(currentAmount)}</span>
+                        </div>
+                        ${diferenca > 0 ? `
+                            <div class="debt-info-cell">
+                                <span class="debt-info-cell-label">⚠️ Variação / Juros</span>
+                                <span class="debt-info-cell-val warning">+ ${formatCurrency(diferenca)}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="debt-obs-box parked">
+                        <div class="debt-obs-box-header">⏸️ Observações para Anotações</div>
+                        <div>${debt.observation ? escapeHtml(debt.observation) : '<i>Nenhuma anotação registrada sobre a dívida estacionada.</i>'}</div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="debt-card-item ${statusClass}" id="debtCard_${debt.id}">
+                    <div class="debt-card-header">
+                        <div class="debt-card-title-area">
+                            <div class="debt-card-name">
+                                <span>⚖️</span>
+                                <span>${escapeHtml(debt.name)}</span>
+                            </div>
+                            <div class="debt-card-meta">
+                                ${badgeHtml}
+                                ${partitionBadge}
+                            </div>
+                        </div>
+                        <div class="debt-card-amount-area">
+                            <div class="debt-card-amount-label">Valor da Dívida</div>
+                            <div class="debt-card-amount-val">${formatCurrency(amount)}</div>
+                        </div>
+                    </div>
+
+                    ${bodyContentHtml}
+
+                    <div class="debt-card-actions">
+                        <button type="button" class="btn-debt-action btn-debt-edit" onclick="openDebtModal(${debt.partition_id}, '${debt.id}')">
+                            ✏️ Editar
+                        </button>
+                        <button type="button" class="btn-debt-action btn-debt-status" onclick="openQuickChangeDebtStatus('${debt.id}')">
+                            🔄 Situação
+                        </button>
+                        <button type="button" class="btn-debt-action btn-debt-delete" onclick="deleteDebtHandler('${debt.id}')">
+                            🗑️ Excluir
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Abre o modal de cadastro ou edição de dívida
+         */
+        function openDebtModal(partition, debtId = null) {
+            const modalTitleEl = document.getElementById('debtModalTitle');
+            const idInput = document.getElementById('debtId');
+            const partitionSelect = document.getElementById('debtPartition');
+            const nameInput = document.getElementById('debtName');
+            const amountInput = document.getElementById('debtAmount');
+            const statusSelect = document.getElementById('debtStatus');
+
+            // Campos específicos
+            const payInitial = document.getElementById('debtInitialAmountPay');
+            const payTotal = document.getElementById('debtTotalAmountPay');
+            const payInstallments = document.getElementById('debtInstallmentsPay');
+            const payInstallmentVal = document.getElementById('debtInstallmentValuePay');
+            const payObs = document.getElementById('debtObsPay');
+
+            const negObs = document.getElementById('debtObsNegociation');
+
+            const parkInitial = document.getElementById('debtInitialAmountParked');
+            const parkCurrent = document.getElementById('debtCurrentAmountParked');
+            const parkObs = document.getElementById('debtObsParked');
+
+            if (debtId) {
+                // Modo Edição
+                const debt = (localData.debts || []).find(d => d.id === debtId);
+                if (!debt) {
+                    showNotification('Dívida não encontrada', 'error');
+                    return;
+                }
+
+                modalTitleEl.textContent = 'Editar Dívida em Aberto';
+                idInput.value = debt.id;
+                partitionSelect.value = debt.partition_id || partition;
+                nameInput.value = debt.name || '';
+                amountInput.value = debt.amount || '';
+                statusSelect.value = debt.status || 'em_pagamento';
+
+                // Preenchimento dos dados existentes
+                payInitial.value = debt.initial_amount || '';
+                payTotal.value = debt.total_amount || '';
+                payInstallments.value = debt.installments || '';
+                payInstallmentVal.value = debt.installment_value || '';
+                payObs.value = (debt.status === 'em_pagamento' ? debt.observation : '') || '';
+
+                negObs.value = (debt.status === 'em_negociacao' ? debt.observation : '') || '';
+
+                parkInitial.value = debt.initial_amount || '';
+                parkCurrent.value = debt.current_amount || '';
+                parkObs.value = (debt.status === 'estacionada' ? debt.observation : '') || '';
+
+            } else {
+                // Modo Criação
+                modalTitleEl.textContent = 'Nova Dívida em Aberto';
+                idInput.value = '';
+                partitionSelect.value = partition || '1';
+                nameInput.value = '';
+                amountInput.value = '';
+                statusSelect.value = 'em_pagamento';
+
+                payInitial.value = '';
+                payTotal.value = '';
+                payInstallments.value = '';
+                payInstallmentVal.value = '';
+                payObs.value = '';
+
+                negObs.value = '';
+
+                parkInitial.value = '';
+                parkCurrent.value = '';
+                parkObs.value = '';
+            }
+
+            onDebtStatusChange();
+            document.getElementById('debtModal').classList.add('active');
+        }
+
+        /**
+         * Fecha o modal de dívida
+         */
+        function closeDebtModal() {
+            document.getElementById('debtModal').classList.remove('active');
+        }
+
+        /**
+         * Alterna os campos condicionais conforme a situação selecionada
+         */
+        function onDebtStatusChange() {
+            const status = document.getElementById('debtStatus').value;
+            const boxPay = document.getElementById('debtFieldsEmPagamento');
+            const boxNeg = document.getElementById('debtFieldsEmNegociacao');
+            const boxPark = document.getElementById('debtFieldsEstacionada');
+
+            boxPay.style.display = status === 'em_pagamento' ? 'block' : 'none';
+            boxNeg.style.display = status === 'em_negociacao' ? 'block' : 'none';
+            boxPark.style.display = status === 'estacionada' ? 'block' : 'none';
+
+            // Auxílio de preenchimento inteligente: se valor da dívida já foi preenchido, sugere no valor inicial
+            const mainAmount = parseFloat(document.getElementById('debtAmount').value);
+            if (mainAmount > 0) {
+                if (status === 'em_pagamento') {
+                    const payInit = document.getElementById('debtInitialAmountPay');
+                    const payTot = document.getElementById('debtTotalAmountPay');
+                    if (!payInit.value) payInit.value = mainAmount;
+                    if (!payTot.value) payTot.value = mainAmount;
+                } else if (status === 'estacionada') {
+                    const parkInit = document.getElementById('debtInitialAmountParked');
+                    const parkCur = document.getElementById('debtCurrentAmountParked');
+                    if (!parkInit.value) parkInit.value = mainAmount;
+                    if (!parkCur.value) parkCur.value = mainAmount;
+                }
+            }
+        }
+
+        /**
+         * Sugere o valor da parcela baseado no total e na quantidade de parcelas
+         */
+        function calcSuggestedInstallment() {
+            const total = parseFloat(document.getElementById('debtTotalAmountPay').value);
+            const instCount = parseInt(document.getElementById('debtInstallmentsPay').value);
+            const instValEl = document.getElementById('debtInstallmentValuePay');
+
+            if (total > 0 && instCount > 0) {
+                const suggested = (total / instCount).toFixed(2);
+                instValEl.placeholder = `Sugerido: ${suggested}`;
+                if (!instValEl.value) {
+                    instValEl.value = suggested;
+                }
+            }
+        }
+
+        /**
+         * Salva uma dívida no formulário
+         */
+        async function saveDebt() {
+            const btnSave = document.getElementById('btnSaveDebt');
+            const originalText = btnSave.textContent;
+
+            try {
+                btnSave.disabled = true;
+                btnSave.textContent = '💾 Gravando...';
+
+                const id = document.getElementById('debtId').value.trim() || (Date.now().toString() + '_' + Math.random().toString(36).substr(2, 6));
+                const partitionId = parseInt(document.getElementById('debtPartition').value) || 1;
+                const name = document.getElementById('debtName').value.trim();
+                const amount = parseFloat(document.getElementById('debtAmount').value);
+                const status = document.getElementById('debtStatus').value;
+
+                if (!name) {
+                    throw new Error('Digite o nome da dívida.');
+                }
+                if (isNaN(amount) || amount <= 0) {
+                    throw new Error('Digite um valor de dívida válido e maior que zero.');
+                }
+
+                const debtObj = {
+                    id: id,
+                    user_id: currentUser ? currentUser.id : 'dev-user',
+                    partition_id: partitionId,
+                    name: name,
+                    amount: amount,
+                    status: status,
+                    updated_at: new Date().toISOString()
+                };
+
+                // Coleta de dados estritamente conforme a situação selecionada
+                if (status === 'em_pagamento') {
+                    const initAmt = parseFloat(document.getElementById('debtInitialAmountPay').value) || amount;
+                    const totAmt = parseFloat(document.getElementById('debtTotalAmountPay').value) || amount;
+                    const installments = parseInt(document.getElementById('debtInstallmentsPay').value) || 1;
+                    const installmentVal = parseFloat(document.getElementById('debtInstallmentValuePay').value) || (installments > 0 ? (totAmt / installments) : totAmt);
+                    const obs = document.getElementById('debtObsPay').value.trim();
+
+                    debtObj.initial_amount = initAmt;
+                    debtObj.total_amount = totAmt;
+                    debtObj.installments = installments;
+                    debtObj.installment_value = installmentVal;
+                    debtObj.observation = obs;
+                    debtObj.current_amount = null;
+
+                } else if (status === 'em_negociacao') {
+                    const obs = document.getElementById('debtObsNegociation').value.trim();
+
+                    debtObj.initial_amount = amount;
+                    debtObj.total_amount = null;
+                    debtObj.installments = null;
+                    debtObj.installment_value = null;
+                    debtObj.current_amount = null;
+                    debtObj.observation = obs;
+
+                } else if (status === 'estacionada') {
+                    const initAmt = parseFloat(document.getElementById('debtInitialAmountParked').value) || amount;
+                    const curAmt = parseFloat(document.getElementById('debtCurrentAmountParked').value) || amount;
+                    const obs = document.getElementById('debtObsParked').value.trim();
+
+                    debtObj.initial_amount = initAmt;
+                    debtObj.current_amount = curAmt;
+                    debtObj.total_amount = null;
+                    debtObj.installments = null;
+                    debtObj.installment_value = null;
+                    debtObj.observation = obs;
+                }
+
+                // Preserva created_at se for edição
+                const existing = (localData.debts || []).find(d => d.id === id);
+                debtObj.created_at = existing ? existing.created_at : new Date().toISOString();
+
+                await persistDebt(debtObj);
+
+                closeDebtModal();
+                showNotification('✅ Dívida em aberto salva com sucesso!');
+
+                // Atualiza visualização das repartições
+                if (openPartitions[partitionId]) {
+                    renderPartitionContent(partitionId);
+                }
+                // Se modal consolidado estiver aberto, atualiza também
+                if (document.getElementById('debtsConsolidatedModal').classList.contains('active')) {
+                    renderConsolidatedDebtsList();
+                }
+
+            } catch (err) {
+                console.error('Erro ao salvar dívida:', err);
+                showNotification('❌ ' + err.message, 'error');
+            } finally {
+                btnSave.disabled = false;
+                btnSave.textContent = originalText;
+            }
+        }
+
+        /**
+         * Exclui uma dívida com confirmação
+         */
+        async function deleteDebtHandler(debtId) {
+            const debt = (localData.debts || []).find(d => d.id === debtId);
+            const nome = debt ? debt.name : 'esta dívida';
+
+            if (!confirm(`Deseja realmente excluir "${nome}" do controle de dívidas em aberto?`)) {
+                return;
+            }
+
+            try {
+                const partitionId = debt ? debt.partition_id : 1;
+                await removeDebt(debtId);
+                showNotification('🗑️ Dívida excluída com sucesso!');
+
+                if (openPartitions[partitionId]) {
+                    renderPartitionContent(partitionId);
+                }
+                if (document.getElementById('debtsConsolidatedModal').classList.contains('active')) {
+                    renderConsolidatedDebtsList();
+                }
+            } catch (e) {
+                console.error('Erro ao excluir dívida:', e);
+                showNotification('❌ Erro ao excluir dívida: ' + e.message, 'error');
+            }
+        }
+
+        /**
+         * Abre o modal rápido para alterar situação da dívida
+         */
+        function openQuickChangeDebtStatus(debtId) {
+            const debt = (localData.debts || []).find(d => d.id === debtId);
+            if (!debt) return;
+
+            document.getElementById('quickDebtId').value = debt.id;
+            document.getElementById('quickDebtName').textContent = '⚖️ ' + debt.name;
+            document.getElementById('quickDebtNewStatus').value = debt.status || 'em_pagamento';
+
+            document.getElementById('debtStatusModal').classList.add('active');
+        }
+
+        /**
+         * Fecha o modal rápido de alteração de situação
+         */
+        function closeDebtStatusModal() {
+            document.getElementById('debtStatusModal').classList.remove('active');
+        }
+
+        /**
+         * Salva a alteração rápida de situação
+         */
+        async function saveQuickChangeDebtStatus() {
+            const debtId = document.getElementById('quickDebtId').value;
+            const newStatus = document.getElementById('quickDebtNewStatus').value;
+
+            const debt = (localData.debts || []).find(d => d.id === debtId);
+            if (!debt) return;
+
+            debt.status = newStatus;
+            debt.updated_at = new Date().toISOString();
+
+            await persistDebt(debt);
+            closeDebtStatusModal();
+            showNotification(`✅ Situação alterada para "${newStatus === 'em_pagamento' ? 'Em pagamento' : (newStatus === 'em_negociacao' ? 'Em negociação' : 'Estacionada')}"!`);
+
+            if (openPartitions[debt.partition_id]) {
+                renderPartitionContent(debt.partition_id);
+            }
+            if (document.getElementById('debtsConsolidatedModal').classList.contains('active')) {
+                renderConsolidatedDebtsList();
+            }
+        }
+
+        /**
+         * Abre o modal de visão consolidada de todas as dívidas
+         */
+        function openDebtsConsolidatedModal() {
+            document.getElementById('debtsConsolidatedModal').classList.add('active');
+            renderConsolidatedDebtsList();
+        }
+
+        /**
+         * Fecha o modal consolidado de dívidas
+         */
+        function closeDebtsConsolidatedModal() {
+            document.getElementById('debtsConsolidatedModal').classList.remove('active');
+        }
+
+        /**
+         * Renderiza a lista do modal consolidado
+         */
+        function renderConsolidatedDebtsList() {
+            if (!localData.debts) localData.debts = [];
+
+            const partFilter = document.getElementById('consolidatedPartitionFilter')?.value || 'all';
+            const statusFilter = document.getElementById('consolidatedStatusFilter')?.value || 'all';
+
+            // Filtragem
+            const filtered = localData.debts.filter(d => {
+                const matchPart = partFilter === 'all' || String(d.partition_id) === String(partFilter);
+                const matchStatus = statusFilter === 'all' || d.status === statusFilter;
+                return matchPart && matchStatus;
+            });
+
+            // KPIs gerais
+            let totalAmount = 0;
+            let countPay = 0;
+            let totalPay = 0;
+            let countNeg = 0;
+            let countPark = 0;
+            let totalPark = 0;
+
+            localData.debts.forEach(d => {
+                const amt = parseFloat(d.amount) || 0;
+                totalAmount += amt;
+
+                if (d.status === 'em_pagamento') {
+                    countPay++;
+                    totalPay += parseFloat(d.total_amount || amt);
+                } else if (d.status === 'em_negociacao') {
+                    countNeg++;
+                } else if (d.status === 'estacionada') {
+                    countPark++;
+                    totalPark += parseFloat(d.current_amount || amt);
+                }
+            });
+
+            // Atualiza KPI Grid
+            const kpiGrid = document.getElementById('consolidatedKpiGrid');
+            if (kpiGrid) {
+                kpiGrid.innerHTML = `
+                    <div class="debt-kpi-card kpi-total">
+                        <div class="debt-kpi-label">💳 Total Consolidado</div>
+                        <div class="debt-kpi-val">${formatCurrency(totalAmount)}</div>
+                        <div class="debt-kpi-sub">${localData.debts.length} dívida(s) no sistema</div>
+                    </div>
+                    <div class="debt-kpi-card kpi-pagamento">
+                        <div class="debt-kpi-label">🔵 Em Pagamento</div>
+                        <div class="debt-kpi-val">${formatCurrency(totalPay)}</div>
+                        <div class="debt-kpi-sub">${countPay} dívida(s) parcelada(s)</div>
+                    </div>
+                    <div class="debt-kpi-card kpi-negociacao">
+                        <div class="debt-kpi-label">🟡 Em Negociação</div>
+                        <div class="debt-kpi-val">${countNeg}</div>
+                        <div class="debt-kpi-sub">Acordos em andamento</div>
+                    </div>
+                    <div class="debt-kpi-card kpi-estacionada">
+                        <div class="debt-kpi-label">🟣 Estacionadas</div>
+                        <div class="debt-kpi-val">${formatCurrency(totalPark)}</div>
+                        <div class="debt-kpi-sub">${countPark} sob congelamento</div>
+                    </div>
+                `;
+            }
+
+            // Lista de Cards
+            const container = document.getElementById('consolidatedDebtsList');
+            if (container) {
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="padding: 2.5rem 1rem; text-align: center; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                            <div style="font-size: 3rem; margin-bottom: 0.75rem;">🛡️</div>
+                            <p style="font-weight: 600; color: #334155; margin-bottom: 0.25rem;">Nenhuma dívida encontrada</p>
+                            <span style="font-size: 0.84rem; color: #64748b;">Nenhuma dívida corresponde aos filtros de repartição e situação selecionados.</span>
+                        </div>
+                    `;
+                } else {
+                    let cardsHtml = '';
+                    filtered.forEach(d => {
+                        cardsHtml += renderDebtCard(d, true);
+                    });
+                    container.innerHTML = cardsHtml;
+                }
+            }
+
+            // Totalizador
+            const footerEl = document.getElementById('consolidatedTotalFooter');
+            if (footerEl) {
+                const filteredTotal = filtered.reduce((acc, d) => acc + (parseFloat(d.amount) || 0), 0);
+                footerEl.innerHTML = `
+                    <div class="debt-total-label">
+                        <span>📊</span>
+                        <span>Total das Dívidas Filtradas (${filtered.length} item(ns))</span>
+                    </div>
+                    <div class="debt-total-amount">
+                        ${formatCurrency(filteredTotal)}
+                    </div>
+                `;
+            }
+        }
 
         // ==========================================
         // FUNÇÃO renderData - CORREÇÃO CRÍTICA
@@ -6946,8 +8477,13 @@
         // ==========================================
 
         function openAddModal(partition) {
-            editingId = null;
             const section = getActiveSection(partition);
+            if (section === 15 || section === 16) {
+                openDebtModal(partition);
+                return;
+            }
+
+            editingId = null;
             const mapping = sectionMapping[section];
             
             document.getElementById('transactionId').value = '';
@@ -8028,13 +9564,15 @@
         function renderNotebooks() {
             const container = document.getElementById('notebooksList');
 
-            if (!localData.notebooks || localData.notebooks.length === 0) {
+            const userNotebooks = (localData.notebooks || []).filter(nb => !nb.name.startsWith('_SYS_'));
+
+            if (userNotebooks.length === 0) {
                 container.innerHTML = '<div style="color: #9ca3af; text-align: center; padding: 1rem;">Nenhum caderno</div>';
                 return;
             }
 
             let html = '';
-            localData.notebooks.forEach(nb => {
+            userNotebooks.forEach(nb => {
                 const noteCount = localData.notes.filter(n => n.notebook_id === nb.id).length;
                 const isActive = nb.id === currentNotebookId;
 
@@ -8784,7 +10322,9 @@
                     if (!localData.notes) localData.notes = [];
                     if (!localData.appointments) localData.appointments = [];
                     if (!localData.paymentHistory) localData.paymentHistory = [];
+                    if (!localData.debts) localData.debts = [];
                     localData._pendingDeletions = [];
+                    saveDebtsToLocalStorage();
 
                     const resultado = await persistirBackupNoBanco(localData);
 
@@ -9113,6 +10653,22 @@
         window.deleteTransactionFromPending = deleteTransactionFromPending;
         window.resetAllData = resetAllData;
         window.resetCurrentMonth = resetCurrentMonth;
+
+        // FUNÇÕES DO MÓDULO DÍVIDAS EM ABERTO EXPORTADAS
+        window.loadDebts = loadDebts;
+        window.openDebtModal = openDebtModal;
+        window.closeDebtModal = closeDebtModal;
+        window.saveDebt = saveDebt;
+        window.deleteDebtHandler = deleteDebtHandler;
+        window.openQuickChangeDebtStatus = openQuickChangeDebtStatus;
+        window.closeDebtStatusModal = closeDebtStatusModal;
+        window.saveQuickChangeDebtStatus = saveQuickChangeDebtStatus;
+        window.openDebtsConsolidatedModal = openDebtsConsolidatedModal;
+        window.closeDebtsConsolidatedModal = closeDebtsConsolidatedModal;
+        window.renderConsolidatedDebtsList = renderConsolidatedDebtsList;
+        window.setDebtPartitionFilter = setDebtPartitionFilter;
+        window.onDebtStatusChange = onDebtStatusChange;
+        window.calcSuggestedInstallment = calcSuggestedInstallment;
 
         // FUNÇÕES REALTIME E ATUALIZAÇÃO EXPORTADAS
         window.setupRealtimeSubscription = setupRealtimeSubscription;

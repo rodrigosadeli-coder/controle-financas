@@ -3473,92 +3473,6 @@
                     </div>
                 </div>
 
-                <!-- Card de Configuração de Compromissos Manual -->
-                <div class="manual-appointments-card-section" id="manualAppointmentsSection">
-                    <div class="manual-appointments-header" onclick="toggleManualAppointmentsCard()">
-                        <div class="manual-appointments-header-title">
-                            <span class="manual-app-icon">⏰</span>
-                            <div>
-                                <span class="manual-app-title">Compromissos e Lembretes Manuais</span>
-                                <span class="manual-app-subtitle">Agende compromissos com alertas configuráveis por data, hora, persistência e observações</span>
-                            </div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                            <span class="manual-app-count-badge" id="manualAppCountBadge">0 compromissos</span>
-                            <button type="button" class="btn-novo-compromisso" onclick="event.stopPropagation(); openNewAppointmentInline()">+ Novo Compromisso</button>
-                            <span class="dropdown-arrow open" id="arrowManualAppointments">▼</span>
-                        </div>
-                    </div>
-
-                    <div class="manual-appointments-body" id="manualAppointmentsBody">
-                        <!-- Formulário de Configuração Manual -->
-                        <div class="manual-appointment-form-box" id="manualAppointmentFormBox">
-                            <h4 id="manualAppFormTitle" style="margin-top: 0; margin-bottom: 12px; color: var(--blue-royal); display: flex; align-items: center; gap: 8px;">
-                                <span>➕</span><span>Configurar Novo Compromisso</span>
-                            </h4>
-                            <input type="hidden" id="manualAppEditId" value="">
-                            
-                            <div class="manual-app-grid">
-                                <div class="form-row" style="grid-column: span 2;">
-                                    <label class="form-label-modal">Título / Descrição do Compromisso *</label>
-                                    <input type="text" id="manualAppDesc" class="form-input-modal" placeholder="Ex: Consulta Médica, Reunião de Condomínio, Ligar para Seguro..." required>
-                                </div>
-                                <div class="form-row">
-                                    <label class="form-label-modal">Data do Compromisso *</label>
-                                    <input type="date" id="manualAppDate" class="form-input-modal" required>
-                                </div>
-                                <div class="form-row">
-                                    <label class="form-label-modal">Horário (opcional)</label>
-                                    <input type="time" id="manualAppTime" class="form-input-modal">
-                                </div>
-                                <div class="form-row" style="grid-column: span 2;">
-                                    <label class="form-label-modal">Regra de Persistência do Alerta na Página *</label>
-                                    <select id="manualAppPersistence" class="form-input-modal">
-                                        <option value="startup_hourly" selected>Ao iniciar a aplicação e a cada 1 hora</option>
-                                        <option value="once">Apenas no horário agendado (Uma vez)</option>
-                                        <option value="hourly">A cada 1 hora no dia do compromisso</option>
-                                        <option value="half_hourly">A cada 30 minutos no dia do compromisso</option>
-                                        <option value="daily">Diário (repetir todo dia no mesmo horário)</option>
-                                        <option value="until_completed">Persistente (a cada 1 hora até ser concluído)</option>
-                                    </select>
-                                </div>
-                                <div class="form-row" style="grid-column: span 2;">
-                                    <label class="form-label-modal">Observações / Detalhes Adicionais</label>
-                                    <textarea id="manualAppNotes" class="form-textarea" placeholder="Descreva observações, contatos, local ou notas relevantes sobre este compromisso (opcional)..." rows="2"></textarea>
-                                </div>
-                                <div class="form-row" style="grid-column: span 2;">
-                                    <div class="checkbox-group" style="margin-top: 4px;">
-                                        <input type="checkbox" id="manualAppAlert" checked>
-                                        <label for="manualAppAlert">🔔 Disparar alertas visuais no centro da tela conforme regra de persistência</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px;">
-                                <button type="button" class="btn btn-cancel" onclick="resetManualAppointmentForm()" style="max-width: 140px;">Limpar</button>
-                                <button type="button" class="btn btn-save" onclick="saveManualAppointment()" style="max-width: 220px;">💾 Salvar Compromisso</button>
-                            </div>
-                        </div>
-
-                        <!-- Filtro / Tabs de Compromissos -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 0 10px; flex-wrap: wrap; gap: 8px;">
-                            <div style="display: flex; gap: 6px;">
-                                <button type="button" class="app-filter-tab active" id="appFilterAll" onclick="setAppointmentFilter('all')">Todos</button>
-                                <button type="button" class="app-filter-tab" id="appFilterActive" onclick="setAppointmentFilter('active')">Ativos / Pendentes</button>
-                                <button type="button" class="app-filter-tab" id="appFilterCompleted" onclick="setAppointmentFilter('completed')">Concluídos</button>
-                            </div>
-                            <div style="font-size: 0.82rem; color: #64748b;">
-                                <span>Ordenado por data e horário</span>
-                            </div>
-                        </div>
-
-                        <!-- Lista de Compromissos Cadastrados -->
-                        <div id="manualAppointmentsList" class="manual-appointments-list">
-                            <div class="empty-state">Nenhum compromisso cadastrado</div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Bloco de Notas Resumo -->
                 <div class="notas-section" onclick="toggleNotes()">
                     <div class="notas-title">
@@ -3902,18 +3816,102 @@
         </div>
     </div>
 
-    <!-- Modal de Alertas -->
-    <div class="modal" id="alertsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">🔔 Alertas e Compromissos</h3>
-                <button class="close-btn" onclick="closeAlertsModal()">×</button>
+    <!-- Modal de Alertas e Configuração de Compromissos (Acionado pelo Sino) -->
+    <div class="modal" id="alertsModal" style="z-index: 2150;">
+        <div class="modal-content large" style="max-width: 760px; border-radius: 18px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 60%, #b45309 100%);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 1.6rem;">🔔</span>
+                    <div>
+                        <h3 class="modal-title" style="margin: 0; font-size: 1.25rem;">Alertas e Configuração de Compromissos</h3>
+                        <div style="font-size: 0.75rem; opacity: 0.9; font-family: 'Segoe UI', sans-serif;">Configure compromissos com regras de data, hora e persistência</div>
+                    </div>
+                </div>
+                <button class="close-btn" onclick="closeAlertsModal()" title="Fechar (×)">×</button>
             </div>
-            <div class="modal-body">
-                <div class="appointments-list" id="alertsList">
-                    <div class="empty-state">Nenhum alerta ativo</div>
+
+            <div class="modal-body" style="padding: 1.25rem;">
+                <!-- Aviso de Contas a Vencer no topo do modal do sino -->
+                <div id="alertsModalPendingNotice" style="display: none; background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; border-radius: 10px; padding: 10px 14px; margin-bottom: 1.2rem; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.2rem;">⚠️</span>
+                        <span id="alertsModalPendingNoticeText" style="font-size: 0.88rem; color: #92400e; font-weight: 600;">Há contas pendentes com vencimento próximo ou vencidas.</span>
+                    </div>
+                    <button type="button" class="btn-small btn-warning-small" onclick="openAutoPendingAlertModal()" style="font-size: 0.78rem; font-weight: 700; white-space: nowrap; cursor: pointer;">
+                        Ver Alerta de Contas
+                    </button>
+                </div>
+
+                <!-- Formulário de Configuração Manual de Compromissos -->
+                <div class="manual-appointment-form-box" id="manualAppointmentFormBox" style="margin-bottom: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 id="manualAppFormTitle" style="margin: 0; color: var(--blue-royal); display: flex; align-items: center; gap: 8px; font-size: 1.05rem;">
+                            <span>➕</span><span>Configurar Novo Compromisso</span>
+                        </h4>
+                        <span class="manual-app-count-badge" id="manualAppCountBadge" style="background: var(--blue-royal); color: white;">0 ativos</span>
+                    </div>
+                    <input type="hidden" id="manualAppEditId" value="">
+                    
+                    <div class="manual-app-grid">
+                        <div class="form-row" style="grid-column: span 2;">
+                            <label class="form-label-modal">Título / Descrição do Compromisso *</label>
+                            <input type="text" id="manualAppDesc" class="form-input-modal" placeholder="Ex: Consulta Médica, Reunião de Condomínio, Ligar para Seguro..." required>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label-modal">Data do Compromisso *</label>
+                            <input type="date" id="manualAppDate" class="form-input-modal" required>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label-modal">Horário (opcional)</label>
+                            <input type="time" id="manualAppTime" class="form-input-modal">
+                        </div>
+                        <div class="form-row" style="grid-column: span 2;">
+                            <label class="form-label-modal">Regra de Persistência do Alerta na Página *</label>
+                            <select id="manualAppPersistence" class="form-input-modal">
+                                <option value="startup_hourly" selected>Ao iniciar a aplicação e a cada 1 hora</option>
+                                <option value="once">Apenas no horário agendado (Uma vez)</option>
+                                <option value="hourly">A cada 1 hora no dia do compromisso</option>
+                                <option value="half_hourly">A cada 30 minutos no dia do compromisso</option>
+                                <option value="daily">Diário (repetir todo dia no mesmo horário)</option>
+                                <option value="until_completed">Persistente (a cada 1 hora até ser concluído)</option>
+                            </select>
+                        </div>
+                        <div class="form-row" style="grid-column: span 2;">
+                            <label class="form-label-modal">Observações / Detalhes Adicionais</label>
+                            <textarea id="manualAppNotes" class="form-textarea" placeholder="Descreva observações, contatos, local ou notas relevantes sobre este compromisso (opcional)..." rows="2"></textarea>
+                        </div>
+                        <div class="form-row" style="grid-column: span 2;">
+                            <div class="checkbox-group" style="margin-top: 4px;">
+                                <input type="checkbox" id="manualAppAlert" checked>
+                                <label for="manualAppAlert">🔔 Disparar alertas visuais no centro da tela conforme regra de persistência</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px;">
+                        <button type="button" class="btn btn-cancel" onclick="resetManualAppointmentForm()" style="max-width: 130px;">Limpar</button>
+                        <button type="button" class="btn btn-save" onclick="saveManualAppointment()" style="max-width: 220px;">💾 Salvar Compromisso</button>
+                    </div>
+                </div>
+
+                <!-- Barra de Filtros dos Compromissos -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 0 10px; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; gap: 6px;">
+                        <button type="button" class="app-filter-tab active" id="appFilterAll" onclick="setAppointmentFilter('all')">Todos</button>
+                        <button type="button" class="app-filter-tab" id="appFilterActive" onclick="setAppointmentFilter('active')">Ativos / Pendentes</button>
+                        <button type="button" class="app-filter-tab" id="appFilterCompleted" onclick="setAppointmentFilter('completed')">Concluídos</button>
+                    </div>
+                    <div style="font-size: 0.82rem; color: #64748b;">
+                        <span>📋 Compromissos Configurados</span>
+                    </div>
+                </div>
+
+                <!-- Lista de Compromissos Cadastrados -->
+                <div id="manualAppointmentsList" class="manual-appointments-list" style="max-height: 42vh; overflow-y: auto;">
+                    <div class="empty-state">Nenhum compromisso cadastrado</div>
                 </div>
             </div>
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-cancel" onclick="closeAlertsModal()">Fechar</button>
             </div>
@@ -10279,17 +10277,7 @@
         }
 
         function scrollToAppointmentsSection() {
-            showView('dashboard');
-            const section = document.getElementById('manualAppointmentsSection');
-            const body = document.getElementById('manualAppointmentsBody');
-            const arrow = document.getElementById('arrowManualAppointments');
-            if (body && body.style.display === 'none') {
-                body.style.display = 'block';
-                if (arrow) arrow.classList.add('open');
-            }
-            if (section) {
-                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
+            openAlertsModal();
         }
 
         function setAppointmentFilter(filter) {
@@ -10676,13 +10664,16 @@
                 return true;
             });
 
+            const pendingAlerts = typeof getPendingBillsForAlert === 'function' ? getPendingBillsForAlert() : [];
+            const totalCount = upcomingAlerts.length + pendingAlerts.length;
+
             const bell = document.getElementById('alertBell');
             const badge = document.getElementById('alertBadge');
 
-            if (upcomingAlerts.length > 0) {
+            if (totalCount > 0) {
                 if (bell) bell.classList.add('has-alerts');
                 if (badge) {
-                    badge.textContent = upcomingAlerts.length;
+                    badge.textContent = totalCount;
                     badge.style.display = 'flex';
                 }
             } else {
@@ -10694,38 +10685,24 @@
         }
 
         function openAlertsModal() {
-            const container = document.getElementById('alertsList');
-            const today = new Date().toISOString().split('T')[0];
-
-            const upcomingAlerts = (localData.appointments || []).filter(a => a.alert && a.status !== 'completed' && a.date >= today)
-                .sort((a, b) => a.date.localeCompare(b.date));
-
-            if (upcomingAlerts.length === 0) {
-                container.innerHTML = '<div class="empty-state">Nenhum alerta ativo</div>';
-            } else {
-                let html = '';
-                upcomingAlerts.forEach(app => {
-                    const isToday = app.date === today;
-                    html += `
-                        <div class="appointment-item">
-                            <div class="appointment-info">
-                                <div class="appointment-date">
-                                    ${isToday ? '📅 Hoje' : formatDate(app.date)} ${app.time ? 'às ' + app.time : ''}
-                                </div>
-                                <div class="appointment-desc">${app.description}</div>
-                                ${app.notes ? `<div style="font-size: 0.78rem; color: #b45309; margin-top: 3px;">📝 ${app.notes}</div>` : ''}
-                            </div>
-                            <div style="display: flex; gap: 4px;">
-                                <button class="btn-small btn-success-small" onclick="toggleManualAppointmentStatus('${app.id}'); openAlertsModal();" title="Concluir">✓</button>
-                                <button class="btn-small btn-danger-small" onclick="deleteAppointment('${app.id}'); openAlertsModal();" title="Excluir">🗑️</button>
-                            </div>
-                        </div>
-                    `;
-                });
-                container.innerHTML = html;
+            // Atualiza aviso de contas pendentes a vencer no topo do modal
+            const pendingNotice = document.getElementById('alertsModalPendingNotice');
+            const pendingNoticeText = document.getElementById('alertsModalPendingNoticeText');
+            if (pendingNotice && pendingNoticeText) {
+                const pendingAlerts = typeof getPendingBillsForAlert === 'function' ? getPendingBillsForAlert() : [];
+                if (pendingAlerts.length > 0) {
+                    pendingNotice.style.display = 'flex';
+                    pendingNoticeText.textContent = `Atenção: Você possui ${pendingAlerts.length} conta(s) pendente(s) com vencimento próximo (<= 2 dias) ou vencida(s).`;
+                } else {
+                    pendingNotice.style.display = 'none';
+                }
             }
 
-            document.getElementById('alertsModal').classList.add('active');
+            // Renderiza o card e a lista de compromissos dentro do modal
+            renderManualAppointmentsCard();
+
+            const modal = document.getElementById('alertsModal');
+            if (modal) modal.classList.add('active');
         }
 
         function closeAlertsModal() {

@@ -1434,57 +1434,6 @@
             height: 16px;
             border-radius: 4px;
         }
-
-        /* Bell Icon */
-        .bell-icon {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 1500;
-            transition: all 0.3s;
-            font-size: 1.5rem;
-        }
-
-        .bell-icon:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
-        }
-
-        .bell-icon.has-alerts {
-            animation: bellRing 2s infinite;
-        }
-
-        @keyframes bellRing {
-            0%, 100% { transform: rotate(0deg); }
-            10%, 30%, 50% { transform: rotate(15deg); }
-            20%, 40% { transform: rotate(-15deg); }
-        }
-
-        .alert-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--danger);
-            color: white;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
-
         /* Appointment Form */
         .appointment-form {
             background: #f9fafb;
@@ -2462,10 +2411,6 @@
 
         body.rh-open {
             overflow: hidden;
-        }
-
-        body.rh-open #alertBell {
-            display: none;
         }
 
         .rh-shell {
@@ -4316,12 +4261,6 @@
                 </div>
             </div>
         </main>
-    </div>
-
-    <!-- Sino de Alerta -->
-    <div class="bell-icon" id="alertBell" onclick="openAlertsModal()">
-        🔔
-        <span class="alert-badge" id="alertBadge" style="display: none;">0</span>
     </div>
 
     <!-- Modal Adicionar/Editar -->
@@ -12128,34 +12067,6 @@
         }
 
         function checkAlerts() {
-            const today = new Date().toISOString().split('T')[0];
-            const now = new Date();
-            const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-            const upcomingAlerts = (localData.appointments || []).filter(a => {
-                if (!a.alert || a.status === 'completed') return false;
-                if (a.date < today && a.persistence !== 'until_completed') return false;
-                if (a.date === today && a.time && a.time < currentTime && a.persistence === 'once') return false;
-                return true;
-            });
-
-            const pendingAlerts = typeof getPendingBillsForAlert === 'function' ? getPendingBillsForAlert() : [];
-            const totalCount = upcomingAlerts.length + pendingAlerts.length;
-
-            const bell = document.getElementById('alertBell');
-            const badge = document.getElementById('alertBadge');
-
-            if (totalCount > 0) {
-                if (bell) bell.classList.add('has-alerts');
-                if (badge) {
-                    badge.textContent = totalCount;
-                    badge.style.display = 'flex';
-                }
-            } else {
-                if (bell) bell.classList.remove('has-alerts');
-                if (badge) badge.style.display = 'none';
-            }
-
             renderManualAppointmentsCard();
         }
 
